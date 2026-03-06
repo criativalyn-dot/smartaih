@@ -1,0 +1,193 @@
+Guia solicitação de Exames e Imagens  
+Dr Rodrigo de Matos Santos 
+KIT 2 – DOR TORÁCICA 
+Referências: ABRAMEDE 2024 • SBC 2023 • ACLS 2020 • Ministério da Saúde – Protocolos 
+de Síndromes Coronarianas Agudas e Emergências Cardiovasculares 
+Objetivo 
+Padronizar a solicitação de exames laboratoriais e de imagem em pacientes com dor torácica no 
+pronto-socorro, priorizando a estratificação de risco, a segurança diagnóstica e a racionalização 
+de recursos laboratoriais e de imagem. 
+1. AVALIAÇÃO INICIAL – ABORDAGEM CLÍNICA E ESTRATIFICAÇÃO 
+• Avaliar tempo de início, tipo e características da dor torácica (localização, 
+irradiação, duração, fatores de alívio/agravamento, sintomas associados). 
+• Realizar ECG de 12 derivações imediato em todos os casos. 
+• Classificar conforme tipo de dor torácica (ABRAMEDE / SBC): 
+Tipo de Dor Características Clínicas Suspeita Principal 
+Tipo A – Isquêmica 
+típica 
+Dor retroesternal, em aperto, irradiando para 
+braço, mandíbula ou dorso, com sudorese, 
+náusea ou dispneia. 
+Síndrome Coronariana 
+Aguda (SCA) 
+Tipo B – Isquêmica 
+atípica 
+Dor epigástrica, dorsal, cervical, menos 
+intensa ou não irradiada, mas com fatores de 
+risco cardiovascular. 
+SCA / Isquemia atípica 
+Tipo C – Não 
+cardíaca 
+Localizada, reproduzida à palpação, piora 
+com movimento, sem sintomas vegetativos. Dor musculoesquelética 
+Tipo D – 
+Indeterminada / 
+ansiosa 
+Mal definida, intermitente, sem padrão 
+cardíaco ou pulmonar. Psicogênica / funcional 
+ 
+ 
+2. EXAMES LABORATORIAIS 
+ 
+Exame Indicação de Solicitação Evitar / Não Indicado 
+Troponina de alta 
+sensibilidade (0h e 
+3h) 
+Dor tipo A/B, sintomas < 12h, ECG 
+com alteração isquêmica ou fatores de 
+risco cardiovascular. 
+Dor musculoesquelética, 
+psicogênica ou tipo C/D sem 
+fator de risco. 
+CK-MB / CPK Alternativa se troponina indisponível. Não solicitar junto com 
+troponina. 
+Hemograma 
+completo 
+Suspeita de infecção (pneumonia, 
+pericardite), anemia ou causa 
+sistêmica. 
+Dor isolada de baixo risco sem 
+repercussão sistêmica. 
+Ureia / Creatinina / 
+Eletrólitos 
+Avaliação pré-contraste e risco renal 
+em dor tipo A/B ou suspeita de TEP. 
+Casos leves, dor 
+musculoesquelética. 
+Gasometria + 
+Lactato 
+Instabilidade hemodinâmica, 
+hipoxemia, suspeita de sepse ou TEP. 
+Casos leves com SpO₂ normal 
+e estabilidade. 
+PCR / 
+Procalcitonina 
+Suspeita de pneumonia, pericardite ou 
+processo infeccioso. Dor sem sinais infecciosos. 
+Guia solicitação de Exames e Imagens  
+Dr Rodrigo de Matos Santos 
+Exame Indicação de Solicitação Evitar / Não Indicado 
+BNP ou NT-proBNP 
+Dispneia, ortopneia, estertores, 
+suspeita de insuficiência cardíaca 
+aguda. 
+Dor torácica isolada sem 
+congestão. 
+D-Dímero Suspeita de TEP com Escore de Wells 
+≤ 4 (baixo/intermediário). 
+Não solicitar de rotina; se 
+Wells > 4 → realizar Angio-
+TC direto. 
+Glicemia capilar 
+Todo paciente com rebaixamento de 
+consciência, sudorese ou confusão 
+mental. 
+— 
+ 
+ 
+3. EXAMES DE IMAGEM 
+a) Radiografia e Ultrassonografia 
+Exame Indicação Evitar 
+ECG de 12 
+derivações Todos os pacientes com dor torácica. Nunca dispensar. 
+RX de Tórax 
+(PA/AP) 
+Dispneia, febre, trauma torácico, 
+suspeita de IC, pneumonia, pneumotórax 
+ou dissecção de aorta. 
+Dor muscular ou psicogênica 
+sem alterações clínicas. 
+USG / POCUS 
+cardíaco e 
+pulmonar 
+Avaliar função ventricular, 
+tamponamento, congestão pulmonar, 
+pneumotórax, derrame pleural. 
+Casos leves e estáveis sem 
+sinais respiratórios ou 
+hemodinâmicos. 
+ 
+ 
+b) Tomografia Computadorizada (TC) 
+ 
+TC Indicação (Solicitar se) Evitar / Não Indicado 
+TC de Tórax 
+com contraste 
+(Angio-TC) 
+Suspeita de TEP (Escore de Wells > 4 ou D-
+dímero positivo) ou dissecção de aorta (dor 
+transfixante + PA diferencial + mediastino 
+alargado). 
+Dor inespecífica, sem 
+sinais clínicos ou 
+laboratoriais sugestivos. 
+TC de Tórax 
+sem contraste 
+Suspeita de lesão pulmonar (pneumotórax 
+oculto, tumor, consolidação atípica). 
+Dor de origem cardíaca 
+confirmada ou RX normal 
+com clínica leve. 
+ 
+ 
+4. CRITÉRIOS DE APOIO À DECISÃO 
+ 
+Critério Pontos 
+Sinais clínicos de TVP 3,0 
+TEP mais provável que outro diagnóstico 3,0 
+FC > 100 bpm 1,5 
+Cirurgia / imobilização recente 1,5 
+História prévia de TEP/TVP 1,5 
+Guia solicitação de Exames e Imagens  
+Dr Rodrigo de Matos Santos 
+Critério Pontos 
+Hemoptise 1,0 
+Câncer ativo 1,0 
+Interpretação: 
+• ≤ 4 pontos → Baixo risco → Solicitar D-Dímero 
+• 4 pontos → Alto risco → Solicitar Angio-TC de Tórax 
+5. PRIORIDADES 
+• Realizar ECG e avaliação clínica imediata antes de qualquer exame laboratorial. 
+• Solicitar troponina seriada apenas quando houver quadro compatível ou risco 
+cardiovascular. 
+• Evitar duplicidade de exames (CKMB + troponina / RX + TC sem justificativa). 
+• Utilizar critérios de risco e escores clínicos antes de ampliar investigação. 
+• Sempre correlacionar exame físico, ECG e tipo de dor antes da decisão diagnóstica. 
+Resumo Prático: 
+ 
+Cenário Exames Laboratoriais Exames de Imagem 
+Dor Tipo A/B (suspeita 
+cardíaca) 
+Troponina, eletrólitos, creatinina, 
+ECG 
+RX Tórax ± Eco 
+POCUS 
+Dispneia / IC descompensada Troponina, BNP, gasometria RX Tórax ± Eco 
+POCUS 
+Suspeita de TEP D-dímero (baixo risco) / Angio-TC 
+(alto risco) TC contrastada 
+Dor pleurítica / infecciosa Hemograma, PCR, Procalcitonina RX Tórax ± TC 
+Dor musculoesquelética / 
+ansiosa Nenhum exame necessário Nenhum exame 
+necessário 
+ 
+Conclusão 
+A avaliação racional da dor torácica reduz exames desnecessários, otimiza o diagnóstico 
+precoce de síndromes graves (SCA, TEP, dissecção de aorta) e melhora o fluxo assistencial no 
+pronto-socorro. O julgamento clínico deve prevalecer, com base em critérios objetivos e 
+diretrizes atualizadas. 
+✅ Diagnóstico rápido e direcionado 
+✅ Menor sobrecarga laboratorial e radiológica 
+✅ Fluxo assistencial mais eficiente 
+✅ Redução de custos e tempo de permanência 
+ 

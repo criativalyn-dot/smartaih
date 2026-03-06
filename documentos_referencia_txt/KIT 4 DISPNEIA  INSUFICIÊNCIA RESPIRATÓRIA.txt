@@ -1,0 +1,163 @@
+Guia solicitação de Exames e Imagens 
+Dr Rodrigo de Matos Santos 
+KIT 4 – DISPNEIA / INSUFICIÊNCIA 
+RESPIRATÓRIA 
+Referências: ABRAMEDE 2024 • Ministério da Saúde • SBPT • SBC • ACLS 2020 • 
+Protocolo Nacional de Sepse 
+Objetivo 
+Padronizar a solicitação de exames laboratoriais e de imagem em pacientes com dispneia ou 
+insuficiência respiratória aguda, priorizando a identificação precoce de causas graves e a 
+racionalização dos recursos diagnósticos no pronto-socorro. 
+1. AVALIAÇÃO INICIAL – ABORDAGEM CLÍNICA 
+• Avaliar início, duração e progressão da dispneia, presença de tosse, febre, dor 
+torácica, sibilância, ortopneia, edema ou sinais de choque. 
+• Avaliar sinais vitais e padrão respiratório (FR, SpO₂, uso de musculatura acessória, 
+cianose, confusão mental). 
+• Realizar oximetria de pulso e ECG de 12 derivações em todos os casos. 
+• Iniciar oxigenoterapia e suporte ventilatório conforme gravidade (cateter, máscara, 
+VNI, VM). 
+2. EXAMES LABORATORIAIS 
+Exame Indicação de Solicitação Evitar / Não Indicado 
+Gasometria arterial 
+ou venosa + lactato 
+Todo paciente com FR > 24 irpm, SpO₂ 
+< 92%, uso de O₂, ou suspeita de 
+acidose / hipercapnia. 
+Casos leves com saturação 
+normal e dispneia leve 
+ansiosa. 
+Hemograma completo 
+Suspeita de infecção (pneumonia, 
+sepse), anemia, hemorragia ou causa 
+hematológica. 
+Dispneia leve sem sintomas 
+sistêmicos. 
+Ureia / Creatinina / 
+Eletrólitos 
+Avaliação metabólica e renal, 
+principalmente em IC, sepse ou uso de 
+diuréticos. 
+Casos leves, quadro ansioso. 
+Troponina / CK-MB Suspeita de SCA, edema agudo de 
+pulmão ou IC aguda descompensada. 
+Dispneia leve sem dor 
+torácica ou fatores de risco 
+cardíaco. 
+BNP / NT-proBNP 
+Dispneia aguda sem diagnóstico 
+definido; suspeita de insuficiência 
+cardíaca. 
+Paciente com diagnóstico já 
+confirmado ou dispneia não 
+congestiva. 
+PCR / Procalcitonina Suspeita de infecção respiratória, 
+pneumonia, sepse. 
+Dispneia de origem não 
+infecciosa confirmada. 
+D-Dímero Suspeita de TEP com escore de Wells ≤ 
+4. 
+Solicitação rotineira sem 
+critério clínico. 
+Função hepática Pacientes sépticos, hipóxicos graves, IC 
+congestiva. Casos leves e transitórios. 
+Glicemia capilar Todo paciente grave, confuso ou em uso 
+de insulina / betabloqueador. — 
+ 
+Guia solicitação de Exames e Imagens 
+Dr Rodrigo de Matos Santos 
+3. EXAMES DE IMAGEM 
+ 
+Exame Indicação Evitar / Não Indicado 
+RX de Tórax 
+(PA/AP) 
+Primeira imagem em todos os casos moderados a 
+graves; pesquisa de pneumonia, edema, derrame, 
+pneumotórax. 
+Dispneia leve sem 
+repercussão clínica. 
+USG pulmonar 
+(LUS / POCUS) 
+Avaliar padrão A/B, derrame pleural, 
+pneumotórax, congestão pulmonar e resposta à 
+terapia. 
+Casos leves com 
+exame físico e RX 
+normais. 
+USG cardíaco 
+(POCUS) 
+Avaliar função ventricular, tamponamento, 
+derrame pericárdico, disfunção VD em suspeita de 
+TEP. 
+Casos leves com 
+diagnóstico definido. 
+ 
+b) Tomografia Computadorizada (TC) 
+ 
+TC Indicação (Solicitar se) Evitar / Não Indicado 
+TC de Tórax com 
+contraste (Angio-TC) 
+Suspeita de TEP (Escore de Wells > 
+4 ou D-dímero positivo). 
+Dispneia com outra causa já 
+evidente (pneumonia, IC). 
+TC de Tórax sem 
+contraste 
+Suspeita de fibrose, infiltrado 
+difuso, neoplasia, COVID 
+prolongado. 
+Dispneia aguda por causas 
+infecciosas ou cardíacas típicas. 
+ 
+4. ESCORES DE APOIO À DECISÃO 
+Escore de WELLS – Tromboembolismo Pulmonar 
+Critério Pontos 
+Sinais clínicos de TVP 3,0 
+TEP mais provável que outro diagnóstico 3,0 
+FC > 100 bpm 1,5 
+Cirurgia ou imobilização recente 1,5 
+História prévia de TEP/TVP 1,5 
+Hemoptise 1,0 
+Câncer ativo 1,0 
+ 
+Interpretação: 
+• ≤ 4 pontos → Baixo risco → Solicitar D-Dímero 
+• 4 pontos → Alto risco → Solicitar Angio-TC de Tórax 
+5. PRIORIDADES 
+• Iniciar oxigenoterapia conforme SpO₂ (alvo ≥ 94% sem DPOC; 88–92% em DPOC). 
+• Realizar ECG e RX de tórax na abordagem inicial. 
+• Solicitar gasometria e lactato nos casos moderados a graves. 
+• Aplicar Escore de Wells antes de solicitar D-Dímero / TC. 
+• Evitar duplicidade de exames (RX + TC sem justificativa). 
+Guia solicitação de Exames e Imagens 
+Dr Rodrigo de Matos Santos 
+• Reavaliar paciente após intervenções (oxigênio, broncodilatador, diurético, antibiótico). 
+Resumo Prático: 
+Cenário Clínico Exames Laboratoriais Exames de Imagem 
+Pneumonia / Sepse 
+Respiratória 
+Hemograma, PCR, gasometria, 
+eletrólitos 
+RX Tórax ± USG 
+pulmonar 
+Edema Agudo de Pulmão / 
+IC 
+Troponina, BNP, gasometria, 
+eletrólitos 
+RX Tórax ± Eco 
+POCUS 
+Asma / DPOC 
+descompensada Gasometria, eletrólitos RX Tórax ± USG 
+pulmonar 
+TEP (suspeita) D-Dímero (baixo risco) / Angio-TC 
+(alto risco) TC contrastada 
+Dispneia psicogênica / leve Nenhum exame inicial Nenhum exame inicial 
+ 
+Conclusão 
+A investigação racional da dispneia deve sempre priorizar a identificação precoce da 
+insuficiência respiratória, associando dados clínicos, laboratoriais e de imagem de forma 
+dirigida. 
+✅ Diagnóstico rápido e direcionado 
+✅ Menor sobrecarga laboratorial e radiológica 
+✅ Melhoria do fluxo assistencial 
+✅ Redução de tempo e custos hospitalares 
+ 

@@ -1,0 +1,222 @@
+Guia solicitação de Exames e Imagens 
+Dr Rodrigo de Matos Santos 
+KIT 9 – REBAIXAMENTO DO NÍVEL DE 
+CONSCIÊNCIA (RNC) 
+Referências: ABRAMEDE 2024 • AHA/ACLS 2020 • SBCM • Ministério da Saúde • 
+Protocolo Nacional de Emergências Neurológicas 
+ 
+Objetivo 
+Padronizar a solicitação de exames laboratoriais e de imagem nos pacientes com 
+rebaixamento agudo do nível de consciência, garantindo diagnóstico rápido, 
+identificação da causa reversível e abordagem direcionada, com uso racional dos 
+recursos diagnósticos. 
+ 
+1. AVALIAÇÃO INICIAL – ABORDAGEM CLÍNICA 
+• Aplicar ABCDE da emergência imediatamente. 
+• Avaliar escala de Glasgow e evolução temporal do rebaixamento. 
+• Identificar sinais de focalidade neurológica, convulsões, trauma, 
+hipoglicemia, intoxicação, sepse ou choque. 
+• Obter histórico rápido (comorbidades, uso de álcool, insulina, 
+anticonvulsivantes, anticoagulantes, psicotrópicos). 
+• Iniciar suporte ventilatório e hemodinâmico conforme necessidade antes da 
+investigação laboratorial. 
+ 
+2. EXAMES LABORATORIAIS 
+Exame Indicação de Solicitação Evitar / Não Indicado 
+Glicemia capilar 
+imediata 
+Todos os pacientes com 
+rebaixamento de consciência. — 
+Gasometria arterial / 
+venosa + lactato 
+Avaliar hipóxia, acidose, 
+retenção de CO₂, choque, 
+intoxicação. 
+Casos leves de sonolência 
+medicamentosa conhecida. 
+Hemograma completo Suspeita de infecção, sepse, 
+anemia aguda. 
+Sonolência por causa 
+evidente e estável. 
+Eletrólitos (Na, K, Cl, 
+Ca, Mg) 
+Suspeita de distúrbios 
+metabólicos, convulsões, 
+arritmias, IC. 
+Casos com causa 
+neurológica clara (ex: AVC 
+confirmado). 
+Ureia / Creatinina / 
+Osmolaridade sérica 
+Avaliar função renal, 
+encefalopatia urêmica, 
+intoxicações, desidratação. 
+Casos agudos por trauma 
+isolado sem disfunção renal. 
+Guia solicitação de Exames e Imagens 
+Dr Rodrigo de Matos Santos 
+Exame Indicação de Solicitação Evitar / Não Indicado 
+TGO / TGP / 
+Bilirrubinas  
+Suspeita de encefalopatia 
+hepática, hepatite, insuficiência 
+hepática. 
+Casos não compatíveis com 
+doença hepática. 
+Glicemia sérica / 
+Cetonemia / Cetonúria 
+Suspeita de cetoacidose 
+diabética, hipoglicemia 
+prolongada. 
+Sem sinais de distúrbio 
+metabólico. 
+Troponina / CK-MB Pacientes idosos, hipotensos, 
+com taquiarritmias ou choque. 
+Casos metabólicos ou 
+tóxicos isolados. 
+PCR / Procalcitonina Suspeita de sepse, meningite, 
+infecção sistêmica. 
+Casos tóxicos ou 
+neurológicos puros. 
+Beta-hCG Toda mulher em idade fértil. — 
+ 
+ 
+3. EXAMES DE IMAGEM 
+a) Primeira linha (emergencial / ate   20 min) 
+ 
+Exame Indicação Evitar / Não Indicado 
+TC de Crânio 
+sem contraste 
+Todo paciente com rebaixamento de 
+consciência de causa não identificada, trauma 
+craniano, sinais focais, uso de anticoagulante, 
+suspeita de HSA ou AVC. 
+Casos metabólicos ou 
+tóxicos com 
+diagnóstico clínico 
+evidente. 
+RX de Tórax 
+(PA/AP) 
+Suspeita de pneumonia, sepse, aspiração, 
+congestão pulmonar. 
+Casos puramente 
+neurológicos sem 
+sintomas respiratórios. 
+ECG de 12 
+derivações 
+Avaliar arritmias, isquemia, distúrbios 
+eletrolíticos. — 
+ 
+b) Segunda linha (dirigida a   hipó  tese) 
+ 
+Exame Indicação (Solicitar se) Evitar / Não Indicado 
+TC de abdome / pelve 
+Suspeita de foco infeccioso 
+abdominal, sangramento 
+interno, intoxicação com dor 
+abdominal intensa. 
+Casos neurológicos 
+isolados. 
+TC de tórax com 
+contraste (Angio-TC) 
+Suspeita de TEP em paciente 
+com hipoxemia e rebaixamento 
+inexplicado. 
+Casos com causa 
+metabólica definida. 
+EEG 
+(Eletroencefalograma) 
+Suspeita de estado de mal não 
+convulsivo, causas anóxicas ou 
+metabólicas. 
+Casos já reativos e com 
+melhora clínica rápida. 
+Punção lombar (PL) 
+Suspeita de meningite, 
+encefalite, HSA com TC 
+normal. 
+Instabilidade 
+hemodinâmica, 
+Guia solicitação de Exames e Imagens 
+Dr Rodrigo de Matos Santos 
+Exame Indicação (Solicitar se) Evitar / Não Indicado 
+hipertensão intracraniana, 
+coagulopatia. 
+ 
+4. PRINCIPAIS ETIOLOGIAS E EXAMES CORRESPONDENTES 
+ 
+Causa Suspeita Exames Principais Exame de Imagem 
+Indicada 
+Hipoglicemia Glicemia capilar, glicemia sérica — 
+Hipóxia / Hipercapnia Gasometria arterial, lactato RX Tórax ± TC de 
+tórax 
+AVC / HSA / Trauma 
+craniano 
+Hemograma, eletrólitos, 
+glicemia 
+TC de crânio sem 
+contraste 
+Sepse / Infecção do SNC Hemograma, PCR, culturas, 
+função renal 
+RX Tórax ± TC 
+crânio ± PL 
+Cetoacidose / Encefalopatia 
+metabólica 
+Gasometria, cetonemia, função 
+renal/hepática — 
+Intoxicação / Overdose Toxicológico, eletrólitos, ECG TC crânio ± RX 
+tórax 
+Coma hepático / urêmico Função hepática, amônia, 
+função renal USG abdome total 
+Coma mixedematoso / 
+Addisoniano TSH/T4L, cortisol — 
+ 
+5. PRIORIDADES 
+• Afastar causas reversíveis primeiro: hipoglicemia, hipóxia, hipotensão, 
+hipotermia. 
+• Garantir via aérea e oxigenação antes dos exames. 
+• Evitar atrasar a TC de crânio em casos de rebaixamento inexplicado. 
+• Solicitar laboratoriais básicos iniciais (hemograma, gasometria, eletrólitos, 
+função renal/hepática). 
+• Em pacientes com Glasgow ≤ 8, iniciar IOT e suporte avançado de vias 
+aéreas. 
+• Repetir gasometria e glicemia conforme resposta terapêutica. 
+ 
+Resumo Prático: 
+Cenário Clínico Exames Laboratoriais Exames de 
+Imagem 
+RNC súbito sem causa 
+aparente 
+Glicemia, gasometria, eletrólitos, 
+função renal, TGO/TGP, PCR 
+TC crânio ± RX 
+tórax 
+Guia solicitação de Exames e Imagens 
+Dr Rodrigo de Matos Santos 
+Cenário Clínico Exames Laboratoriais Exames de 
+Imagem 
+RNC com trauma Hemograma, coagulograma, função 
+renal, eletrólitos 
+TC crânio sem 
+contraste 
+RNC séptico / infeccioso Hemograma, PCR, culturas, 
+gasometria, lactato 
+RX tórax ± TC 
+crânio 
+RNC metabólico (CAD, 
+hepático, urêmico) 
+Gasometria, glicemia, função 
+renal/hepática, cetonas — 
+RNC tóxico / overdose Toxicológico, eletrólitos, ECG TC crânio ± RX 
+tórax 
+ 
+Conclusão 
+A abordagem do rebaixamento de consciência deve priorizar causas reversíveis e de 
+tratamento imediato, associando avaliação neurológica rápida com exames 
+laboratoriais dirigidos. A TC de crânio sem contraste continua sendo o exame de 
+imagem prioritário, e a glicemia capilar deve ser sempre o primeiro passo diagnóstico. 
+✅ Diagnóstico rápido e seguro 
+✅ Correção imediata de causas reversíveis 
+✅ Redução de solicitações desnecessárias 
+✅ Melhoria do tempo de resposta clínica 
+ 

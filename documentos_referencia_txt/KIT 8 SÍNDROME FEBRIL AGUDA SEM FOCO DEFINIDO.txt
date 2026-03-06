@@ -1,0 +1,186 @@
+Guia solicitação de Exames e Imagens 
+Dr Rodrigo de Matos Santos 
+KIT 8 – SÍNDROME FEBRIL AGUDA SEM FOCO 
+DEFINIDO 
+Referências: ABRAMEDE 2024 • Ministério da Saúde – Protocolos de Manejo de 
+Febre Aguda 2023 • SBIM • ILAS • OMS 
+ 
+Objetivo 
+Padronizar a solicitação de exames laboratoriais e de imagem em pacientes 
+com síndrome febril aguda (SFA) sem foco aparente na admissão, visando 
+o diagnóstico precoce de doenças infecciosas, a racionalização dos exames e 
+a segurança clínica do atendimento. 
+ 
+1. AVALIAÇÃO INICIAL – ABORDAGEM CLÍNICA 
+• Considerar síndrome febril aguda quando há febre ≤ 7 dias associada ou não a 
+sintomas sistêmicos inespecíficos (cefaleia, mialgia, náusea, exantema, artralgia, 
+dor retro-orbitária, prostração). 
+• Avaliar sinais de gravidade: hipotensão, taquicardia, confusão mental, dispneia, 
+dor abdominal intensa, sangramento, icterícia ou oligúria. 
+• Investigar histórico epidemiológico (dengue, zika, chikungunya, leptospirose, 
+COVID, malária, febre tifóide). 
+• Realizar exame físico completo e minucioso, com atenção a linfonodos, 
+exantema, mucosas e ausculta pulmonar. 
+ 
+2. EXAMES LABORATORIAIS 
+Exame Indicação de Solicitação Evitar / Não 
+Indicado 
+Hemograma 
+completo 
+Todos os pacientes com febre ≥ 48h; 
+auxilia no diagnóstico diferencial 
+(leucopenia viral, leucocitose bacteriana, 
+plaquetopenia). 
+Febre leve < 24h em 
+adultos previamente 
+hígidos. 
+Função renal 
+(ureia e 
+creatinina) 
+Avaliar gravidade e hidratação, suspeita de 
+leptospirose, sepse, dengue grave. 
+Casos leves sem 
+sintomas sistêmicos. 
+Transaminases 
+(TGO/TGP) 
+Suspeita de hepatite viral, dengue, febre 
+tifóide, leptospirose. 
+Febre isolada sem 
+icterícia nem dor 
+abdominal. 
+Eletrólitos (Na, K) Pacientes com vômitos, diarreia ou sinais 
+de desidratação. Casos leves. 
+Guia solicitação de Exames e Imagens 
+Dr Rodrigo de Matos Santos 
+Exame Indicação de Solicitação Evitar / Não 
+Indicado 
+PCR / 
+Procalcitonina 
+Diferenciação entre origem viral e 
+bacteriana; controle de resposta terapêutica. 
+Casos leves, sem 
+sinais sistêmicos. 
+Gasometria + 
+Lactato 
+Pacientes com hipotensão, taquipneia, 
+confusão mental ou sepse. 
+Casos leves sem 
+repercussão 
+sistêmica. 
+EAS (Urina tipo I) Pesquisa de ITU, pielonefrite, leptospirose 
+(proteinúria, hematuria). 
+Febre isolada sem 
+sintomas urinários. 
+Hemoculturas (2 
+amostras) 
+Pacientes com febre persistente (> 72h), 
+sepse, calafrios ou imunossuprimidos. 
+Casos leves, febre 
+autolimitada. 
+Sorologias rápidas Conforme suspeita clínica e área endêmica:  
+ 
+3. EXAMES DE IMAGEM 
+ 
+Exame Indicação Evitar / Não 
+Indicado 
+RX de Tórax 
+(PA/AP) 
+Febre com tosse, dispneia, crepitações, ou 
+suspeita de pneumonia / COVID-19. 
+Febre isolada sem 
+sintomas 
+respiratórios. 
+USG abdominal 
+total (POCUS) 
+Suspeita de dengue grave (ascite, derrame 
+pleural, hepatoesplenomegalia), leptospirose, 
+dor abdominal persistente. 
+Febre isolada sem 
+dor abdominal. 
+USG de vias 
+urinárias / rins 
+Suspeita de pielonefrite, ITU febril, dor lombar 
+ou hematúria. 
+Casos sem queixa 
+urinária. 
+TC de abdome / 
+tórax 
+Apenas em casos com suspeita de 
+complicações graves (abscesso, sepse, 
+sangramento). 
+Casos leves sem 
+critérios de 
+gravidade. 
+ 
+4. CLASSIFICAÇA  O DE RISCO CLI NICO 
+ 
+Classificação Critérios Conduta e Exames 
+Baixo risco (SFA 
+leve) 
+Febre < 3 dias, bom estado 
+geral, sem sinais de gravidade. 
+Hemograma isolado; hidratação 
+oral; observação. 
+Risco 
+intermediário 
+Febre ≥ 3 dias, sintomas 
+sistêmicos leves, sem 
+instabilidade. 
+Hemograma, função renal, 
+transaminases, EAS, sorologias 
+básicas. 
+Alto risco (SFA 
+grave / sepse) 
+Hipotensão, taquicardia, 
+plaquetopenia, sangramento, 
+icterícia, confusão mental. 
+Hemograma completo, função 
+renal/hepática, lactato, PCR, 
+culturas, imagem dirigida. 
+ 
+ 
+5. PRIORIDADES 
+Guia solicitação de Exames e Imagens 
+Dr Rodrigo de Matos Santos 
+• Avaliar e registrar tempo de febre, área endêmica e comorbidades. 
+• Realizar hidratação precoce em casos suspeitos de dengue, leptospirose e 
+sepse. 
+• Solicitar sorologias específicas apenas quando houver suspeita epidemiológica 
+real. 
+• Evitar solicitações simultâneas de múltiplas sorologias sem indicação clínica. 
+• Em casos de febre persistente > 7 dias, reavaliar diagnósticos não infecciosos 
+(autoimunes, neoplásicos). 
+ 
+Resumo Prático: 
+Cenário Clínico Exames Laboratoriais Exames de 
+Imagem 
+Febre leve ≤ 3 dias Hemograma simples Nenhum exame 
+inicial 
+Febre persistente ≥ 3 
+dias 
+Hemograma, função renal e hepática, 
+EAS, PCR 
+RX tórax ± USG 
+abdome 
+Febre com tosse / 
+dispneia Hemograma, PCR, gasometria, Ureia RX tórax ± TC 
+Febre com icterícia / dor 
+abdominal 
+Função hepática, eletrólitos, 
+bilirrubina USG abdome total 
+Febre com hipotensão / 
+sepse 
+Hemograma, lactato, culturas, função 
+orgânica completa 
+USG POCUS ± TC 
+dirigida 
+ 
+Conclusão 
+A investigação da síndrome febril aguda sem foco definido deve seguir critérios 
+clínicos e epidemiológicos, evitando excesso de exames e priorizando a identificação de 
+sinais de gravidade. 
+✅ Diagnóstico rápido e direcionado 
+✅ Solicitação racional de exames 
+✅ Redução de custos e sobrecarga laboratorial 
+✅ Melhoria do fluxo e segurança do paciente 
+ 

@@ -1,0 +1,177 @@
+Guia solicitação de Exames e Imagens 
+Dr Rodrigo de Matos Santos 
+KIT 10 – INSUFICIÊNCIA RENAL CRÔNICA (IRC) 
+/ PACIENTE RENAL CRÔNICO 
+DESCOMPENSADO 
+Referências: ABRAMEDE 2024 • KDIGO 2023 • SBN • Ministério da Saúde – 
+Protocolo Clínico de Doença Renal Crônica 
+ 
+Objetivo 
+Padronizar a solicitação de exames laboratoriais e de imagem nos pacientes 
+com insuficiência renal crônica (IRC) ou descompensação aguda sobre crônica, 
+visando avaliação da gravidade, causas reversíveis e necessidade de terapia renal 
+substitutiva (TRS). 
+ 
+1. AVALIAÇÃO INICIAL – ABORDAGEM CLÍNICA 
+• Identificar estágio da doença renal crônica (segundo taxa de filtração 
+glomerular – TFG). 
+• Avaliar sintomas de descompensação: dispneia, edema, confusão mental, 
+náusea, vômito, oligúria, anúria, arritmias ou sinais de uremia. 
+• Investigar fatores precipitantes: infecção, desidratação, uso de contraste, 
+drogas nefrotóxicas, obstrução urinária, descompensação cardíaca. 
+• Avaliar presença de cateter venoso central, fístula ou enxerto arteriovenoso. 
+ 
+2. EXAMES LABORATORIAIS 
+Exame Indicação de Solicitação Evitar / Não Indicado 
+Ureia / Creatinina  Todos os pacientes com IRC ou 
+suspeita de descompensação. — 
+Eletrólitos (Na, K) 
+Monitorização de distúrbios 
+eletrolíticos, hipercalemia e 
+acidose. 
+Casos estáveis em diálise 
+regular sem intercorrência. 
+Gasometria arterial / 
+venosa + Lactato 
+Avaliar acidose metabólica, 
+hipercapnia, descompensação 
+respiratória. 
+Pacientes compensados e 
+assintomáticos. 
+Hemograma 
+completo 
+Avaliação de anemia da IRC, 
+infecção e plaquetopenia. — 
+PCR / Procalcitonina 
+Suspeita de infecção (sepse, 
+pneumonia, ITU, foco 
+abdominal). 
+Casos estáveis sem febre. 
+Guia solicitação de Exames e Imagens 
+Dr Rodrigo de Matos Santos 
+Exame Indicação de Solicitação Evitar / Não Indicado 
+Glicemia capilar / 
+sérica 
+Avaliar diabetes como fator 
+agravante. — 
+TGO / TGP / FA / 
+GGT / Bilirrubinas 
+Avaliar função hepática e 
+toxicidade medicamentosa. 
+Casos puramente renais sem 
+comorbidades hepáticas. 
+EAS (Urina tipo I) Identificar proteinúria, 
+hematúria, infecção. Pacientes anúricos. 
+Urocultura / 
+Hemocultura 
+Suspeita de infecção sistêmica ou 
+urinária. 
+Casos sem febre ou 
+leucocitose. 
+Troponina / CK-MB Pacientes com dispneia, dor 
+torácica, IC descompensada. 
+Sem sintomas 
+cardiovasculares. 
+ 
+3. EXAMES DE IMAGEM 
+ 
+Exame Indicação Evitar / Não Indicado 
+USG de rins e vias 
+urinárias 
+Avaliar tamanho renal, simetria, 
+espessura cortical, dilatação 
+pielocalicial, obstrução. 
+Pacientes já dialíticos com 
+achados prévios conhecidos. 
+USG abdominal 
+total (POCUS) 
+Avaliar ascite, congestão hepática, 
+derrame pleural, bexiga repleta ou 
+obstrução. 
+Casos com diagnóstico de 
+IRC terminal e sem 
+complicações. 
+RX de Tórax 
+(PA/AP) 
+Suspeita de congestão pulmonar, 
+edema agudo, sobrecarga volêmica. 
+Casos sem dispneia ou 
+congestão clínica. 
+ECG de 12 
+derivações 
+Avaliar arritmias, distúrbios do 
+potássio, sinais de sobrecarga 
+ventricular. 
+— 
+TC de abdome / 
+pelve (sem 
+contraste) 
+Suspeita de obstrução, litíase, 
+abscesso, infecção renal. 
+Casos estáveis, sem dor ou 
+febre. 
+ 
+4. CRITE  RIOS DE GRAVIDADE E INDICAÇA  O DE TRS (HEMODIA  LISE 
+URGENTE) 
+ 
+Critério Achado Laboratorial / Clínico 
+A – Acidose metabólica refratária pH < 7,1 ou HCO₃⁻ < 10 mEq/L 
+E – Eletrólitos (hipercalemia grave) K⁺ > 6,0 mEq/L refratário a tratamento clínico 
+I – Intoxicações Ex: lítio, metanol, etilenoglicol, salicilato 
+O – Overload (hipervolemia) Edema agudo de pulmão ou congestão refratária 
+U – Uremia Encefalopatia, pericardite, vômitos refratários 
+ 
+5. PRIORIDADES 
+Guia solicitação de Exames e Imagens 
+Dr Rodrigo de Matos Santos 
+• Avaliar via de acesso dialítico funcional (fístula, CVC). 
+• Corrigir hipercalemia e acidose imediatamente. 
+• Evitar contraste iodado e drogas nefrotóxicas (AINEs, aminoglicosídeos, 
+IECA/BRAs em instabilidade). 
+• Tratar fatores precipitantes (infecção, hipovolemia, obstrução). 
+• Avaliar indicação de TRS precoce conforme critérios AEIOU. 
+• Monitorar glicemia, diurese e sinais de congestão a cada 2–4h. 
+ 
+Resumo Prático: 
+Cenário Clínico Exames Laboratoriais Exames de 
+Imagem 
+IRC estável / 
+acompanhamento 
+Ureia, creatinina, eletrólitos, 
+hemograma, PTH 
+USG rins e vias 
+urinárias 
+Descompensação aguda (IRA 
+sobre IRC) 
+Ureia, creatinina, eletrólitos, 
+gasometria, PCR 
+USG abdome total 
+± RX tórax 
+Hipercalemia / acidose / 
+dispneia 
+Gasometria, K⁺, lactato, função 
+renal ECG ± RX tórax 
+Infecção / sepse em IRC Hemograma, PCR, culturas, 
+função renal/hepática 
+RX tórax ± USG 
+abdome 
+Avaliação pré-diálise Gasometria, ureia, K⁺, HCO₃⁻, 
+hemograma USG abdome total 
+IRC terminal com sintomas 
+urêmicos 
+Função renal, lactato, eletrólitos, 
+hemograma 
+RX tórax ± POCUS 
+cardíaco 
+ 
+Conclusão 
+O manejo diagnóstico do paciente renal crônico deve ser focado na identificação 
+precoce de descompensações, prevenção de causas reversíveis e avaliação rápida de 
+critérios dialíticos. 
+O uso racional dos exames reduz sobrecarga, evita contrastes desnecessários e garante 
+segurança clínica. 
+✅ Avaliação laboratorial dirigida 
+✅ Diagnóstico rápido de descompensação 
+✅ Critérios objetivos para TRS 
+✅ Redução de exames e uso racional de contraste 
+ 

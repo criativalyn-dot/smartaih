@@ -1,0 +1,176 @@
+Guia solicitação de Exames e Imagens 
+Dr Rodrigo de Matos Santos 
+KIT 6 – AVC / DÉFICIT NEUROLÓGICO AGUDO 
+Referências: ABRAMEDE 2024 • Ministério da Saúde 2023 • SBDCV • AHA/ASA 
+Guidelines 2021 
+Objetivo 
+Padronizar a solicitação de exames laboratoriais e de imagem em pacientes com suspeita 
+de acidente vascular cerebral (AVC) ou déficit neurológico agudo, priorizando o diagnóstico 
+rápido, a estratificação de risco e o encaminhamento adequado para tratamento trombolítico ou 
+neurocirúrgico. 
+1. AVALIAÇÃO INICIAL – ABORDAGEM CLÍNICA 
+• Avaliar início do quadro, tempo de evolução e sintomas neurológicos 
+focais (hemiparesia, disartria, afasia, hemianopsia, vertigem, ataxia, alteração de 
+consciência). 
+• Identificar janela terapêutica: até 4h30min para trombólise venosa e até 24h para 
+trombectomia (casos selecionados). 
+• Aplicar Escore NIHSS para avaliação de gravidade. 
+• Realizar ABCDE da emergência, estabilizando via aérea e oxigenação. 
+• Iniciar protocolo de AVC / Código AVC se tempo de início ≤ 6 horas. 
+2. EXAMES LABORATORIAIS 
+Exame Indicação de Solicitação Evitar / Não Indicado 
+Glicemia capilar 
+imediata 
+Todos os pacientes com déficit 
+neurológico agudo. — 
+Hemograma 
+completo 
+Todos os casos suspeitos de AVC 
+(descartar infecção, anemia, 
+trombocitopenia). 
+— 
+Eletrólitos / Ureia / 
+Creatinina 
+Avaliar função renal, distúrbios 
+hidroeletrolíticos e preparo para 
+contraste. 
+Casos leves sem indicação de 
+imagem contrastada. 
+Coagulograma (TP, 
+TTPA, INR) 
+Obrigatório antes da trombólise e em 
+uso de anticoagulantes. 
+Casos sem risco de 
+sangramento e sem uso de 
+anticoagulantes. 
+Glicemia sérica / 
+Gasometria 
+Avaliação metabólica em pacientes 
+graves, rebaixados ou hipoglicêmicos. 
+Casos leves e conscientes com 
+glicemia capilar normal. 
+TGO / TGP / 
+Bilirrubinas / FA 
+Avaliação hepática antes da trombólise 
+em pacientes com comorbidades. Casos leves, sem hepatopatia. 
+Troponina / CK-MB Avaliação de injúria miocárdica 
+associada (AVC cardiogênico). Sem sintomas cardíacos. 
+PCR / 
+Procalcitonina 
+Avaliação de infecção concomitante 
+(pneumonia aspirativa, sepse). 
+Casos puros de AVC sem 
+infecção. 
+Beta-hCG Mulheres em idade fértil. — 
+ 
+ 
+3. EXAMES DE IMAGEM 
+a) Primeira linha (emergencial / até 20 min) 
+Guia solicitação de Exames e Imagens 
+Dr Rodrigo de Matos Santos 
+ 
+Exame Indicação Evitar / Não Indicado 
+TC de crânio 
+sem contraste 
+Exame obrigatório e prioritário em todo paciente 
+com déficit neurológico agudo para diferenciar 
+AVC isquêmico de hemorrágico. 
+Nenhum caso suspeito 
+deve deixar de realizar 
+TC inicial. 
+RX de tórax Avaliação complementar em pacientes graves, 
+acamados ou com instabilidade respiratória. 
+Casos leves sem 
+repercussão clínica. 
+ECG de 12 
+derivações 
+Avaliar arritmias (FA), isquemia, causa 
+cardiogênica do AVC. — 
+ 
+b) Segunda linha (confirmatória ou complementar) 
+ 
+Exame Indicação (Solicitar se) Evitar / Não Indicado 
+Angio-TC de crânio e vasos 
+cervicais (carótidas e 
+vertebrais) 
+Avaliar oclusão de grandes vasos e 
+elegibilidade para trombectomia 
+mecânica. 
+Casos de AVC lacunar ou 
+já fora da janela 
+terapêutica. 
+TC de perfusão cerebral 
+Identificação de penumbra 
+isquêmica (avaliação do tecido 
+viável). 
+Casos com diagnóstico e 
+conduta já definidos. 
+ 
+4. ESCORES DE APOIO À DECISÃO 
+NIHSS – National Institutes of Health Stroke Scale 
+• Escore clínico utilizado para determinar gravidade do AVC. 
+• Classificação: 
+o Leve: ≤ 4 
+o Moderado: 5–15 
+o Grave: > 15 
+Escala de Rankin modificada (mRS) 
+• Avaliação funcional e prognóstica no momento da admissão e alta. 
+Janela terapêutica para trombólise 
+Terapia Critérios principais 
+Trombólise endovenosa 
+(rtPA) 
+Até 4h30 do início dos sintomas; TC sem sangramento; PAS < 185 
+mmHg; ausência de contraindicações. 
+Trombectomia 
+mecânica 
+Até 24h (casos selecionados com penumbra viável em 
+angio/perfusão TC). 
+ 
+5. PRIORIDADES 
+• TC de crânio sem contraste deve ser solicitada imediatamente, idealmente em até 20 
+minutos da chegada. 
+• Evitar exames laboratoriais desnecessários que atrasem a trombólise. 
+• Realizar ECG e glicemia capilar imediatos. 
+Guia solicitação de Exames e Imagens 
+Dr Rodrigo de Matos Santos 
+• Avaliar contra-indicações absolutas antes da trombólise. 
+• Em caso de deterioração neurológica súbita, repetir TC de crânio. 
+• Garantir registro do tempo de início dos sintomas (Last Seen Well) e tempo porta-
+TC / porta-agulha. 
+Resumo Prático: 
+Cenário Clínico Exames Laboratoriais Exames de Imagem 
+Suspeita de AVC 
+isquêmico (< 6h) 
+Glicemia, hemograma, 
+coagulograma, eletrólitos, função 
+renal 
+TC sem contraste ± 
+Angio-TC 
+Suspeita de AVC 
+hemorrágico 
+Hemograma, coagulograma, função 
+renal 
+TC sem contraste 
+(diagnóstico e volume) 
+AVC fora da janela / AIT Exames metabólicos e infecciosos 
+básicos 
+TC sem contraste ± RM 
+com difusão 
+Déficit neurológico agudo 
+sem foco definido 
+Hemograma, eletrólitos, gasometria, 
+PCR, função renal 
+TC ± TC de perfusão / 
+RM se disponível 
+Paciente com deterioração 
+/ piora súbita Lactato, gasometria, função orgânica TC de controle 
+ 
+Conclusão 
+A avaliação rápida e estruturada do paciente com déficit neurológico agudo é determinante para 
+o prognóstico funcional. A priorização da TC de crânio sem contraste e a coleta apenas dos 
+exames essenciais evitam atrasos no tratamento trombolítico. 
+✅ Diagnóstico rápido e preciso 
+✅ Menor atraso para trombólise ou trombectomia 
+✅ Uso racional de exames laboratoriais 
+✅ Melhor desfecho neurológico e prognóstico funcional 
+ 

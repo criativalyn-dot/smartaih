@@ -1,0 +1,186 @@
+Guia solicitação de Exames e Imagens  
+Dr Rodrigo de Matos Santos 
+KIT 3 – ABDOME AGUDO 
+Referências: ABRAMEDE 2024 • ATLS 10ª Edição • Ministério da Saúde – Protocolo de 
+Abdome Agudo • SBAIT • SBAD 
+Objetivo 
+Padronizar a solicitação de exames laboratoriais e de imagem nos casos de abdome agudo, 
+priorizando o raciocínio clínico, o reconhecimento precoce de causas cirúrgicas e a 
+racionalização dos recursos laboratoriais e radiológicos no pronto-socorro. 
+1. AVALIAÇÃO INICIAL – ABORDAGEM CLÍNICA 
+• Avaliar características da dor (localização, início, intensidade, irradiação, fatores de 
+melhora/piora). 
+• Identificar sinais de instabilidade hemodinâmica, peritonite, vômitos, distensão, 
+febre ou sangramento. 
+• Realizar exame físico completo do abdome (inspeção, ausculta, palpação, percussão, 
+toque retal e vaginal quando indicado). 
+• Não atrasar avaliação cirúrgica em casos de abdome agudo evidente ou instabilidade. 
+2. EXAMES LABORATORIAIS 
+Exame Indicação de Solicitação Evitar / Não Indicado 
+Hemograma 
+completo 
+Avaliar leucocitose, anemia e sangramento 
+oculto; solicitado em todos os quadros de 
+abdome agudo. 
+— 
+PCR / 
+Procalcitonina 
+Suspeita de abdome inflamatório/infeccioso 
+(apendicite, diverticulite, colecistite, 
+pielonefrite). 
+Casos de dor leve e 
+transitória sem sinais 
+sistêmicos. 
+Ureia / Creatinina / 
+Eletrólitos 
+Avaliar função renal e distúrbios 
+hidroeletrolíticos, especialmente em 
+pacientes com vômitos ou sepse. 
+Casos leves sem 
+repercussão sistêmica. 
+Amilase / Lipase Dor epigástrica, vômitos, irradiação para 
+dorso, suspeita de pancreatite. 
+Dor em outros 
+quadrantes sem suspeita 
+pancreática. 
+TGO / TGP / FA / 
+GGT / Bilirrubinas 
+Dor em hipocôndrio direito, icterícia, colúria, 
+náuseas — suspeita de colestase ou 
+hepatopatia. 
+Dor em flancos, 
+epigástrio ou hipogástrio 
+sem icterícia. 
+Urina tipo I / EAS Suspeita de ITU, pielonefrite, cálculo 
+ureteral, disúria associada. 
+Dor abdominal sem 
+sintomas urinários. 
+β-hCG (teste de 
+gravidez) 
+Toda mulher em idade fértil (descartar 
+gravidez ectópica). 
+Pós-menopausa ou 
+esterilização 
+comprovada. 
+Gasometria + 
+Lactato 
+Sinais de choque, acidose metabólica, sepse, 
+obstrução ou isquemia mesentérica. 
+Casos leves sem 
+repercussão sistêmica. 
+Função hepática 
+completa 
+Suspeita de hepatite, abscesso hepático ou 
+colestase. 
+Casos sem icterícia nem 
+alteração hepática 
+clínica. 
+ 
+Guia solicitação de Exames e Imagens  
+Dr Rodrigo de Matos Santos 
+3. EXAMES DE IMAGEM 
+Exame Indicação Evitar / Não Indicado 
+RX de abdome em 
+ortostase e decúbito 
+Suspeita de obstrução intestinal, íleo 
+paralítico, perfuração (pneumoperitônio). 
+Dor leve sem distensão, sem 
+vômitos e sem sinais de 
+obstrução. 
+RX de tórax PA/AP Pesquisa de pneumoperitônio (livre 
+subdiafragmático). 
+Quando TC abdominal for 
+disponível. 
+ 
+b) Ultrassonografia (USG / POCUS) 
+ 
+Exame Indicação Evitar / Não Indicado 
+USG de abdome 
+total 
+Primeira escolha na maioria dos casos; 
+diagnóstico de colecistite, apendicite, 
+pielonefrite, ascite, abscesso, aneurisma de 
+aorta. 
+Abdome distendido com 
+alças gasosas (dificulta 
+visualização). 
+USG pélvico 
+transvaginal 
+Mulheres em idade fértil, dor pélvica, suspeita 
+de gravidez ectópica ou cisto roto. 
+Pacientes do sexo masculino 
+ou pós-menopausa. 
+ 
+c) Tomografia Computadorizada (TC) 
+ 
+TC Indicação (Solicitar se) Evitar / Não Indicado 
+TC de abdome e 
+pelve com 
+contraste EV 
+Dor intensa ou persistente sem diagnóstico 
+definido, abdome agudo cirúrgico, pós-
+operatório com suspeita de complicação, sepse 
+abdominal. 
+Dor leve autolimitada ou 
+diagnóstico clínico 
+evidente. 
+TC sem 
+contraste 
+Avaliação de cálculo renal, obstrução urinária 
+ou contraindicação ao contraste iodado. 
+Casos infecciosos e 
+inflamatórios onde 
+contraste é essencial. 
+TC de abdome 
+em trauma 
+Avaliar lesões de órgãos sólidos e sangramento 
+intra-abdominal (FAST positivo). 
+Trauma leve sem sinais 
+abdominais. 
+4. PRIORIDADES 
+• Estabilizar hemodinamicamente antes dos exames. 
+• Evitar atrasar avaliação cirúrgica em abdome agudo evidente. 
+• USG é o exame inicial de escolha na maioria dos casos. 
+• TC é indicada apenas após avaliação clínica e conforme critérios de gravidade ou 
+incerteza diagnóstica. 
+• Evitar duplicidade de exames (RX + TC sem necessidade). 
+ 
+ 
+Resumo Prático: 
+Cenário Exames Laboratoriais Exames de Imagem 
+Apendicite / Diverticulite / 
+Colecistite 
+Hemograma, PCR, eletrólitos, 
+função renal 
+USG abdome total ± TC com 
+contraste 
+Guia solicitação de Exames e Imagens  
+Dr Rodrigo de Matos Santos 
+Cenário Exames Laboratoriais Exames de Imagem 
+Pancreatite aguda Amilase, lipase, eletrólitos, 
+função renal 
+USG abdome ± TC (48–72h 
+se grave) 
+Cólica renal / Pielonefrite EAS, creatinina, eletrólitos, 
+hemograma 
+USG rins e vias urinárias ± 
+TC sem contraste 
+Gravidez ectópica / dor 
+pélvica feminina β-hCG, hemograma USG pélvico transvaginal 
+Obstrução / perfuração / 
+abdome cirúrgico 
+Hemograma, lactato, função 
+renal 
+RX abdome e tórax ± TC 
+contrastada 
+Dor leve, sem sinais de 
+gravidade Nenhum exame inicial Nenhum exame inicial 
+ 
+Conclusão 
+A solicitação racional de exames no abdome agudo permite diagnóstico rápido e direcionado, 
+reduz a exposição desnecessária a radiação e contraste, e otimiza o tempo de decisão cirúrgica. 
+✅ Diagnóstico precoce e seguro 
+✅ Menor sobrecarga do serviço 
+✅ Melhoria no fluxo de atendimento 
+✅ Redução de custos e tempo de permanência 
+ 

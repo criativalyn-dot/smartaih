@@ -1,0 +1,172 @@
+Guia solicitação de Exames e Imagens 
+Dr Rodrigo de Matos Santos 
+KIT 7 – CRISE CONVULSIVA / ESTADO DE MAL 
+EPILÉPTICO 
+Referências: ABRAMEDE 2024 • LBE 2023 • AHA/ACLS 2020 • SBN • Ministério 
+da Saúde 
+ 
+Objetivo 
+Padronizar a solicitação de exames laboratoriais e de imagem nos casos de crise 
+convulsiva aguda ou estado de mal epiléptico (EME), garantindo investigação rápida 
+das causas desencadeantes e o uso racional dos exames no pronto-socorro. 
+ 
+1. AVALIAÇÃO INICIAL – ABORDAGEM CLÍNICA 
+• Identificar tempo e tipo da crise (tônico-clônica, focal, ausência, mioclônica, 
+atônica). 
+• Avaliar nível de consciência pós-ictal, tempo de recuperação e recorrência. 
+• Procurar causa secundária: trauma, infecção, hipoglicemia, distúrbio 
+hidroeletrolítico, intoxicação ou suspensão de anticonvulsivante. 
+• Em crise ativa > 5 minutos, iniciar protocolo de EME e estabilizar ABC. 
+• Após estabilização, seguir com exames conforme quadro clínico. 
+ 
+2. EXAMES LABORATORIAIS 
+Exame Indicação de Solicitação Evitar / Não Indicado 
+Glicemia capilar 
+imediata 
+Obrigatório em toda crise 
+convulsiva. — 
+Gasometria arterial / 
+venosa 
+Avaliar acidose láctica pós-crise, 
+hipóxia, hipercapnia. 
+Após crise isolada curta com 
+recuperação plena. 
+Eletrólitos (Na, K, 
+Ca, Mg) 
+Toda crise nova, EME ou 
+refratária; avaliação de distúrbios 
+metabólicos. 
+Casos epilépticos 
+conhecidos, compensados e 
+estáveis. 
+Ureia / Creatinina / 
+Osmolaridade 
+Avaliar função renal, intoxicação 
+por lítio, uremia, distúrbios 
+metabólicos. 
+Crise isolada leve, sem 
+comorbidades. 
+TGO / TGP / 
+Bilirrubinas 
+Suspeita de hepatopatia, 
+intoxicação, insuficiência 
+hepática. 
+Casos com causa metabólica 
+ou traumática conhecida. 
+Hemograma 
+completo 
+Suspeita de infecção sistêmica, 
+sepse, meningite, encefalite. 
+Paciente com epilepsia 
+conhecida e recuperação 
+habitual. 
+Guia solicitação de Exames e Imagens 
+Dr Rodrigo de Matos Santos 
+Exame Indicação de Solicitação Evitar / Não Indicado 
+PCR / Procalcitonina Crises associadas a febre, sepse, 
+infecção SNC. Crise isolada, sem febre. 
+Cálcio iônico / 
+Magnésio sérico 
+Convulsões refratárias, gestantes, 
+uso de diuréticos, etilismo. 
+Casos simples com 
+recuperação rápida. 
+Beta-hCG Toda mulher em idade fértil. — 
+ 
+ 
+3. EXAMES DE IMAGEM 
+a) Primeira linha 
+ 
+Exame Indicação Evitar / Não Indicado 
+TC de Crânio 
+sem contraste 
+Primeira escolha em crises focais, 
+prolongadas, com trauma, déficit focal, 
+febre, uso de anticoagulante ou primeira 
+crise. 
+Crise epiléptica típica, 
+paciente conhecido, sem 
+sinais novos. 
+RX de Tórax Paciente pós-crise com queda, trauma 
+torácico ou suspeita de aspiração. 
+Crise leve sem 
+repercussão respiratória. 
+ECG 12 
+derivações 
+Avaliar arritmias, alterações QT ou 
+distúrbios eletrolíticos associados. — 
+ 
+4. PRINCIPAIS ETIOLOGIAS E EXAMES CORRESPONDENTES 
+ 
+Causa Suspeita Exames Laboratoriais Imagem Indicada 
+Epilepsia idiopática (crise 
+habitual) 
+Nenhum adicional, monitorar 
+anticonvulsivante 
+Nenhuma ou TC se 
+alteração clínica 
+Primeira crise na vida Glicemia, eletrólitos, função 
+renal, toxicológico, beta-hCG TC crânio ± RM 
+Crise focal / prolongada / com 
+déficit 
+Gasometria, eletrólitos, função 
+hepática TC crânio ± RM 
+Crise febril / séptica Hemograma, PCR, culturas TC crânio ± PL 
+Crise metabólica (CAD, 
+hipoNa, hipoCa, hepática, 
+urêmica) 
+Gasometria, eletrólitos, função 
+renal/hepática — 
+Crise por intoxicação / 
+abstinência 
+Toxicológico, alcoolemia, 
+eletrólitos 
+TC crânio se 
+trauma associado 
+ 
+5. PRIORIDADES 
+• Controlar a crise primeiro (benzodiazepínico EV → anticonvulsivante de 
+manutenção). 
+• Realizar glicemia capilar imediata. 
+Guia solicitação de Exames e Imagens 
+Dr Rodrigo de Matos Santos 
+• Evitar atrasar TC de crânio em primeira crise, déficit focal ou uso de 
+anticoagulantes. 
+• Não solicitar exames extensos de rotina em crises típicas, autolimitadas e já 
+diagnosticadas. 
+• Considerar causas metabólicas e tóxicas como mais prevalentes em adultos e 
+idosos. 
+• Punção lombar deve ser feita apenas após exclusão de hipertensão 
+intracraniana. 
+ 
+Resumo Prático: 
+Cenário Clínico Exames Laboratoriais Exames de 
+Imagem 
+Crise única em epiléptico 
+conhecido Nenhum adicional — 
+Primeira crise Glicemia, eletrólitos, função 
+renal/hepática, toxicológico, beta-hCG 
+TC crânio ± 
+RM 
+Crise com trauma / déficit 
+focal / anticoagulado Hemograma, coagulograma, eletrólitos TC crânio sem 
+contraste 
+Crise febril / infecciosa Hemograma, PCR, culturas, eletrólitos TC crânio ± 
+PL 
+Crise metabólica / tóxica Gasometria, eletrólitos, toxicológico — 
+Estado de mal epiléptico 
+(EME) 
+Gasometria, eletrólitos, função renal, 
+lactato, anticonvulsivante sérico 
+TC crânio ± 
+EEG 
+ 
+Conclusão 
+A abordagem diagnóstica das crises convulsivas deve ser direcionada à identificação 
+da causa precipitante e prevenção de recidivas. O uso racional de exames evita 
+atrasos no tratamento e reduz custos, sem comprometer a segurança do paciente. 
+✅ Diagnóstico rápido e seguro 
+✅ Correção de causas reversíveis 
+✅ Redução de exames desnecessários 
+✅ Fluxo otimizado no pronto-socorro 
+ 

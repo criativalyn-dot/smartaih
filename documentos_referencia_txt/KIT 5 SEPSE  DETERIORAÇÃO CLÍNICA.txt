@@ -1,0 +1,173 @@
+Guia solicitação de Exames e Imagens 
+Dr Rodrigo de Matos Santos 
+KIT 5 – SEPSE / DETERIORAÇÃO CLÍNICA 
+Referências: ABRAMEDE 2024 • ILAS 2023 • Surviving Sepsis Campaign 2021 • Ministério 
+da Saúde – Protocolo Nacional de Sepse 
+Objetivo 
+Padronizar a solicitação de exames laboratoriais e de imagem em pacientes com suspeita de 
+sepse, choque séptico ou deterioração clínica aguda, garantindo o diagnóstico precoce, a 
+estratificação de gravidade e a racionalização de recursos diagnósticos no pronto-socorro. 
+1. AVALIAÇÃO INICIAL – ABORDAGEM CLÍNICA 
+• Considerar sepse em pacientes com infecção suspeita ou confirmada + disfunção 
+orgânica (SOFA ≥ 2 pontos). 
+• Identificar sinais de deterioração clínica: hipotensão, taquicardia, taquipneia, 
+rebaixamento do nível de consciência, hipoxemia ou oligúria. 
+• Realizar avaliação imediata de via aérea, ventilação e perfusão. 
+• Acionar Protocolo de Sepse e de Deterioração Clínica conforme fluxos institucionais. 
+2. EXAMES LABORATORIAIS 
+Exame Indicação de Solicitação Evitar / Não Indicado 
+Hemograma completo Todos os pacientes com suspeita de 
+infecção, sepse ou deterioração. — 
+Gasometria arterial / 
+venosa + lactato 
+Avaliação de oxigenação, acidose e 
+hipoperfusão; controle seriado a 
+cada 2–4h. 
+Casos estáveis sem sinais 
+de hipóxia ou choque. 
+Ureia / Creatinina / 
+Eletrólitos 
+Avaliar função renal e distúrbios 
+metabólicos; fundamental no cálculo 
+do SOFA. 
+Casos leves sem 
+disfunção orgânica. 
+TGO / TGP / Bilirrubinas / 
+FA / GGT 
+Avaliação de função hepática e 
+disfunção multiorgânica. 
+Casos sem repercussão 
+sistêmica. 
+Coagulograma (TP, TTPA, 
+INR, fibrinogênio, 
+plaquetas) 
+Suspeita de CIVD, disfunção 
+hepática ou sepse grave. 
+Casos leves sem alteração 
+clínica. 
+PCR / Procalcitonina 
+Diagnóstico diferencial e 
+monitoramento da resposta 
+terapêutica. 
+Casos sem suspeita 
+infecciosa. 
+Glicemia capilar Monitorização contínua da resposta 
+metabólica e uso de insulina. — 
+Urocultura, Hemoculturas 
+(2 pares) e Culturas de sítio 
+suspeito 
+Coletar antes do início do 
+antibiótico, preferencialmente de 2 
+sítios diferentes. 
+Não adiar 
+antibioticoterapia se 
+coleta inviável. 
+Albumina e Proteínas totais Avaliar estado nutricional e 
+prognóstico. 
+Casos com diagnóstico 
+infeccioso leve. 
+Troponina e BNP 
+Pacientes com disfunção miocárdica 
+séptica, choque misto ou 
+comorbidades cardíacas. 
+Casos sem instabilidade 
+hemodinâmica. 
+ 
+Guia solicitação de Exames e Imagens 
+Dr Rodrigo de Matos Santos 
+3. EXAMES DE IMAGEM 
+ 
+Exame Indicação Evitar / Não Indicado 
+RX de Tórax Suspeita de pneumonia, foco pulmonar, 
+controle de dispositivos invasivos. 
+Casos sem sintomas respiratórios 
+ou controle desnecessário. 
+USG abdominal 
+total / POCUS 
+Avaliação de coleções, obstruções, 
+abscessos, colestase, pielonefrite. 
+Casos com diagnóstico infeccioso 
+já confirmado e sem novo foco. 
+USG cardíaco 
+(POCUS) 
+Avaliação de função ventricular, 
+tamponamento, hipovolemia e resposta 
+volêmica. 
+Casos sem instabilidade 
+hemodinâmica. 
+ 
+b) Segunda linha (complementar) 
+ 
+Exame Indicação (Solicitar se) Evitar / Não Indicado 
+TC de tórax / abdome 
+/ pelve com contraste 
+Suspeita de foco infeccioso oculto, 
+abscesso, perfuração, coleções ou sepse sem 
+foco definido. 
+Casos leves, diagnóstico 
+clínico evidente. 
+TC de crânio sem 
+contraste 
+Alteração neurológica aguda, rebaixamento 
+inexplicado do nível de consciência. 
+Sem déficit focal ou 
+alterações neurológicas. 
+ 
+4. ESCORES DE APOIO À DECISÃO 
+qSOFA (avaliação rápida de sepse) 
+Critério Pontos 
+FR ≥ 22 irpm 1 
+PAS ≤ 100 mmHg 1 
+Alteração do nível de consciência (Glasgow < 15) 1 
+ 
+qSOFA ≥ 2 → suspeitar de sepse e iniciar protocolo imediatamente. 
+SOFA (Sequential Organ Failure Assessment) 
+• Inclui: PaO₂/FiO₂, plaquetas, bilirrubinas, PAM ou DVA, Glasgow, creatinina ou débito 
+urinário. 
+• SOFA ≥ 2 → confirma disfunção orgânica relacionada à infecção. 
+5. PRIORIDADES 
+• Iniciar coleta de exames e culturas antes do antibiótico, sem atrasar início da 
+antibioticoterapia. 
+• Repetir lactato em 2–4 horas para avaliar resposta ao tratamento. 
+• Aplicar escores (qSOFA / SOFA) para monitoramento contínuo. 
+• Priorizar USG e RX como exames iniciais para foco infeccioso. 
+• Solicitar TC com contraste apenas após estabilização hemodinâmica. 
+• Registrar e reavaliar todos os parâmetros clínicos a cada 30–60 minutos em deterioração 
+clínica ativa. 
+Guia solicitação de Exames e Imagens 
+Dr Rodrigo de Matos Santos 
+Resumo Prático: 
+Cenário Clínico Exames Laboratoriais Exames de Imagem 
+Sepse pulmonar / 
+pneumonia 
+Hemograma, PCR, gasometria, lactato, 
+eletrólitos, culturas 
+RX Tórax ± USG 
+pulmonar 
+Sepse abdominal / foco 
+indeterminado 
+Hemograma, função renal e hepática, 
+lactato, culturas 
+USG abdome ± TC 
+contrastada 
+Sepse urinária / urológica EAS, urocultura, creatinina, hemograma USG rins e vias 
+urinárias 
+Choque séptico / 
+deterioração grave 
+Gasometria seriada, lactato, SOFA, 
+culturas, função orgânica completa 
+USG cardíaco e 
+abdominal ± TC 
+Infecção leve / estável Hemograma, PCR, urocultura se indicado Nenhum exame 
+adicional inicial 
+ 
+ 
+Conclusão 
+A abordagem laboratorial e de imagem na sepse deve ser rápida, dirigida e baseada em 
+critérios clínicos de gravidade. O diagnóstico precoce e a coleta adequada de exames reduzem 
+mortalidade e tempo de internação. 
+✅ Diagnóstico rápido e dirigido 
+✅ Detecção precoce da disfunção orgânica 
+✅ Uso racional de exames e contrastes 
+✅ Melhor desfecho clínico e prognóstico 
+ 
