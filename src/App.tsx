@@ -446,12 +446,12 @@ Retorne EXATAMENTE no seguinte formato JSON:
                 <label className="block text-sm font-bold text-gray-700 mb-3 tracking-wide flex items-center gap-2">
                   <Stethoscope className="w-4 h-4 text-blue-500" /> Justificativa Clínica (Sinais, Sintomas, Exames)
                 </label>
-                <div className="mb-6">
+                <div className="mb-6 break-inside-avoid-page print:break-inside-avoid">
                   <textarea
                     rows={5}
                     value={clinicalText}
                     onChange={(e) => setClinicalText(e.target.value)}
-                    className="block w-full p-5 border-2 border-transparent bg-gray-50 rounded-2xl leading-relaxed placeholder-gray-400 focus:outline-none focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all text-gray-800 text-lg resize-none shadow-inner"
+                    className="block w-full p-5 border-2 border-transparent bg-gray-50 rounded-2xl leading-relaxed placeholder-gray-400 focus:outline-none focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all text-gray-800 text-lg resize-none shadow-inner print:border print:border-gray-200 print:bg-white"
                     placeholder="Cole ou digite aqui o quadro clínico (Ex: Paciente admitido no PS com febre, dor em fossa ilíaca direita intensa...)"
                   />
                 </div>
@@ -664,17 +664,17 @@ Retorne EXATAMENTE no seguinte formato JSON:
 
                   {/* Resposta do Manchester Rendering */}
                   {res.classificacaoManchester && (
-                    <div className={`mb-6 rounded-2xl overflow-hidden shadow-sm border-2 ${manchesterBorder} relative print:border-black print:border`}>
-                      <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none print:hidden"></div>
-                      <div className={`px-6 md:px-8 py-5 flex flex-col md:flex-row md:items-center gap-5 ${manchesterBg} print:bg-white`}>
-                        <div className="flex-shrink-0 flex items-center gap-3 bg-white/20 p-3 rounded-2xl backdrop-blur-sm print:bg-gray-100 print:text-black">
-                          <Activity className={`w-8 h-8 ${manchesterText} print:text-black`} />
+                    <div className={`mb-6 rounded-2xl overflow-hidden shadow-sm border-2 ${manchesterBorder} relative break-inside-avoid-page print:break-inside-avoid`}>
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
+                      <div className={`px-6 md:px-8 py-5 flex flex-col md:flex-row md:items-center gap-5 ${manchesterBg}`}>
+                        <div className="flex-shrink-0 flex items-center gap-3 bg-white/20 p-3 rounded-2xl backdrop-blur-sm">
+                          <Activity className={`w-8 h-8 ${manchesterText}`} />
                         </div>
                         <div className="flex-1">
-                          <h3 className={`font-black text-xl uppercase tracking-widest ${manchesterText} print:text-black mb-1 drop-shadow-sm print:drop-shadow-none`}>
+                          <h3 className={`font-black text-xl uppercase tracking-widest ${manchesterText} mb-1 drop-shadow-sm`}>
                             TRIAGEM: {res.classificacaoManchester.cor}
                           </h3>
-                          <div className={`text-sm md:text-base font-medium opacity-95 leading-relaxed ${manchesterText} print:text-black`}>
+                          <div className={`text-sm md:text-base font-medium opacity-95 leading-relaxed ${manchesterText}`}>
                             {res.classificacaoManchester.justificativa}
                           </div>
                         </div>
