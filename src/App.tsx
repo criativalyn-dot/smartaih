@@ -629,11 +629,11 @@ Retorne EXATAMENTE no seguinte formato JSON:
               let manchesterBorder = 'border-gray-200';
               const corLower = res.classificacaoManchester?.cor?.toLowerCase() || '';
 
-              if (corLower.includes('vermelho')) { manchesterBg = 'bg-red-600'; manchesterText = 'text-white'; manchesterBorder = 'border-red-700'; }
-              else if (corLower.includes('laranja')) { manchesterBg = 'bg-orange-500'; manchesterText = 'text-white'; manchesterBorder = 'border-orange-600'; }
+              if (corLower.includes('vermelho')) { manchesterBg = 'bg-red-600'; manchesterText = 'text-gray-900'; manchesterBorder = 'border-red-700'; }
+              else if (corLower.includes('laranja')) { manchesterBg = 'bg-orange-500'; manchesterText = 'text-gray-900'; manchesterBorder = 'border-orange-600'; }
               else if (corLower.includes('amarelo')) { manchesterBg = 'bg-yellow-400'; manchesterText = 'text-gray-900'; manchesterBorder = 'border-yellow-500'; }
-              else if (corLower.includes('verde')) { manchesterBg = 'bg-green-500'; manchesterText = 'text-white'; manchesterBorder = 'border-green-600'; }
-              else if (corLower.includes('azul')) { manchesterBg = 'bg-blue-500'; manchesterText = 'text-white'; manchesterBorder = 'border-blue-600'; }
+              else if (corLower.includes('verde')) { manchesterBg = 'bg-green-500'; manchesterText = 'text-gray-900'; manchesterBorder = 'border-green-600'; }
+              else if (corLower.includes('azul')) { manchesterBg = 'bg-blue-500'; manchesterText = 'text-gray-900'; manchesterBorder = 'border-blue-600'; }
 
               return (
                 <div key={index} className="animate-in fade-in slide-in-from-bottom-4 duration-500">
