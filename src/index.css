@@ -6,6 +6,18 @@
   html {
     font-family: 'Inter', system-ui, sans-serif;
   }
+
+  @media print {
+    @page {
+      size: auto;
+      margin: 10mm;
+    }
+
+    body {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+  }
 }
 
 body {

@@ -1,11 +1,37 @@
 import { useState } from 'react'
-import { Search, Activity, Stethoscope, AlertTriangle, CheckCircle2, Key, ChevronRight } from 'lucide-react'
-import { MOCK_DATABASE } from './data/mockDatabase'
-import type { SigtapProcedure, CidSigtapRelation } from './data/mockDatabase'
-import { CURATED_SIGTAP_PROCEDURES } from './data/sigtapReferencia'
-import { PROTOCOLOS_CLINICOS_REFERENCIA } from './data/protocolosReferencia'
+import { Search, Activity, Stethoscope, AlertTriangle, CheckCircle2, Key, ChevronRight, Eye, Bed, Scissors } from 'lucide-react'
+import sigtapDatabase from './data/sigtap_database.json'
+import type { CidSigtapRelation, SigtapProcedure } from './data/mockDatabase' // Keeping types for now, though we might need to adjust them if JSON changes
 import { PROTOCOLO_MANCHESTER_REFERENCIA } from './data/manchesterReferencia'
 import { GoogleGenAI } from '@google/genai';
+
+// Helper para o calculo exato de idade (Anos, Meses ou Dias) usado no prompt e no Header do PDF
+const calcularIdadeExata = (dataString: string) => {
+  if (!dataString) return 'Idade não informada';
+  const hoje = new Date();
+  const nasc = new Date(dataString);
+  let anos = hoje.getFullYear() - nasc.getFullYear();
+  let meses = hoje.getMonth() - nasc.getMonth();
+  let dias = hoje.getDate() - nasc.getDate();
+
+  if (dias < 0) {
+    meses--;
+    const ultimoDiaMesAnterior = new Date(hoje.getFullYear(), hoje.getMonth(), 0).getDate();
+    dias += ultimoDiaMesAnterior;
+  }
+  if (meses < 0) {
+    anos--;
+    meses += 12;
+  }
+
+  if (anos > 0) {
+    return `${anos} anos${meses > 0 ? ` e ${meses} meses` : ''}`;
+  } else if (meses > 0) {
+    return `${meses} meses${dias > 0 ? ` e ${dias} dias` : ''}`;
+  } else {
+    return `${dias} dias de vida`;
+  }
+};
 
 function App() {
   const [apiKey, setApiKey] = useState('')
@@ -17,9 +43,11 @@ function App() {
   const [isShowingSuggestions, setIsShowingSuggestions] = useState(false)
 
   // Tab 2 State
+  const [patientName, setPatientName] = useState('')
+  const [medicalRecord, setMedicalRecord] = useState('')
   const [clinicalText, setClinicalText] = useState('')
   const [historicoPaciente, setHistoricoPaciente] = useState({
-    idade: '',
+    dataNascimento: '',
     comorbidades: '',
     alergias: '',
     medicamentos: ''
@@ -29,6 +57,7 @@ function App() {
     peso: '', altura: '', bcf: '', alturaUterina: '', glasgow: '', dor: ''
   })
   const [isLoadingAi, setIsLoadingAi] = useState(false)
+  const [tipoAtendimento, setTipoAtendimento] = useState<'observacao' | 'internacao' | 'cirurgia'>('internacao')
 
   // Results State
   const [results, setResults] = useState<{
@@ -37,8 +66,9 @@ function App() {
     cidsSecundarios?: { cid: string; nome: string }[];
     examesSugeridos?: string[];
     classificacaoManchester?: { cor: string; justificativa: string };
+    procedimentosTags: string[];
     procedimentos: SigtapProcedure[];
-  }>({ cidSelecionado: null, nomeCid: null, procedimentos: [] })
+  }>({ cidSelecionado: null, nomeCid: null, procedimentosTags: [], procedimentos: [] })
 
   const [aiResults, setAiResults] = useState<{
     cidSelecionado: string | null;
@@ -46,6 +76,7 @@ function App() {
     cidsSecundarios?: { cid: string; nome: string }[];
     examesSugeridos?: string[];
     classificacaoManchester?: { cor: string; justificativa: string };
+    procedimentosTags: string[];
     procedimentos: SigtapProcedure[];
   }[]>([])
 
@@ -55,22 +86,29 @@ function App() {
     if (query.trim().length === 0) {
       setSuggestions([]);
       setIsShowingSuggestions(false);
-      setResults({ cidSelecionado: null, nomeCid: null, procedimentos: [] });
+      setResults({ cidSelecionado: null, nomeCid: null, procedimentosTags: [], procedimentos: [] });
       return;
     }
 
     const lowerQuery = query.toLowerCase();
 
-    // Filtra CIDs que COMECEM com o código digitado OU contenham no NOME a palavra digitada
-    const filtered = MOCK_DATABASE.filter(item => {
-      const isCidMatch = item.cid.toLowerCase().startsWith(lowerQuery);
-      const isNameMatch = item.cidNome.toLowerCase().includes(lowerQuery);
-      return isCidMatch || isNameMatch;
+    // Filtra CIDs que COMECEM com o código digitado OU contenham no NOME a palavra digitada na base falsa/legada (se precisarmos de autocomplete real de ICD10, mudar isso depois)
+    // Usando temporariamente um mapa extraido do JSON SIGTAP se não houver um banco CID puro
+    const allCidsFromSigtap: Record<string, string> = {};
+    sigtapDatabase.forEach(proc => {
+      if (proc.defaultCid) allCidsFromSigtap[proc.defaultCid] = "Doença relacionada a " + proc.nome;
     });
 
-    setSuggestions(filtered);
+    // Mock simples de autocomplete baseado nos defaultCids do JSON para não quebrar a UI
+    const mockAutocomplete: CidSigtapRelation[] = Object.keys(allCidsFromSigtap).map(cid => ({
+      cid,
+      cidNome: allCidsFromSigtap[cid],
+      procedimentos: []
+    })).filter(item => item.cid.toLowerCase().startsWith(lowerQuery));
+
+    setSuggestions(mockAutocomplete);
     setIsShowingSuggestions(true);
-    setResults({ cidSelecionado: null, nomeCid: null, procedimentos: [] });
+    setResults({ cidSelecionado: null, nomeCid: null, procedimentosTags: [], procedimentos: [] });
     setAiResults([]);
   }
 
@@ -80,7 +118,8 @@ function App() {
     setResults({
       cidSelecionado: cidItem.cid,
       nomeCid: cidItem.cidNome,
-      procedimentos: cidItem.procedimentos
+      procedimentosTags: [],
+      procedimentos: cidItem.procedimentos || []
     });
     setAiResults([]); // Limpa resultados da IA se havia
   }
@@ -89,130 +128,174 @@ function App() {
     if (!clinicalText.trim() || !apiKey) return;
 
     setIsLoadingAi(true);
-    setResults({ cidSelecionado: null, nomeCid: null, procedimentos: [] });
+    setResults({ cidSelecionado: null, nomeCid: null, procedimentosTags: [], procedimentos: [] });
     setAiResults([]);
 
     try {
+      const idadeCalculada = calcularIdadeExata(historicoPaciente.dataNascimento);
       const ai = new GoogleGenAI({ apiKey });
+      const tagsDisponiveis = sigtapDatabase.flatMap(proc => proc.tagsClinicas).join(', ');
 
-      const prompt = `Você é um médico auditor do SUS e especialista em auditoria clínica hospitalar sênior, com conhecimento profundo e avançado em semiologia, fisiopatologia, codificação clínica e regras de faturamento do SIGTAP (Datasus).
-Sua missão é a MÁXIMA PRECISÃO DIAGNÓSTICA baseada em CRITÉRIO MÉDICO AVANÇADO e EXTREMA RIGIDEZ nas regras de compatibilidade do SIGTAP.
+      let orientacaoTipo = "";
+      if (tipoAtendimento === 'observacao') {
+        orientacaoTipo = "ATENÇÃO MÁXIMA: O MÉDICO INDICOU QUE O PACIENTE FICARÁ APENAS EM OBSERVAÇÃO/CONSULTA. VOCÊ DEVE OBRIGATORIAMENTE ESCOLHER TAGS DE CONSULTA/OBSERVAÇÃO (Ex: OBSERVACAO_CLINICA). É ESTRITAMENTE PROIBIDO USAR TAGS DE INTERNAÇÃO OU CIRURGIA. \n\nREGRA OURO MANCHESTER PARA OBSERVAÇÃO: Pacientes puramente em observação, sem sinais vitais alterados, DEVEM ter a base da Classificação de Risco como VERDE (Pouco Urgente) ou AZUL (Não Urgente), pois não necessitam de intervenção hospitalar aguda imediata.";
+      } else if (tipoAtendimento === 'cirurgia') {
+        orientacaoTipo = "ATENÇÃO MÁXIMA: O MÉDICO INDICOU QUE O PACIENTE FARÁ CIRURGIA. VOCÊ DEVE OBRIGATORIAMENTE ESCOLHER TAGS CIRÚRGICAS (EX: DRENAGEM_ABSCESSO_PELE, CESAREANA) E NÃO APENAS CLÍNICAS. \n\nREGRA OURO MANCHESTER PARA CIRURGIA: A indicação cirúrgica imediata ou de urgência eleva automaticamente o Risco. A base da Classificação de Risco DEVE ser no mínimo AMARELO (Urgente), podendo ser LARANJA (Muito Urgente) ou VERMELHO (Emergência) se os sinais vitais estiverem comprometidos.";
+      } else {
+        orientacaoTipo = "ATENÇÃO MÁXIMA: O MÉDICO INDICOU INTERNAÇÃO CLÍNICA/TRATAMENTO. VOCÊ DEVE ESCOLHER AS TAGS DE INTERNAÇÃO. PROIBIDO USAR TAGS CIRÚRGICAS OU DE MERA OBSERVAÇÃO. \n\nREGRA OURO MANCHESTER PARA INTERNAÇÃO CLINICA: A necessidade de internação para suporte ou antibioticoterapia eleva o risco. A base da Classificação de Risco DEVE ser no mínimo AMARELO (Urgente), podendo escalar para Laranja/Vermelho se os sinais vitais exigirem suporte de vida imediato.";
+      }
 
-Atue RIGOROSAMENTE e de forma EXTENSIVA a TODOS os sistemas do corpo humano e TODOS os CIDs-10 existentes.
+      // --- PASSO 1: Descobrir o Tratamento/Procedimento Ideal ---
+      const promptStep1 = `Você é um médico auditor do SUS e especialista clínico.
+Sua missão é a MÁXIMA PRECISÃO DIAGNÓSTICA baseada em CRITÉRIO MÉDICO AVANÇADO.
+
 Analise detalhadamente o quadro clínico abaixo (sinais, sintomas, exames laboratoriais e de imagem).
-Liste os CIDs-10 MAIS PROVÁVEIS (diagnósticos diferenciais) que sejam perfeitamente CONGRUENTES com a justificativa apresentada.
-Liste APENAS as opções que tenham probabilidade clínica altíssima e sustentada pela literatura médica atual (entre 1 a no máximo 4 opções). Se o quadro for muito claro para uma suspeita específica, liste apenas as variações daquela doença.
+${orientacaoTipo}
 
-Para cada CID listado, você DEVE encontrar o procedimento principal do SIGTAP para o tratamento.
-MUITO IMPORTANTE - OBRIGATÓRIO SEGUIR A LÓGICA OFICIAL DA TABELA SIGTAP:
-ATENÇÃO: VOCÊ DEVE INVESTIGAR E CONSIDERAR TODOS OS GRUPOS DO SIGTAP DISPONÍVEIS (DO 01 AO 09), SEUS RESPECTIVOS SUB-GRUPOS E FORMAS DE ORGANIZAÇÃO.
-1. Identifique o GRUPO (Pode ser qualquer um dos 9 grupos: 01, 02, 03, 04, 05, 06, 07, 08 ou 09).
-2. Identifique o SUB-GRUPO compatível dentro do grupo escolhido.
-3. Identifique a FORMA DE ORGANIZAÇÃO compatível.
-4. Identifique o CÓDIGO DO PROCEDIMENTO exato (formato GG.SS.FF.PPP-D).
-5. REGRA DE COMPATIBILIDADE E FATURAMENTO (A MAIS IMPORTANTE DE TODAS): O procedimento escolhido DEVE OBRIGATORIAMENTE ter o "CID Principal" (cidSelecionado) sugerido na sua lista oficial de CIDs compatíveis da Tabela SIGTAP.
-5.1. FATURAMENTO SOBREPÕE A CLÍNICA: Se o "CID Clínico" que motivou o caso (ex: O34.2 - Cicatriz uterina) NÃO possuir compatibilidade oficial de faturamento com o procedimento necessário (ex: 04.11.01.004-2 Parto Cesariano c/ Laqueadura), VOCÊ NÃO PODE usá-lo como CID Principal. Você DEVE escolher um CID que SEJA compatível e autorize o faturamento (ex: Z30.2, O82.0, O24.4, etc - desde que aplicável ao caso) como "cidSelecionado", e mover o CID puramente clínico (O34.2) para o array de "cidsSecundarios". JAMAIS sugira um pacote onde o CID Principal rejeita o Procedimento no SUS.
-6. NOME EXATO DO PROCEDIMENTO (LEI ABSOLUTA PARA TODOS OS 9 GRUPOS): Você NUNCA, SOB HIPÓTESE ALGUMA, deve inventar ou alterar o nome de um procedimento juntando o código oficial com o nome da doença, órgão afetado ou sintoma. O nome retornado DEVE ser a nomenclatura oficial, seca e exata da tabela SIGTAP, sem adornos. A sua validação de "compatibilidade" deve ser rigorosa, garantindo que o CID real da doença exista na aba de CIDs compatíveis daquele procedimento EXATO.
-7. OBRIGATÓRIO MULTIDISCIPLINAR (CÓDIGOS COMPLEMENTARES): Nunca retorne apenas 1 procedimento se o quadro clínico for complexo (ex: urgências, traumas, psiquiatria severa, UTI). Você é OBRIGADO a vasculhar os 9 Grupos e retornar também os Procedimentos Complementares obrigatórios para aquele caso. Exemplos:
-- Se internar em Psiquiatria (Grupo 03), inclua também códigos do Grupo 09 (Atenção Psicossocial).
-- Se tiver trauma sangrante, inclua as suturas (Grupo 04) + Vacina antitetânica ou Imunoglobulina (Grupo 06 - Medicamentos).
-- Se for emergência grave, considere Diárias de UTI (Grupo 08) ou Exames Diagnósticos essenciais (Grupo 02) que justificam a internação.
+1. **A REGRA DE OURO - TAGS CLÍNICAS (MUITO IMPORTANTE):**
+Você ESTÁ PROIBIDO de inventar códigos SIGTAP. Ao invés disso, você DEVE retornar APENAS UMA ÚNICA tag de string ("Tags Clínicas") que representa a intenção principal do procedimento/tratamento a ser faturado nesta AIH.
+As ÚNICAS Tags Clínicas que você PODE escolher (Obrigatório escolher UMA que corresponda ao Quadro Clínico E ao TIPO DE ATENDIMENTO selecionado pelo médico) são:
 
-8. TRADUÇÃO DE ABREVIAÇÕES MÉDICAS: O quadro clínico pode conter abreviações médicas comuns em prontuários (ex: G2P1C1 = Gesta 2, Para 1, Cesárea 1; DMG = Diabetes Mellitus Gestacional; HAS = Hipertensão Arterial Sistêmica; DPNI = Descolamento Prematuro de Placenta, etc). Traduza e compreenda TODAS as abreviações de todas as especialidades antes de sugerir o CID.
-9. PLANEJAMENTO FAMILIAR E ESTERILIZAÇÃO: Se a justificativa citar "planejamento familiar", "laqueadura", "vasectomia" ou "esterilização cirúrgica", você DEVE obrigatoriamente incluir o CID-10 Z30.2 (Esterilização) como um dos CIDs (seja principal ou secundário) e sugerir o procedimento SIGTAP correspondente para a laqueadura ou vasectomia (ex: 04.11.01.004-2 PARTO CESARIANO C/ LAQUEADURA TUBARIA ou 04.09.06.014-3 LAQUEADURA TUBARIA).
-10. CIDS SECUNDÁRIOS E COMORBIDADES (JUSTIFICATIVA CLÍNICA LIVRE): Diferente do "CID Principal" que DEVE obrigatoriamente cruzar com a regra de faturamento do procedimento SIGTAP, os CIDs que você enviar para a lista "cidsSecundarios" NÃO PRECISAM ser compatíveis com o procedimento na tabela. Eles servem exclusivamente para justificar a gravidade, a necessidade de internação ou a complexidade clínica do caso. Exemplo: Se o paciente internar por Pneumonia (onde o Procedimento exige CID Principal de Pneumonia), mas ele possui Asma (que agravou o quadro e exigiu hospitalização), a Asma deve constar como CID Secundário para embasar clinicamente a decisão do médico assistente, mesmo que a Asma não esteja na lista de CIDs oficiais daquele procedimento. Portanto, liste todas as comorbidades ativas relevantes no array "cidsSecundarios".
-10. IGNORAR HISTÓRICO RESOLVIDO: Preste muita atenção ao tempo verbal e a palavras como "tratada" ou "cicatriz sorológica". Doenças ou condições passadas não ativas (ex: "Sífilis tratada", "apendicectomia prévia") NÃO devem constar como CIDs Ativos.
-11. FOCO OBRIGATÓRIO EM PROCEDIMENTOS HOSPITALARES (AIH): O objetivo central desta auditoria é faturar as Internações e Cirurgias. Se o quadro descreve gestação, irregularidade menstrual que requeira intervenção, candidíase de repetição, fraturas, tumores ou urgências... VOCÊ É EXTREMAMENTE PROIBIDO de devolver apenas "03.01.01.007-2 Consulta Médica em Atenção Especializada". Você DEVE caçar o procedimento raiz de tratamento na Tabela (ex: curetagem, parto, tratamento de transtornos endócrinos, laqueadura, ressecção, etc.). Se não for cirúrgico, busque "Tratamento de [Doença]" no Grupo 03 (ex: "Tratamento de Doenças Bacterianas", "Tratamento de Transtornos Infecciosos", "Tratamento de Intercorrências da Gestação"). Só use "Consulta Médica" se o paciente estiver puramente relatando dor crônica de nível 0-2 (Azul).
+[ LISTA OBRIGATÓRIA DE TAGS PERMITIDAS ]: ${tagsDisponiveis}
 
-Abaixo está uma lista de referência rápida com alguns procedimentos REAIS do SIGTAP (use-os prioritariamente se aplicável ao caso):
-${CURATED_SIGTAP_PROCEDURES}
+Se o caso for, por exemplo, um Abcesso Celulite Furúnculo (CID L02 ou L03) e o médico pediu "Cirurgia", retorne "DRENAGEM_ABSCESSO_PELE".
+Se o médico pediu "Internação Clínica" para Abcesso Celulite Furúnculo, retorne "INTERNACAO_DERMATOLOGIA".
+A sua escolha DEVE estar EXATAMENTE ESCRITA na lista acima. Não mude uma letra.
 
-E MUITO IMPORTANTE: Abaixo estão as Diretrizes de Protocolos de Exames de Referência do Hospital.
-12. EXAMES SUGERIDOS: Baseado NESTAS diretrizes abaixo e cruzando com o quadro clínico e os CIDs prováveis, retorne uma lista com os Nomes Completos dos Exames de Imagem e Laboratório que OBRIGATORIAMENTE deveriam ser solicitados para fechar, monitorar ou descartar esse diagnóstico no Pronto-Socorro. Não abrevie o nome do exame na resposta.
-DIRETRIZES DE EXAMES PARA REFERÊNCIA:
-${PROTOCOLOS_CLINICOS_REFERENCIA}
+2. CIDS SECUNDÁRIOS E COMORBIDADES: Liste todas as comorbidades ativas e secundárias relevantes no array "cidsSecundarios". Exija prioridade absoluta nas comorbidades não-compensadas encontradas pela varredura laboratorial.
 
-13. CLASSIFICAÇÃO DE RISCO DE MANCHESTER: Avalie todos os Sinais Vitais fornecidos e o Quadro Clínico detalhado e determine a Cor da Classificação de Risco (Vermelho, Laranja, Amarelo, Verde, Azul) de acordo com o Protocolo de Manchester. Forneça uma justificativa clínica robusta defendendo a cor escolhida.
-DIRETRIZES DE MANCHESTER PARA REFERÊNCIA:
+3. CLASSIFICAÇÃO DE RISCO DE MANCHESTER: Avalie todos os Sinais Vitais fornecidos, os RESULTADOS LABORATORIAIS e o Quadro Clínico para determinar a Cor.
+DIRETRIZES DE MANCHESTER:
 ${PROTOCOLO_MANCHESTER_REFERENCIA}
 
-Caso não use a lista de referência acima, vasculhe sua base de conhecimento para encontrar o código SIGTAP real, grupo, sub-grupo, e forma de organização, garantindo a compatibilidade CID x Procedimento.
+4. EXAMES SUGERIDOS: Retorne uma lista com os Nomes Completos dos Exames de Imagem e Laboratório adicionais necessários.
 
 Quadro Clínico e Motivo da Consulta:
 "${clinicalText}"
 
-Histórico do Paciente:
-Idade: ${historicoPaciente.idade || 'Não informada'}
+Histórico do Paciente e Exames Criptografados no Texto:
+Idade Exata Calculada: ${idadeCalculada}
 Comorbidades/Doenças Crônicas: ${historicoPaciente.comorbidades || 'Não informadas'}
-Alergias: ${historicoPaciente.alergias || 'Não informadas'}
-Medicamentos em uso contínuo: ${historicoPaciente.medicamentos || 'Não informados'}
 
 Sinais Vitais Registrados na Triagem:
-PA: ${sinaisVitais.pa || 'Não preenchido'} | FC: ${sinaisVitais.fc || 'Não preenchido'} bpm | FR: ${sinaisVitais.fr || 'Não preenchido'} irpm
-Temp: ${sinaisVitais.temp || 'Não preenchido'} °C | SpO2: ${sinaisVitais.spo2 || 'Não preenchido'} % | HGT: ${sinaisVitais.hgt || 'Não preenchido'}
-Peso: ${sinaisVitais.peso || 'Não preenchido'} kg | Altura: ${sinaisVitais.altura || 'Não preenchido'} m
-BCF: ${sinaisVitais.bcf || 'Não preenchido'} bpm | Altura Uterina: ${sinaisVitais.alturaUterina || 'Não preenchido'} cm
-Glasgow: ${sinaisVitais.glasgow || 'Não preenchido'} | Escala de Dor (0-10): ${sinaisVitais.dor || 'Não preenchido'}
+PA: ${sinaisVitais.pa || '-'} | FC: ${sinaisVitais.fc || '-'} | SpO2: ${sinaisVitais.spo2 || '-'}
+Temp: ${sinaisVitais.temp || '-'}
 
-Retorne o resultado EXATAMENTE no seguinte formato JSON (array de objetos):
-[
-  {
-    "cidSelecionado": "CÓDIGO_DO_CID_PRINCIPAL (Ex: O34.2)",
-    "nomeCid": "Nome descritivo do CID Principal (Ex: Assistência prestada à mãe por cicatriz uterina devida a cirurgia anterior)",
-    "cidsSecundarios": [
-      { "cid": "CÓDIGO_SECUNDARIO", "nome": "Nome do CID secundário/comorbidade (Ex: O24.4 Diabetes mellitus gestacional)" },
-      { "cid": "Z30.2", "nome": "Esterilização (Se aplicável)" }
-    ],
-    "examesSugeridos": [
-      "Nome Completo do Exame de Imagem ou Laboratório 1",
-      "Nome Completo do Exame 2"
-    ],
-    "classificacaoManchester": {
-      "cor": "Vermelho, Laranja, Amarelo, Verde ou Azul",
-      "justificativa": "Sua justificativa clínica detalhada explicando o porquê desta cor baseado nos sinais vitais e quadro clínico informados."
-    },
-    "procedimentos": [
-      {
-        "codigo": "CÓDIGO_SIGTAP (Ex: 04.11.01.004-2)",
-        "nome": "NOME EXATO DO PROCEDIMENTO SIGTAP COMPATÍVEL",
-        "grupo": "Ex: 04 - Procedimentos Cirúrgicos",
-        "subGrupo": "Ex: 11 - Cirurgia obstétrica",
-        "formaOrganizacao": "Ex: 01 - Partos e outros procedimentos obstétricos",
-        "complexidade": "Média Complexidade ou Alta Complexidade"
-      }
-    ]
+**ATENÇÃO:** NESTE PASSO, NÃO ENVIE O CID PRINCIPAL. APENAS A TAG E DETALHES CLÍNICOS SECUNDÁRIOS.
+
+Retorne EXATAMENTE no seguinte formato JSON:
+{
+  "procedimentoTagPrincipal": "UMA_DAS_TAGS_DA_LISTA_PERMITIDA_ACIMA",
+  "cidsSecundarios": [
+    { "cid": "CÓDIGO_SECUNDARIO", "nome": "Nome" }
+  ],
+  "examesSugeridos": [
+    "Nome Completo do Exame 1"
+  ],
+  "classificacaoManchester": {
+    "cor": "Vermelho, Laranja, Amarelo, Verde ou Azul",
+    "justificativa": "Justificativa..."
   }
-]
+}
 `;
 
-      const response = await ai.models.generateContent({
+      const responseStep1 = await ai.models.generateContent({
         model: 'gemini-2.5-flash',
-        contents: prompt,
+        contents: promptStep1,
         config: {
           responseMimeType: "application/json",
-          temperature: 0.1, // Reduz drasticamente a "criatividade" para forçar precisão clínica
+          temperature: 0.1,
         }
       });
 
-      if (response.text) {
-        // Remove blocos de markdown ```json e ``` para evitar crash no parse
-        const cleanText = response.text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-
-        try {
-          const parsedResults = JSON.parse(cleanText);
-          if (Array.isArray(parsedResults) && parsedResults.length > 0) {
-            setAiResults(parsedResults);
-          } else {
-            alert("A IA analisou, mas não encontrou resultados compatíveis ou não retornou no formato correto.");
-          }
-        } catch (parseError) {
-          console.error("Erro ao fazer parse do JSON:", parseError, response.text);
-          alert("A IA retornou um texto que não pôde ser interpretado pelo sistema. Tente novamente.");
-        }
+      if (!responseStep1.text) {
+        throw new Error("IA não retornou resposta no Passo 1.");
       }
+
+      const cleanTextStep1 = responseStep1.text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      const resultStep1 = JSON.parse(cleanTextStep1);
+
+      const tagEscolhida = resultStep1.procedimentoTagPrincipal;
+      if (!tagEscolhida) throw new Error("IA não conseguiu definir uma Tag Clínica correspondente.");
+
+      // Encontrar o procedimento no banco de dados para extrair CIDs permitidos
+      const foundProc = sigtapDatabase.find(p => p.tagsClinicas.includes(tagEscolhida));
+
+      if (!foundProc) {
+        throw new Error(`A Tag escolhida pela IA (${tagEscolhida}) não existe no banco de dados SIGTAP.`);
+      }
+
+      const cidsPermitidosString = foundProc.cidsPermitidos && foundProc.cidsPermitidos.length > 0
+        ? foundProc.cidsPermitidos.join(', ')
+        : "Qualquer CID é permitido para este procedimento.";
+
+      // --- PASSO 2: Definir CID Principal Estrito ---
+      const promptStep2 = `Você analisou o caso clínico anteriormente e escolheu a seguinte Tag de Procedimento SUS para internar o paciente: ${tagEscolhida} (${foundProc.nome}).
+
+AGORA, SUA MISSÃO É DEFINIR O CID PRINCIPAL COM BASE **ESTRITAMENTE** NAS REGRAS DO SUS.
+Para o procedimento escolhido, o Sistema de Faturamento do SUS SÓ ACEITA OS SEGUINTES CIDS PRINCIPAIS:
+[ ${cidsPermitidosString} ]
+
+**INSTRUÇÃO SUPREMA:** 
+Você está PROIBIDO de sugerir qualquer CID Principal que não esteja exata e literalmente escrito na lista acima.
+Se o CID ideal que você pensou (ex: E16.2 para Hipoglicemia) NÃO ESTÁ na lista, você DEVE procurar o CID mais próximo que ESTÁ na lista e que englobe os sintomas/condição base (ex: buscando entre E10 e E14 para diabetes causador).
+Retorne o CID com sua grafia exata (ex: E100, N390 - removendo o ponto no formato final se estava assim na lista acima, ou mantendo o ponto se a lista tem ponto, apenas copie o formato da lista).
+
+1. Escolha o melhor CID DENTRO DA LISTA PERMITIDA.
+2. Dê o nome real descritivo desse CID.
+
+Quadro Clínico Original para referência:
+"${clinicalText}"
+
+Retorne EXATAMENTE no seguinte formato JSON:
+{
+  "cidSelecionado": "CÓDIGO_ESCOLHIDO_DA_LISTA_PERMITIDA",
+  "nomeCid": "Nome descritivo real do CID"
+}
+`;
+
+      const responseStep2 = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: promptStep2,
+        config: {
+          responseMimeType: "application/json",
+          temperature: 0.1,
+        }
+      });
+
+      if (!responseStep2.text) {
+        throw new Error("IA não retornou resposta no Passo 2.");
+      }
+
+      const cleanTextStep2 = responseStep2.text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      const resultStep2 = JSON.parse(cleanTextStep2);
+
+      // --- Mapeando e Formatando Saída Final ---
+      const finalProcedure: SigtapProcedure = {
+        codigo: foundProc.codigo,
+        nome: foundProc.nome,
+        grupo: `${foundProc.grupo} - Carregado Localmente`,
+        subGrupo: `${foundProc.subGrupo} - Carregado Localmente`,
+        formaOrganizacao: `${foundProc.formaOrganizacao} - Carregado Localmente`,
+        complexidade: "Alta Complexidade",
+        justificativaCompatibilidade: "Atrelado via Tag (Two-Step Engine): " + tagEscolhida
+      };
+
+      const finalResult = {
+        cidSelecionado: resultStep2.cidSelecionado,
+        nomeCid: resultStep2.nomeCid,
+        cidsSecundarios: resultStep1.cidsSecundarios || [],
+        examesSugeridos: resultStep1.examesSugeridos || [],
+        classificacaoManchester: resultStep1.classificacaoManchester,
+        procedimentosTags: [tagEscolhida],
+        procedimentos: [finalProcedure]
+      };
+
+      setAiResults([finalResult]);
+
     } catch (error: any) {
-      console.error("Erro detalhado na IA:", error);
-      alert(`Erro ao contatar API do Gemini: ${error?.message || 'Erro desconhecido'}\n\nAbra o console do navegador (F12) para mais detalhes.`);
+      console.error("Erro detalhado na IA (Two-Step):", error);
+      alert(`Erro ao contatar API ou processar dados: ${error?.message || 'Erro desconhecido'}\n\nAbra o console do navegador (F12) para mais detalhes.`);
     } finally {
       setIsLoadingAi(false);
     }
@@ -299,7 +382,7 @@ Retorne o resultado EXATAMENTE no seguinte formato JSON (array de objetos):
                         {suggestions.length} resultados encontrados
                       </div>
                       <ul className="py-1">
-                        {suggestions.map((item) => (
+                        {suggestions.map((item: CidSigtapRelation) => (
                           <li key={item.cid}>
                             <button
                               onClick={() => selectCid(item)}
@@ -327,6 +410,31 @@ Retorne o resultado EXATAMENTE no seguinte formato JSON (array de objetos):
               </div>
             ) : (
               <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-xl shadow-blue-900/5 mb-8 transform transition-all hover:scale-[1.01]">
+                  <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-semibold text-gray-600 mb-1 block">Nome do Paciente</label>
+                      <input
+                        type="text"
+                        placeholder="Nome completo..."
+                        className="w-full text-sm p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                        value={patientName}
+                        onChange={e => setPatientName(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-gray-600 mb-1 block">Prontuário / Registro</label>
+                      <input
+                        type="text"
+                        placeholder="Nº do prontuário..."
+                        className="w-full text-sm p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                        value={medicalRecord}
+                        onChange={e => setMedicalRecord(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
+
                 <label className="block text-sm font-bold text-gray-700 mb-3 tracking-wide flex items-center gap-2">
                   <Stethoscope className="w-4 h-4 text-blue-500" /> Justificativa Clínica (Sinais, Sintomas, Exames)
                 </label>
@@ -346,8 +454,8 @@ Retorne o resultado EXATAMENTE no seguinte formato JSON (array de objetos):
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="text-xs font-semibold text-gray-600 mb-1 block">Idade</label>
-                      <input type="text" placeholder="Ex: 45 anos, 8 meses..." className="w-full text-sm p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" value={historicoPaciente.idade} onChange={e => setHistoricoPaciente({ ...historicoPaciente, idade: e.target.value })} />
+                      <label className="text-xs font-semibold text-gray-600 mb-1 block">Data de Nascimento</label>
+                      <input type="date" className="w-full text-sm p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" value={historicoPaciente.dataNascimento} onChange={e => setHistoricoPaciente({ ...historicoPaciente, dataNascimento: e.target.value })} />
                     </div>
                     <div>
                       <label className="text-xs font-semibold text-gray-600 mb-1 block">Alergias</label>
@@ -400,6 +508,36 @@ Retorne o resultado EXATAMENTE no seguinte formato JSON (array de objetos):
                   </div>
                 </div>
 
+                <div className="bg-white p-6 rounded-3xl border border-blue-100 mt-6 shadow-sm print:hidden">
+                  <h3 className="text-sm font-bold text-blue-800 uppercase tracking-widest mb-4 flex items-center gap-2">
+                    Objetivo do Atendimento
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <button
+                      onClick={() => setTipoAtendimento('observacao')}
+                      className={`flex items-center justify-center gap-3 p-4 rounded-xl border-2 transition-all ${tipoAtendimento === 'observacao' ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-md transform scale-[1.02]' : 'border-gray-200 bg-white text-gray-500 hover:border-blue-300 hover:bg-gray-50'}`}
+                    >
+                      <Eye className="w-6 h-6" />
+                      <span className="font-bold">Apenas Observação</span>
+                    </button>
+                    <button
+                      onClick={() => setTipoAtendimento('internacao')}
+                      className={`flex items-center justify-center gap-3 p-4 rounded-xl border-2 transition-all ${tipoAtendimento === 'internacao' ? 'border-amber-500 bg-amber-50 text-amber-700 shadow-md transform scale-[1.02]' : 'border-gray-200 bg-white text-gray-500 hover:border-amber-300 hover:bg-gray-50'}`}
+                    >
+                      <Bed className="w-6 h-6" />
+                      <span className="font-bold">Internação Clínica</span>
+                    </button>
+                    <button
+                      onClick={() => setTipoAtendimento('cirurgia')}
+                      className={`flex items-center justify-center gap-3 p-4 rounded-xl border-2 transition-all ${tipoAtendimento === 'cirurgia' ? 'border-red-500 bg-red-50 text-red-700 shadow-md transform scale-[1.02]' : 'border-gray-200 bg-white text-gray-500 hover:border-red-300 hover:bg-gray-50'}`}
+                    >
+                      <Scissors className="w-6 h-6" />
+                      <span className="font-bold">Procedimento Cirúrgico</span>
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-3 text-center">Isso forçará a Inteligência Clínica a selecionar SOMENTE códigos e categorias de procedimentos compatíveis com a sua escolha acima.</p>
+                </div>
+
                 <div className="mt-10 pt-8 border-t border-gray-100 flex flex-col sm:flex-row justify-between items-center gap-6">
                   <span className="text-sm font-medium flex items-center gap-2">
                     {apiKey ? (
@@ -436,19 +574,47 @@ Retorne o resultado EXATAMENTE no seguinte formato JSON (array de objetos):
         {/* Results Area */}
         {(results.cidSelecionado || aiResults.length > 0) ? (
           <div className="flex flex-col gap-6">
-            {/* Header if AI generated multiple results */}
-            {aiResults.length > 0 && (
-              <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex items-center gap-3 text-blue-800">
-                <Stethoscope className="w-6 h-6" />
-                <div>
-                  <h3 className="font-bold">Análise da Inteligência Artificial Concluída</h3>
-                  <p className="text-sm">Foram encontrados {aiResults.length} CIDs clinicamente prováveis para o quadro descrito, com seus respectivos procedimentos SIGTAP sugeridos.</p>
+            {/* Cabecalho de Identificacao do Paciente (Para Impressao/PDF) */}
+            {(patientName || medicalRecord || historicoPaciente.dataNascimento) && (
+              <div className="bg-white border-2 border-gray-800 rounded-xl p-6 mb-4 print:border-black print:mb-8">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                  <div>
+                    <span className="text-xs uppercase tracking-widest text-gray-500 font-bold block mb-1">Paciente</span>
+                    <h2 className="text-2xl font-black text-gray-900 uppercase">{patientName || 'NÃO INFORMADO'}</h2>
+                    {historicoPaciente.dataNascimento && (
+                      <p className="text-sm font-medium text-gray-600 mt-1">Nasc: {new Date(historicoPaciente.dataNascimento).toLocaleDateString('pt-BR')} (Idade: {calcularIdadeExata(historicoPaciente.dataNascimento)})</p>
+                    )}
+                  </div>
+                  <div className="md:text-right bg-gray-100 px-4 py-2 rounded-lg print:bg-transparent print:border print:border-gray-300">
+                    <span className="text-xs uppercase tracking-widest text-gray-500 font-bold block mb-1">Prontuário / Registro</span>
+                    <span className="text-xl font-mono font-bold text-blue-900">{medicalRecord || 'NÃO INFORMADO'}</span>
+                  </div>
                 </div>
               </div>
             )}
 
+            {/* Header if AI generated multiple results */}
+            {aiResults.length > 0 && (
+              <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-blue-800 print:hidden">
+                <div className="flex items-center gap-3">
+                  <Stethoscope className="w-6 h-6 flex-shrink-0" />
+                  <div>
+                    <h3 className="font-bold">Análise da Inteligência Artificial Concluída</h3>
+                    <p className="text-sm">Foram encontrados {aiResults.length} CIDs clinicamente prováveis para o quadro descrito, com seus respectivos procedimentos SIGTAP sugeridos.</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => window.print()}
+                  className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow-md transition-all active:scale-95 whitespace-nowrap w-full sm:w-auto"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                  Salvar em PDF
+                </button>
+              </div>
+            )}
+
             {/* Mapping over single result or AI results array */}
-            {(aiResults.length > 0 ? aiResults : [results]).map((res, index) => {
+            {(aiResults.length > 0 ? aiResults : [results]).map((res: any, index: number) => {
               // Map Manchester Colors to Tailwind Classes
               let manchesterBg = 'bg-gray-100';
               let manchesterText = 'text-gray-800';
@@ -476,7 +642,7 @@ Retorne o resultado EXATAMENTE no seguinte formato JSON (array de objetos):
                       {/* Secondary CIDs Rendering */}
                       {res.cidsSecundarios && res.cidsSecundarios.length > 0 && (
                         <div className="mt-3 flex flex-wrap gap-2">
-                          {res.cidsSecundarios.map((sec, sIdx) => (
+                          {res.cidsSecundarios.map((sec: any, sIdx: number) => (
                             <span key={sIdx} className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium bg-gray-100 text-gray-700 border border-gray-200" title={sec.nome}>
                               <span className="font-bold whitespace-nowrap">{sec.cid}</span>
                               <span className="opacity-70 mx-1">•</span>
@@ -517,7 +683,7 @@ Retorne o resultado EXATAMENTE no seguinte formato JSON (array de objetos):
                       </div>
                       <div className="px-6 py-5">
                         <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-purple-900/80">
-                          {res.examesSugeridos.map((exame, eIdx) => (
+                          {res.examesSugeridos.map((exame: string, eIdx: number) => (
                             <li key={eIdx} className="flex items-start gap-2.5 group">
                               <span className="flex-shrink-0 w-5 h-5 rounded-full bg-purple-200 text-purple-700 flex items-center justify-center text-xs font-bold mt-0.5 group-hover:bg-purple-600 group-hover:text-white transition-colors">{eIdx + 1}</span>
                               <span className="font-medium leading-relaxed">{exame}</span>
@@ -535,7 +701,7 @@ Retorne o resultado EXATAMENTE no seguinte formato JSON (array de objetos):
                     </div>
 
                     <div className="divide-y divide-gray-100">
-                      {(res.procedimentos || []).map((proc, idx) => (
+                      {(res.procedimentos || []).map((proc: any, idx: number) => (
                         <div key={idx} className="p-6 hover:bg-blue-50/50 transition-colors">
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
