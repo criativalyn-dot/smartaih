@@ -162,6 +162,14 @@ Se o caso for, por exemplo, um Abcesso Celulite Furúnculo (CID L02 ou L03) e o 
 Se o médico pediu "Internação Clínica" para Abcesso Celulite Furúnculo, retorne "INTERNACAO_DERMATOLOGIA".
 A sua escolha DEVE estar EXATAMENTE ESCRITA na lista acima. Não mude uma letra.
 
+**INSTRUÇÃO ESPECIAL - DICIONÁRIO DE ABREVIAÇÕES DO SUS:**
+No texto clínico, você encontrará várias abreviações médicas de urgência que você DEVE traduzir mentalmente com precisão:
+- CBM: Corpo de Bombeiros Militar (apenas meio de transporte, irrelevante para CID)
+- PS / PA: Pronto Socorro / Pronto Atendimento
+- SVD: Sonda Vesical de Demora (Indica gravidade, retenção urinária ou preparo, mas não é diagnóstico isolado)
+- HGT: Glicemia Capilar
+Além disso, atenção a cruzamentos laboratoriais (HB, HTO, Leuco, Creat, Ureia, K, Na) com os Sinais Vitais para elevar o nível do Manchester.
+
 2. CIDS SECUNDÁRIOS E COMORBIDADES: Liste todas as comorbidades ativas e secundárias relevantes no array "cidsSecundarios". Exija prioridade absoluta nas comorbidades não-compensadas encontradas pela varredura laboratorial.
 
 3. CLASSIFICAÇÃO DE RISCO DE MANCHESTER: Avalie todos os Sinais Vitais fornecidos, os RESULTADOS LABORATORIAIS e o Quadro Clínico para determinar a Cor.
