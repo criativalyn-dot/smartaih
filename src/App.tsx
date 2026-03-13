@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Search, Activity, Stethoscope, AlertTriangle, CheckCircle2, Key, ChevronRight, Eye, Bed, Scissors } from 'lucide-react'
 import sigtapDatabase from './data/sigtap_database.json'
 import type { CidSigtapRelation, SigtapProcedure } from './data/mockDatabase' // Keeping types for now, though we might need to adjust them if JSON changes
@@ -34,7 +34,7 @@ const calcularIdadeExata = (dataString: string) => {
 };
 
 function App() {
-  const [apiKey, setApiKey] = useState('')
+  const [apiKey, setApiKey] = useState(() => localStorage.getItem('smartaih_apiKey') || '')
   const [activeTab, setActiveTab] = useState<'cid' | 'symptoms'>('cid')
 
   // Tab 1 State
@@ -43,21 +43,35 @@ function App() {
   const [isShowingSuggestions, setIsShowingSuggestions] = useState(false)
 
   // Tab 2 State
-  const [patientName, setPatientName] = useState('')
-  const [medicalRecord, setMedicalRecord] = useState('')
-  const [clinicalText, setClinicalText] = useState('')
-  const [historicoPaciente, setHistoricoPaciente] = useState({
-    dataNascimento: '',
-    comorbidades: '',
-    alergias: '',
-    medicamentos: ''
+  const [patientName, setPatientName] = useState(() => localStorage.getItem('smartaih_patientName') || '')
+  const [medicalRecord, setMedicalRecord] = useState(() => localStorage.getItem('smartaih_medicalRecord') || '')
+  const [clinicalText, setClinicalText] = useState(() => localStorage.getItem('smartaih_clinicalText') || '')
+  const [historicoPaciente, setHistoricoPaciente] = useState(() => {
+    const saved = localStorage.getItem('smartaih_historico');
+    return saved ? JSON.parse(saved) : {
+      dataNascimento: '', comorbidades: '', alergias: '', medicamentos: ''
+    };
   })
-  const [sinaisVitais, setSinaisVitais] = useState({
-    pa: '', fc: '', fr: '', temp: '', spo2: '', hgt: '',
-    peso: '', altura: '', bcf: '', alturaUterina: '', glasgow: '', dor: ''
+  const [sinaisVitais, setSinaisVitais] = useState(() => {
+    const saved = localStorage.getItem('smartaih_sinais');
+    return saved ? JSON.parse(saved) : {
+      pa: '', fc: '', fr: '', temp: '', spo2: '', hgt: '',
+      peso: '', altura: '', bcf: '', alturaUterina: '', glasgow: '', dor: ''
+    };
   })
   const [isLoadingAi, setIsLoadingAi] = useState(false)
-  const [tipoAtendimento, setTipoAtendimento] = useState<'observacao' | 'internacao' | 'cirurgia'>('internacao')
+  const [tipoAtendimento, setTipoAtendimento] = useState<'observacao' | 'internacao' | 'cirurgia'>(() => (localStorage.getItem('smartaih_tipoAtendimento') as any) || 'internacao')
+
+  // Auto-Save Effect
+  useEffect(() => {
+    localStorage.setItem('smartaih_apiKey', apiKey);
+    localStorage.setItem('smartaih_patientName', patientName);
+    localStorage.setItem('smartaih_medicalRecord', medicalRecord);
+    localStorage.setItem('smartaih_clinicalText', clinicalText);
+    localStorage.setItem('smartaih_historico', JSON.stringify(historicoPaciente));
+    localStorage.setItem('smartaih_sinais', JSON.stringify(sinaisVitais));
+    localStorage.setItem('smartaih_tipoAtendimento', tipoAtendimento);
+  }, [apiKey, patientName, medicalRecord, clinicalText, historicoPaciente, sinaisVitais, tipoAtendimento]);
 
   // Results State
   const [results, setResults] = useState<{
