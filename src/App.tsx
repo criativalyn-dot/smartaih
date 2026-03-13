@@ -176,6 +176,12 @@ Se o caso for, por exemplo, um Abcesso Celulite Furúnculo (CID L02 ou L03) e o 
 Se o médico pediu "Internação Clínica" para Abcesso Celulite Furúnculo, retorne a tag completa correspondente, ex: "SIGTAP_0303080060_INTERNACAO_DERMATOLOGIA".
 A sua escolha DEVE ser idêntica a uma das tags da lista acima listada. Não corte prefixos nem mude letras.
 
+**[ REGRA DE EXCEÇÃO PARA MÚLTIPLAS CIRURGIAS ]**
+Se você identificar pelo texto médico que o paciente foi submetido a **MAIS DE UMA intervenção cirúrgica de grande porte no mesmo ato operatório de urgência** (exemplo: ressecção de intestino + correção de hérnia; abdômen agudo com múltiplos achados; ou colecistectomia + ressecção de alça), você **É OBRIGADO** a ignorar as tags cirúrgicas individuais e selecionar EXCLUSIVAMENTE a tag coringa aglutinadora:
+"SIGTAP_0415010012_TRATAMENTO_C_CIRURGIAS_MULTIPLAS"
+Descreva quais foram as cirurgias reais (ex: Colecistectomia) no campo de Exames Sugeridos ou dentro da Justificativa da Triagem.
+O CID Principal nesta exceção deve ser a Doença de Base que causou a internação (Câncer, Obstrução, Trauma, etc).
+
 **INSTRUÇÃO ESPECIAL - DICIONÁRIO DE ABREVIAÇÕES DO SUS:**
 No texto clínico, você encontrará várias abreviações médicas de urgência que você DEVE traduzir mentalmente com precisão:
 - CBM: Corpo de Bombeiros Militar (apenas meio de transporte, irrelevante para CID)
