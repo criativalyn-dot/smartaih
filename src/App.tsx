@@ -669,17 +669,17 @@ Retorne EXATAMENTE no seguinte formato JSON:
 
                   {/* Resposta do Manchester Rendering */}
                   {res.classificacaoManchester && (
-                    <div className={`mb-6 rounded-2xl overflow-hidden shadow-sm border-2 ${manchesterBorder} relative break-inside-avoid-page print:break-inside-avoid`}>
+                    <div className={`mb-6 rounded-2xl overflow-hidden shadow-sm border-2 ${manchesterBorder} relative break-inside-avoid-page print:break-inside-avoid print:bg-white print:border-4`}>
                       <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none print:hidden"></div>
-                      <div className={`px-6 md:px-8 py-5 flex flex-col md:flex-row md:items-center gap-5 ${manchesterBg}`}>
-                        <div className="flex-shrink-0 flex items-center gap-3 bg-white/20 p-3 rounded-2xl backdrop-blur-sm print:bg-white/40">
-                          <Activity className={`w-8 h-8 ${manchesterText}`} />
+                      <div className={`px-6 md:px-8 py-5 flex flex-col md:flex-row md:items-center gap-5 ${manchesterBg} print:bg-transparent`}>
+                        <div className="flex-shrink-0 flex items-center gap-3 bg-white/20 p-3 rounded-2xl backdrop-blur-sm print:backdrop-blur-none print:bg-gray-100">
+                          <Activity className={`w-8 h-8 ${manchesterText} print:text-black`} />
                         </div>
-                        <div className="flex-1">
-                          <h3 className={`font-black text-xl uppercase tracking-widest ${manchesterText} mb-1 drop-shadow-sm print:drop-shadow-none`}>
+                        <div className="flex-1 relative z-10">
+                          <h3 className={`font-black text-xl uppercase tracking-widest ${manchesterText} print:text-black mb-1 drop-shadow-sm print:drop-shadow-none`}>
                             TRIAGEM: {res.classificacaoManchester.cor}
                           </h3>
-                          <div className={`text-sm md:text-base font-medium opacity-95 leading-relaxed ${manchesterText}`}>
+                          <div className={`text-sm md:text-base font-medium opacity-95 leading-relaxed ${manchesterText} print:text-black`}>
                             {res.classificacaoManchester.justificativa}
                           </div>
                         </div>
@@ -689,16 +689,16 @@ Retorne EXATAMENTE no seguinte formato JSON:
 
                   {/* Exames Sugeridos Rendering */}
                   {res.examesSugeridos && res.examesSugeridos.length > 0 && (
-                    <div className="mb-6 bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200/60 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-                      <div className="bg-white/60 backdrop-blur-md px-6 py-4 border-b border-purple-100 flex items-center gap-3">
-                        <div className="bg-purple-100 p-2 rounded-lg"><Activity className="w-5 h-5 text-purple-600" /></div>
-                        <h3 className="font-bold text-purple-900 text-sm md:text-base uppercase tracking-wider">Investigação Diagnóstica Sugerida</h3>
+                    <div className="mb-6 bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200/60 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow break-inside-avoid-page print:break-inside-avoid print:bg-white print:border-purple-300 print:border-2">
+                      <div className="bg-white/60 backdrop-blur-md print:backdrop-blur-none print:bg-transparent px-6 py-4 border-b border-purple-100 flex items-center gap-3">
+                        <div className="bg-purple-100 p-2 rounded-lg print:bg-purple-50"><Activity className="w-5 h-5 text-purple-600 print:text-purple-800" /></div>
+                        <h3 className="font-bold text-purple-900 text-sm md:text-base uppercase tracking-wider print:text-black">Investigação Diagnóstica Sugerida</h3>
                       </div>
-                      <div className="px-6 py-5">
-                        <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-purple-900/80">
+                      <div className="px-6 py-5 relative z-10">
+                        <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-purple-900/80 print:text-black">
                           {res.examesSugeridos.map((exame: string, eIdx: number) => (
                             <li key={eIdx} className="flex items-start gap-2.5 group">
-                              <span className="flex-shrink-0 w-5 h-5 rounded-full bg-purple-200 text-purple-700 flex items-center justify-center text-xs font-bold mt-0.5 group-hover:bg-purple-600 group-hover:text-white transition-colors">{eIdx + 1}</span>
+                              <span className="flex-shrink-0 w-5 h-5 rounded-full bg-purple-200 text-purple-700 print:bg-gray-200 print:text-black flex items-center justify-center text-xs font-bold mt-0.5 transition-colors">{eIdx + 1}</span>
                               <span className="font-medium leading-relaxed">{exame}</span>
                             </li>
                           ))}
