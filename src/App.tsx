@@ -154,7 +154,15 @@ function App() {
       if (tipoAtendimento === 'observacao') {
         orientacaoTipo = "ATENÇÃO MÁXIMA: O MÉDICO INDICOU QUE O PACIENTE FICARÁ APENAS EM OBSERVAÇÃO/CONSULTA. VOCÊ DEVE OBRIGATORIAMENTE ESCOLHER TAGS DE CONSULTA/OBSERVAÇÃO (Ex: OBSERVACAO_CLINICA). É ESTRITAMENTE PROIBIDO USAR TAGS DE INTERNAÇÃO OU CIRURGIA. \n\nREGRA OURO MANCHESTER PARA OBSERVAÇÃO: Pacientes puramente em observação, sem sinais vitais alterados, DEVEM ter a base da Classificação de Risco como VERDE (Pouco Urgente) ou AZUL (Não Urgente), pois não necessitam de intervenção hospitalar aguda imediata.";
       } else if (tipoAtendimento === 'cirurgia') {
-        orientacaoTipo = "ATENÇÃO MÁXIMA: O MÉDICO INDICOU QUE O PACIENTE FARÁ CIRURGIA. VOCÊ DEVE OBRIGATORIAMENTE ESCOLHER TAGS CIRÚRGICAS (EX: DRENAGEM_ABSCESSO_PELE, CESAREANA) E NÃO APENAS CLÍNICAS. \n\nREGRA OURO MANCHESTER PARA CIRURGIA: A indicação cirúrgica imediata ou de urgência eleva automaticamente o Risco. A base da Classificação de Risco DEVE ser no mínimo AMARELO (Urgente), podendo ser LARANJA (Muito Urgente) ou VERMELHO (Emergência) se os sinais vitais estiverem comprometidos.";
+        orientacaoTipo = `ATENÇÃO MÁXIMA: O MÉDICO INDICOU QUE O PACIENTE FARÁ CIRURGIA. VOCÊ DEVE OBRIGATORIAMENTE ESCOLHER TAGS CIRÚRGICAS (EX: DRENAGEM_ABSCESSO_PELE, CESAREANA) E NÃO APENAS CLÍNICAS.
+
+[ REGRA DE OURO DO SUS - FATURAMENTO CIRÚRGICO MÚLTIPLO ]
+Se o relato clínico descrever MAIS DE UMA cirurgia distinta sendo feita no mesmo tempo operatório (Ex: Hernioplastia + Colecistectomia), aja como um Auditor Estratégico para faturamento:
+1. O Procedimento Principal (Tag) DEVE SER OBRIGATORIAMENTE a tag coringa "SIGTAP_0415010012_TRATAMENTO_C_CIRURGIAS_MULTIPLAS" (ou Laparotomia Exploratória se aplicável).
+2. Você DEVE usar o array "cidsSecundarios" de forma inteligente e exata para "justificar as cirurgias filhas"! Para CADA procedimento cirúrgico real que você "escondeu" dentro de "Cirurgias Múltiplas", você DEVE deduzir do texto e listar o respectivo CID da tabela que autorizaria a cirurgia filha (Ex: Se tirou vesícula por trauma, liste S36 nos secundários; Se corrigiu hérnia incisional, liste K430). 
+3. Liste textualmente o nome das cirurgias reais realizadas no campo "examesSugeridos" ou na Justificativa.
+
+REGRA OURO MANCHESTER PARA CIRURGIA: A indicação cirúrgica imediata ou de urgência eleva automaticamente o Risco. A base da Classificação de Risco DEVE ser no mínimo AMARELO (Urgente), podendo ser LARANJA (Muito Urgente) ou VERMELHO (Emergência) se os sinais vitais estiverem em choque.`;
       } else {
         orientacaoTipo = "ATENÇÃO MÁXIMA: O MÉDICO INDICOU INTERNAÇÃO CLÍNICA/TRATAMENTO. VOCÊ DEVE ESCOLHER AS TAGS DE INTERNAÇÃO. PROIBIDO USAR TAGS CIRÚRGICAS OU DE MERA OBSERVAÇÃO. \n\nREGRA OURO MANCHESTER PARA INTERNAÇÃO CLINICA: A necessidade de internação para suporte ou antibioticoterapia eleva o risco. A base da Classificação de Risco DEVE ser no mínimo AMARELO (Urgente), podendo escalar para Laranja/Vermelho se os sinais vitais exigirem suporte de vida imediato.";
       }
@@ -176,11 +184,6 @@ Se o caso for, por exemplo, um Abcesso Celulite Furúnculo (CID L02 ou L03) e o 
 Se o médico pediu "Internação Clínica" para Abcesso Celulite Furúnculo, retorne a tag completa correspondente, ex: "SIGTAP_0303080060_INTERNACAO_DERMATOLOGIA".
 A sua escolha DEVE ser idêntica a uma das tags da lista acima listada. Não corte prefixos nem mude letras.
 
-**[ REGRA DE EXCEÇÃO PARA MÚLTIPLAS CIRURGIAS ]**
-Se você identificar pelo texto médico que o paciente foi submetido a **MAIS DE UMA intervenção cirúrgica de grande porte no mesmo ato operatório de urgência** (exemplo: ressecção de intestino + correção de hérnia; abdômen agudo com múltiplos achados; ou colecistectomia + ressecção de alça), você **É OBRIGADO** a ignorar as tags cirúrgicas individuais e selecionar EXCLUSIVAMENTE a tag coringa aglutinadora:
-"SIGTAP_0415010012_TRATAMENTO_C_CIRURGIAS_MULTIPLAS"
-Descreva quais foram as cirurgias reais (ex: Colecistectomia) no campo de Exames Sugeridos ou dentro da Justificativa da Triagem.
-O CID Principal nesta exceção deve ser a Doença de Base que causou a internação (Câncer, Obstrução, Trauma, etc).
 
 **INSTRUÇÃO ESPECIAL - DICIONÁRIO DE ABREVIAÇÕES DO SUS:**
 No texto clínico, você encontrará várias abreviações médicas de urgência que você DEVE traduzir mentalmente com precisão:
