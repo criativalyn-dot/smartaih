@@ -138,6 +138,23 @@ function App() {
     setAiResults([]); // Limpa resultados da IA se havia
   }
 
+  const sanitizeJsonString = (rawJson: string) => {
+    // 1. Remove markdown blocks
+    let cleaned = rawJson.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+
+    // 2. Fix extremely common trailing commas before array/object closing brackets
+    cleaned = cleaned.replace(/,\s*([\]}])/g, '$1');
+
+    // 3. (Optional extreme cleanup) Try to escape unescaped internal quotes inside strings if possible without breaking structure
+    // This regex is a simple heuristic: if a quote is preceded by a word char and followed by a word char/space, escape it.
+    // cleaned = cleaned.replace(/(?<=\w)"(?=\s*\w)/g, '\\"');
+
+    // 4. Strip out control characters that break parsing
+    cleaned = cleaned.replace(/[\u0000-\.001F]+/g, ' ');
+
+    return cleaned;
+  };
+
   const handleAiAnalysis = async () => {
     if (!clinicalText.trim() || !apiKey) return;
 
@@ -250,8 +267,14 @@ Retorne EXATAMENTE no seguinte formato JSON:
         throw new Error("IA não retornou resposta no Passo 1.");
       }
 
-      const cleanTextStep1 = responseStep1.text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-      const resultStep1 = JSON.parse(cleanTextStep1);
+      const cleanTextStep1 = sanitizeJsonString(responseStep1.text);
+      let resultStep1;
+      try {
+        resultStep1 = JSON.parse(cleanTextStep1);
+      } catch (parseError) {
+        console.error("Parse Error no Passo 1:", parseError, "Texto limpo:", cleanTextStep1);
+        throw new Error("A Inteligência Artificial retornou um texto com formatação corrompida (erro de aspas ou vírgulas). Tente Analisar Novamente.");
+      }
 
       const tagEscolhida = resultStep1.procedimentoTagPrincipal;
       if (!tagEscolhida) throw new Error("IA não conseguiu definir uma Tag Clínica correspondente.");
@@ -308,8 +331,14 @@ Retorne EXATAMENTE no seguinte formato JSON:
         throw new Error("IA não retornou resposta no Passo 2.");
       }
 
-      const cleanTextStep2 = responseStep2.text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-      const resultStep2 = JSON.parse(cleanTextStep2);
+      const cleanTextStep2 = sanitizeJsonString(responseStep2.text);
+      let resultStep2;
+      try {
+        resultStep2 = JSON.parse(cleanTextStep2);
+      } catch (parseError) {
+        console.error("Parse Error no Passo 2:", parseError, "Texto limpo:", cleanTextStep2);
+        throw new Error("A Inteligência Artificial retornou um texto com formatação corrompida no Passo 2. Tente Analisar Novamente.");
+      }
 
       // --- Mapeando e Formatando Saída Final ---
       const finalProcedure: SigtapProcedure = {
