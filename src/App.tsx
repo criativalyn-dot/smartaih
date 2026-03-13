@@ -172,9 +172,9 @@ As ÚNICAS Tags Clínicas que você PODE escolher (Obrigatório escolher UMA que
 
 [ LISTA OBRIGATÓRIA DE TAGS PERMITIDAS ]: ${tagsDisponiveis}
 
-Se o caso for, por exemplo, um Abcesso Celulite Furúnculo (CID L02 ou L03) e o médico pediu "Cirurgia", retorne "DRENAGEM_ABSCESSO_PELE".
-Se o médico pediu "Internação Clínica" para Abcesso Celulite Furúnculo, retorne "INTERNACAO_DERMATOLOGIA".
-A sua escolha DEVE estar EXATAMENTE ESCRITA na lista acima. Não mude uma letra.
+Se o caso for, por exemplo, um Abcesso Celulite Furúnculo (CID L02 ou L03) e o médico pediu "Cirurgia", retorne exatamente a tag como está na lista, ex: "SIGTAP_0403010098_DRENAGEM_ABSCESSO_PELE".
+Se o médico pediu "Internação Clínica" para Abcesso Celulite Furúnculo, retorne a tag completa correspondente, ex: "SIGTAP_0303080060_INTERNACAO_DERMATOLOGIA".
+A sua escolha DEVE ser idêntica a uma das tags da lista acima listada. Não corte prefixos nem mude letras.
 
 **INSTRUÇÃO ESPECIAL - DICIONÁRIO DE ABREVIAÇÕES DO SUS:**
 No texto clínico, você encontrará várias abreviações médicas de urgência que você DEVE traduzir mentalmente com precisão:
@@ -241,10 +241,13 @@ Retorne EXATAMENTE no seguinte formato JSON:
       if (!tagEscolhida) throw new Error("IA não conseguiu definir uma Tag Clínica correspondente.");
 
       // Encontrar o procedimento no banco de dados para extrair CIDs permitidos
-      const foundProc = sigtapDatabase.find(p => p.tagsClinicas.includes(tagEscolhida));
+      // Aceita correspondência exata ou parcial (caso a IA teimosamente remova o prefixo SIGTAP_)
+      const foundProc = sigtapDatabase.find(p =>
+        p.tagsClinicas.some(t => t === tagEscolhida || t.includes(tagEscolhida) || tagEscolhida.includes(t))
+      );
 
       if (!foundProc) {
-        throw new Error(`A Tag escolhida pela IA (${tagEscolhida}) não existe no banco de dados SIGTAP.`);
+        throw new Error(`A Tag escolhida pela IA (${tagEscolhida}) não existe no banco de dados SIGTAP. O Motor não conseguiu cruzar este tratamento com a tabela do SUS.`);
       }
 
       const cidsPermitidosString = foundProc.cidsPermitidos && foundProc.cidsPermitidos.length > 0
