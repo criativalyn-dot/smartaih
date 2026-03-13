@@ -139,8 +139,16 @@ function App() {
   }
 
   const sanitizeJsonString = (rawJson: string) => {
-    // 1. Remove markdown blocks
-    let cleaned = rawJson.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    // 1. Isolate the JSON block in case the AI added conversational text before or after
+    let extracted = rawJson;
+    const firstBrace = rawJson.indexOf('{');
+    const lastBrace = rawJson.lastIndexOf('}');
+    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+      extracted = rawJson.substring(firstBrace, lastBrace + 1);
+    }
+
+    // 2. Remove markdown blocks if still present
+    let cleaned = extracted.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
 
     // 2. Fix extremely common trailing commas before array/object closing brackets
     cleaned = cleaned.replace(/,\s*([\]}])/g, '$1');
@@ -276,7 +284,9 @@ Retorne EXATAMENTE no seguinte formato JSON, sem crases markdown ou texto extra:
       try {
         resultStep1 = JSON.parse(cleanTextStep1);
       } catch (parseError) {
-        console.error("Parse Error no Passo 1:", parseError, "Texto limpo:", cleanTextStep1);
+        console.error("Parse Error no Passo 1:", parseError);
+        console.error("Texto Bruto da IA (Passo 1):", responseStep1.text);
+        console.error("Texto Limpo Tentado Mapear (Passo 1):", cleanTextStep1);
         throw new Error("A Inteligência Artificial retornou um texto com formatação corrompida (erro de aspas ou vírgulas). Tente Analisar Novamente.");
       }
 
@@ -343,7 +353,9 @@ Retorne EXATAMENTE no seguinte formato JSON, sem crases markdown:
       try {
         resultStep2 = JSON.parse(cleanTextStep2);
       } catch (parseError) {
-        console.error("Parse Error no Passo 2:", parseError, "Texto limpo:", cleanTextStep2);
+        console.error("Parse Error no Passo 2:", parseError);
+        console.error("Texto Bruto da IA (Passo 2):", responseStep2.text);
+        console.error("Texto Limpo Tentado Mapear (Passo 2):", cleanTextStep2);
         throw new Error("A Inteligência Artificial retornou um texto com formatação corrompida no Passo 2. Tente Analisar Novamente.");
       }
 
