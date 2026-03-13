@@ -164,7 +164,14 @@ Se o relato clínico descrever MAIS DE UMA cirurgia distinta sendo feita no mesm
 
 REGRA OURO MANCHESTER PARA CIRURGIA: A indicação cirúrgica imediata ou de urgência eleva automaticamente o Risco. A base da Classificação de Risco DEVE ser no mínimo AMARELO (Urgente), podendo ser LARANJA (Muito Urgente) ou VERMELHO (Emergência) se os sinais vitais estiverem em choque.`;
       } else {
-        orientacaoTipo = "ATENÇÃO MÁXIMA: O MÉDICO INDICOU INTERNAÇÃO CLÍNICA/TRATAMENTO. VOCÊ DEVE ESCOLHER AS TAGS DE INTERNAÇÃO. PROIBIDO USAR TAGS CIRÚRGICAS OU DE MERA OBSERVAÇÃO. \n\nREGRA OURO MANCHESTER PARA INTERNAÇÃO CLINICA: A necessidade de internação para suporte ou antibioticoterapia eleva o risco. A base da Classificação de Risco DEVE ser no mínimo AMARELO (Urgente), podendo escalar para Laranja/Vermelho se os sinais vitais exigirem suporte de vida imediato.";
+        orientacaoTipo = `ATENÇÃO MÁXIMA: O MÉDICO INDICOU INTERNAÇÃO CLÍNICA/TRATAMENTO. VOCÊ DEVE ESCOLHER AS TAGS DE INTERNAÇÃO. PROIBIDO USAR TAGS CIRÚRGICAS OU DE MERA OBSERVAÇÃO.
+
+[ REGRA DE OURO - PACIENTES COM MÚLTIPLAS COMORBIDADES (GERIATRIA) ]
+Se o paciente (especialmente idosos) apresentar múltiplos problemas clínicos simultâneos que não necessitam de cirurgia de urgência (Exemplo: Sofreu uma Queda com Fratura Conservadora + Apresenta Infecção Urinária Grave com exames ou sangramento + Descompensação Diabética), você DEVE:
+1. Eleger como PROCEDIMENTO PRINCIPAL (e consequentemente base para o CID Principal) a condição de MAIOR GRAVIDADE SISTÊMICA ou risco imediato à vida que motivou o suporte hospitalar na triagem (geralmente a Infecção, Sepsia, ou quadro agudo descompensado). Ex: "TRATAMENTO DE INFECCAO DO TRATO URINARIO".
+2. As demais afecções e traumas (Ex: Fratura de Cóccix fechada S32.2) devem OBRIGATORIAMENTE entrar na lista de "cidsSecundarios" para resguardar o faturamento das medicações de dor e curativos associados.
+
+REGRA OURO MANCHESTER PARA INTERNAÇÃO CLINICA: A necessidade de internação para suporte ou antibioticoterapia eleva o risco. A base da Classificação de Risco DEVE ser no mínimo AMARELO (Urgente), podendo escalar para Laranja/Vermelho se os sinais vitais exigirem suporte de vida imediato.`;
       }
 
       // --- PASSO 1: Descobrir o Tratamento/Procedimento Ideal ---
