@@ -238,7 +238,11 @@ Temp: ${sinaisVitais.temp || '-'}
 
 **ATENÇÃO:** NESTE PASSO, NÃO ENVIE O CID PRINCIPAL. APENAS A TAG E DETALHES CLÍNICOS SECUNDÁRIOS.
 
-Retorne EXATAMENTE no seguinte formato JSON:
+**[ REGRA ANTI-CRASH DE FORMATAÇÃO JSON (CRÍTICA) ]**
+1. NUNCA use aspas duplas dentro de nenhuma string de texto explicativo (exemplo: na Justificativa). Se precisar citar algo, use aspas simples ('texto').
+2. NUNCA pule de linha "dando Enter" dentro das strings. Se precisar de parágrafos, digite literalmente os caracteres "\\n" em sequência.
+
+Retorne EXATAMENTE no seguinte formato JSON, sem crases markdown ou texto extra:
 {
   "procedimentoTagPrincipal": "UMA_DAS_TAGS_DA_LISTA_PERMITIDA_ACIMA",
   "cidsSecundarios": [
@@ -311,7 +315,10 @@ Retorne o CID com sua grafia exata (ex: E100, N390 - removendo o ponto no format
 Quadro Clínico Original para referência:
 "${clinicalText}"
 
-Retorne EXATAMENTE no seguinte formato JSON:
+**[ REGRA ANTI-CRASH DE FORMATAÇÃO JSON (CRÍTICA) ]**
+NUNCA use aspas duplas dentro dos textos (use aspas simples) e NUNCA pule de linha teclando enter (digite \\n).
+
+Retorne EXATAMENTE no seguinte formato JSON, sem crases markdown:
 {
   "cidSelecionado": "CÓDIGO_ESCOLHIDO_DA_LISTA_PERMITIDA",
   "nomeCid": "Nome descritivo real do CID"
