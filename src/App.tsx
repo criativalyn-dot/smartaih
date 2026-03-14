@@ -723,26 +723,64 @@ Retorne EXATAMENTE no seguinte formato JSON, sem crases markdown:
 
               return (
                 <div key={index} className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                  <div className="mb-4 flex items-center gap-3">
-                    <div className="bg-green-100 p-2 rounded-full">
-                      <CheckCircle2 className="w-5 h-5 text-green-600" />
+
+                  {/* Procedimento SIGTAP Rendering (NOW ON TOP) */}
+                  <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-300 mb-6 mt-4">
+                    <div className="bg-gradient-to-r from-blue-600 to-indigo-700 px-6 py-5 flex items-center gap-3">
+                      <div className="bg-white/20 p-2 rounded-lg text-white font-black">{(res.procedimentos || []).length}</div>
+                      <h3 className="font-extrabold text-white text-xl tracking-wide uppercase">Procedimento Principal (SIGTAP)</h3>
                     </div>
-                    <div>
-                      <h2 className="text-2xl font-bold text-gray-900 border-b-2 border-green-500 inline-block">
-                        CID Principal: {res.cidSelecionado}
+
+                    <div className="divide-y divide-gray-100">
+                      {(res.procedimentos || []).map((proc: any, idx: number) => (
+                        <div key={idx} className="p-6 bg-blue-50/30">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex flex-col md:flex-row md:items-center gap-3 mb-3">
+                                {proc.codigo && (
+                                  <span className="bg-blue-600 text-white text-lg font-mono font-bold px-4 py-1.5 rounded-lg shadow-sm print:bg-gray-800">
+                                    {proc.codigo}
+                                  </span>
+                                )}
+                                <h4 className="text-2xl font-black text-gray-900 leading-tight">{proc.nome}</h4>
+                              </div>
+
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-y-2 gap-x-6 mt-4 text-sm text-gray-700 font-medium">
+                                {proc.grupo && <div className="flex flex-col"><span className="text-gray-400 text-xs uppercase tracking-wider font-bold">Grupo</span>{proc.grupo}</div>}
+                                {proc.subGrupo && <div className="flex flex-col"><span className="text-gray-400 text-xs uppercase tracking-wider font-bold">Sub-Grupo</span>{proc.subGrupo}</div>}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* CID Principal e Secundários (NOW BELOW) */}
+                  <div className="mb-6 flex items-start gap-4 p-5 bg-green-50/50 border border-green-100 rounded-2xl print:bg-white print:border-gray-300">
+                    <div className="bg-green-100 p-2.5 rounded-xl print:bg-white flex-shrink-0 mt-1">
+                      <CheckCircle2 className="w-6 h-6 text-green-700" />
+                    </div>
+                    <div className="flex-1">
+                      <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                        <span className="text-green-700">CID Principal Âncora:</span>
+                        <span className="bg-white px-3 py-1 rounded inline-block border border-green-200">{res.cidSelecionado}</span>
                       </h2>
-                      <p className="text-gray-600 text-lg mt-1 font-medium">{res.nomeCid}</p>
+                      <p className="text-gray-700 text-lg mt-2 font-medium">{res.nomeCid}</p>
 
                       {/* Secondary CIDs Rendering */}
                       {res.cidsSecundarios && res.cidsSecundarios.length > 0 && (
-                        <div className="mt-3 flex flex-wrap gap-2">
-                          {res.cidsSecundarios.map((sec: any, sIdx: number) => (
-                            <span key={sIdx} className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium bg-gray-100 text-gray-700 border border-gray-200" title={sec.nome}>
-                              <span className="font-bold whitespace-nowrap">{sec.cid}</span>
-                              <span className="opacity-70 mx-1">•</span>
-                              <span>{sec.nome}</span>
-                            </span>
-                          ))}
+                        <div className="mt-4 pt-4 border-t border-green-200/60">
+                          <h4 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2">Comorbidades / CIDs Secundários mapeados:</h4>
+                          <div className="flex flex-wrap gap-2">
+                            {res.cidsSecundarios.map((sec: any, sIdx: number) => (
+                              <span key={sIdx} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-white text-gray-700 border border-gray-200 shadow-sm" title={sec.nome}>
+                                <span className="font-bold whitespace-nowrap">{sec.cid}</span>
+                                <span className="opacity-40 mx-1">•</span>
+                                <span>{sec.nome}</span>
+                              </span>
+                            ))}
+                          </div>
                         </div>
                       )}
                     </div>
@@ -787,49 +825,6 @@ Retorne EXATAMENTE no seguinte formato JSON, sem crases markdown:
                       </div>
                     </div>
                   )}
-
-                  <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-300">
-                    <div className="bg-gradient-to-r from-gray-50 to-white px-6 py-5 border-b border-gray-200 flex items-center gap-3">
-                      <div className="bg-blue-100 p-2 rounded-lg text-blue-700 font-black">{(res.procedimentos || []).length}</div>
-                      <h3 className="font-bold text-gray-800 text-lg">Procedimentos SIGTAP Recomendados</h3>
-                    </div>
-
-                    <div className="divide-y divide-gray-100">
-                      {(res.procedimentos || []).map((proc: any, idx: number) => (
-                        <div key={idx} className="p-6 hover:bg-blue-50/50 transition-colors">
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-3 mb-2">
-                                {proc.codigo && (
-                                  <span className="bg-blue-100 text-blue-800 text-sm font-mono font-bold px-3 py-1 rounded-md">
-                                    {proc.codigo}
-                                  </span>
-                                )}
-                                <h4 className="text-lg font-bold text-gray-900">{proc.nome}</h4>
-                              </div>
-
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-y-2 gap-x-6 mt-4 text-sm text-gray-600">
-                                {proc.grupo && <div className="flex flex-col"><span className="text-gray-400 text-xs uppercase tracking-wider font-semibold">Grupo</span>{proc.grupo}</div>}
-                                {proc.subGrupo && <div className="flex flex-col"><span className="text-gray-400 text-xs uppercase tracking-wider font-semibold">Sub-Grupo</span>{proc.subGrupo}</div>}
-                                {proc.formaOrganizacao && <div className="flex flex-col md:col-span-2"><span className="text-gray-400 text-xs uppercase tracking-wider font-semibold">Forma de Organização</span>{proc.formaOrganizacao}</div>}
-                              </div>
-                            </div>
-
-                            {/* Restricted Professional Alert Badge */}
-                            {proc.restricaoProfissional && (
-                              <div className="ml-4 flex-shrink-0 flex items-center gap-2 bg-amber-50 text-amber-700 px-4 py-3 rounded-xl border border-amber-200 max-w-xs">
-                                <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0" />
-                                <div className="text-sm">
-                                  <p className="font-bold">Atenção à Especialidade</p>
-                                  <p className="font-medium opacity-90">{proc.restricaoProfissional}</p>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
                 </div>
               );
             })}
