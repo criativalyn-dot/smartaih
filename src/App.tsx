@@ -157,8 +157,8 @@ function App() {
     // This regex is a simple heuristic: if a quote is preceded by a word char and followed by a word char/space, escape it.
     // cleaned = cleaned.replace(/(?<=\w)"(?=\s*\w)/g, '\\"');
 
-    // 4. Strip out control characters that break parsing
-    cleaned = cleaned.replace(/[\u0000-\.001F]+/g, ' ');
+    // 4. Strip out control characters that break parsing (Fixed regex typo)
+    cleaned = cleaned.replace(/[\u0000-\u001F]+/g, ' ');
 
     return cleaned;
   };
