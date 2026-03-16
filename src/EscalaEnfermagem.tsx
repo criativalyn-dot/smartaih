@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Download, Plus, Trash2, Calendar } from 'lucide-react';
+import { Download, Plus, Trash2, Calendar, Upload } from 'lucide-react';
 
 export interface Colaborador {
     id: string;
@@ -157,6 +157,47 @@ export const EscalaEnfermagem: React.FC<Props> = ({
         }
     };
 
+    const handleExportBackup = () => {
+        const data = {
+            colaboradores,
+            mes,
+            ano,
+            excecoes
+        };
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `SmartAIH_Escala_Backup_${mes}_${ano}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    };
+
+    const handleImportBackup = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try {
+                const data = JSON.parse(event.target?.result as string);
+                if (data.colaboradores && data.excecoes) {
+                    setColaboradores(data.colaboradores);
+                    if (data.mes) setMes(data.mes);
+                    if (data.ano) setAno(data.ano);
+                    setExcecoes(data.excecoes);
+                    alert('Backup restaurado com sucesso! Seus dados foram recuperados.');
+                } else {
+                    alert('Arquivo de backup inválido. Não foi possível restaurar.');
+                }
+            } catch (error) {
+                alert('Erro ao ler o arquivo de backup.');
+            }
+        };
+        reader.readAsText(file);
+    };
+
     // Agrupar por Setor -> Categoria
 
     return (
@@ -192,9 +233,20 @@ export const EscalaEnfermagem: React.FC<Props> = ({
                 </div>
 
                 <div className="flex gap-2 print:hidden">
+                    <label className="flex items-center gap-1.5 bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 transition-colors cursor-pointer" title="Restaurar de um Backup (Arquivo JSON)">
+                        <Upload className="w-4 h-4" /> Restaurar
+                        <input type="file" accept=".json" onChange={handleImportBackup} className="hidden" />
+                    </label>
+                    <button
+                        onClick={handleExportBackup}
+                        className="flex items-center gap-1.5 bg-green-600 text-white px-3 py-2 rounded-lg text-sm font-bold hover:bg-green-700 transition-colors"
+                        title="Salvar um Backup no Computador (Arquivo JSON)"
+                    >
+                        <Download className="w-4 h-4" /> Backup
+                    </button>
                     <button
                         onClick={handleOpenAdd}
-                        className="flex items-center gap-2 bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-gray-800 transition-colors"
+                        className="flex items-center gap-2 bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-gray-800 transition-colors ml-2"
                     >
                         <Plus className="w-4 h-4" /> Colaborador
                     </button>
