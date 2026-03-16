@@ -35,7 +35,7 @@ const calcularIdadeExata = (dataString: string) => {
 
 function App() {
   const [apiKey, setApiKey] = useState(() => localStorage.getItem('smartaih_apiKey') || '')
-  const [activeTab, setActiveTab] = useState<'cid' | 'symptoms'>('cid')
+  const [activeTab, setActiveTab] = useState<'cid' | 'symptoms' | 'nursing'>('cid')
 
   // Tab 1 State
   const [searchQuery, setSearchQuery] = useState('')
@@ -62,6 +62,49 @@ function App() {
   const [isLoadingAi, setIsLoadingAi] = useState(false)
   const [tipoAtendimento, setTipoAtendimento] = useState<'observacao' | 'internacao' | 'cirurgia'>(() => (localStorage.getItem('smartaih_tipoAtendimento') as any) || 'internacao')
 
+  // Tab 3 State (Nursing SAE Wizard)
+  const [currentSection, setCurrentSection] = useState(0);
+  const saeSections = [
+    'Dados do Paciente',
+    'Sinais Vitais',
+    'Avaliação Neurológica',
+    'Avaliação Respiratória',
+    'Avaliação Cardiovascular',
+    'Avaliação de Pele',
+    'Avaliação Gastrointestinal',
+    'Avaliação Urinária',
+    'Cateteres e Sondas',
+    'Escala de Braden',
+    'Escala de Morse',
+    'Escala de Fugulin',
+    'Análise IA (NANDA/NIC/NOC)'
+  ];
+
+  const [nursingAssessment, setNursingAssessment] = useState(() => {
+    const saved = localStorage.getItem('smartaih_nursingAssessment');
+    return saved ? JSON.parse(saved) : {
+      neurologicalStatus: [], pupils: [], thermalRegulation: [], oxygenation: [],
+      skin: [], gastrointestinal: [], vascular: [], abdominal: [], urinary: [],
+      catheters: { peripheral: '', location: '', vesicalProbe: '', drain: '', allergies: '', feeding: [] },
+      // Keeping legacy fields for basic info
+      leito: '', dataInternacao: '', hipoteseDiagnostica: ''
+    };
+  });
+  const [bradenScore, setBradenScore] = useState(() => {
+    const saved = localStorage.getItem('smartaih_braden');
+    return saved ? JSON.parse(saved) : { sensoryPerception: 4, moisture: 4, activity: 4, mobility: 4, nutrition: 4, frictionShear: 3, total: 23 };
+  });
+  const [morseScore, setMorseScore] = useState(() => {
+    const saved = localStorage.getItem('smartaih_morse');
+    return saved ? JSON.parse(saved) : { fallHistory: 0, secondaryDiagnosis: 0, ambulatoryAid: 0, ivTherapy: 0, gait: 0, mentalStatus: 0, total: 0 };
+  });
+  const [fugulinScore, setFugulinScore] = useState(() => {
+    const saved = localStorage.getItem('smartaih_fugulin');
+    return saved ? JSON.parse(saved) : { mentalStatus: 1, oxygenation: 1, vitalSigns: 1, motility: 1, walking: 1, feeding: 1, bodyCare: 1, elimination: 1, therapeutics: 1, total: 9 };
+  });
+
+  const [nursingResults, setNursingResults] = useState<any>(null);
+
   // Auto-Save Effect
   useEffect(() => {
     localStorage.setItem('smartaih_apiKey', apiKey);
@@ -71,7 +114,49 @@ function App() {
     localStorage.setItem('smartaih_historico', JSON.stringify(historicoPaciente));
     localStorage.setItem('smartaih_sinais', JSON.stringify(sinaisVitais));
     localStorage.setItem('smartaih_tipoAtendimento', tipoAtendimento);
-  }, [apiKey, patientName, medicalRecord, clinicalText, historicoPaciente, sinaisVitais, tipoAtendimento]);
+    localStorage.setItem('smartaih_nursingAssessment', JSON.stringify(nursingAssessment));
+    localStorage.setItem('smartaih_braden', JSON.stringify(bradenScore));
+    localStorage.setItem('smartaih_morse', JSON.stringify(morseScore));
+    localStorage.setItem('smartaih_fugulin', JSON.stringify(fugulinScore));
+  }, [apiKey, patientName, medicalRecord, clinicalText, historicoPaciente, sinaisVitais, tipoAtendimento, nursingAssessment, bradenScore, morseScore, fugulinScore]);
+
+  // Calculators for Scales
+  useEffect(() => {
+    const total = bradenScore.sensoryPerception + bradenScore.moisture + bradenScore.activity + bradenScore.mobility + bradenScore.nutrition + bradenScore.frictionShear;
+    setBradenScore((prev: any) => ({ ...prev, total }));
+  }, [bradenScore.sensoryPerception, bradenScore.moisture, bradenScore.activity, bradenScore.mobility, bradenScore.nutrition, bradenScore.frictionShear]);
+
+  useEffect(() => {
+    const total = morseScore.fallHistory + morseScore.secondaryDiagnosis + morseScore.ambulatoryAid + morseScore.ivTherapy + morseScore.gait + morseScore.mentalStatus;
+    setMorseScore((prev: any) => ({ ...prev, total }));
+  }, [morseScore.fallHistory, morseScore.secondaryDiagnosis, morseScore.ambulatoryAid, morseScore.ivTherapy, morseScore.gait, morseScore.mentalStatus]);
+
+  const getBradenRisk = (score: number) => {
+    if (score <= 9) return 'Risco Altíssimo';
+    if (score <= 12) return 'Risco Alto';
+    if (score <= 14) return 'Risco Moderado';
+    if (score <= 18) return 'Risco Baixo';
+    return 'Sem Risco';
+  };
+
+  const getMorseRisk = (score: number) => {
+    if (score >= 45) return 'Risco Alto';
+    if (score >= 25) return 'Risco Moderado';
+    return 'Risco Baixo';
+  };
+
+  const getFugulinCareLevel = (score: number) => {
+    if (score >= 32) return 'Cuidados Intensivos';
+    if (score >= 27) return 'Cuidados Semi-Intensivos';
+    if (score >= 21) return 'Cuidados de Alta Dependência';
+    if (score >= 15) return 'Cuidados Intermediários';
+    return 'Cuidados Mínimos';
+  };
+
+  useEffect(() => {
+    const total = fugulinScore.mentalStatus + fugulinScore.oxygenation + fugulinScore.vitalSigns + fugulinScore.motility + fugulinScore.walking + fugulinScore.feeding + fugulinScore.bodyCare + fugulinScore.elimination + fugulinScore.therapeutics;
+    setFugulinScore((prev: any) => ({ ...prev, total }));
+  }, [fugulinScore.mentalStatus, fugulinScore.oxygenation, fugulinScore.vitalSigns, fugulinScore.motility, fugulinScore.walking, fugulinScore.feeding, fugulinScore.bodyCare, fugulinScore.elimination, fugulinScore.therapeutics]);
 
   // Results State
   const [results, setResults] = useState<{
@@ -295,12 +380,34 @@ Retorne EXATAMENTE no seguinte formato JSON, sem crases markdown ou texto extra:
 
       // Encontrar o procedimento no banco de dados para extrair CIDs permitidos
       // Aceita correspondência exata ou parcial (caso a IA teimosamente remova o prefixo SIGTAP_)
-      const foundProc = sigtapDatabase.find(p =>
+      let foundProc = sigtapDatabase.find(p =>
         p.tagsClinicas.some(t => t === tagEscolhida || t.includes(tagEscolhida) || tagEscolhida.includes(t))
       );
 
+      // Failsafe 1: Busca Semântica básica caso a IA tenha alucinado a tag
       if (!foundProc) {
-        throw new Error(`A Tag escolhida pela IA (${tagEscolhida}) não existe no banco de dados SIGTAP. O Motor não conseguiu cruzar este tratamento com a tabela do SUS.`);
+        const cleanHallucination = tagEscolhida.replace('SIGTAP_', '').replace(/_/g, ' ').toLowerCase();
+        const searchTerms = cleanHallucination.split(' ').filter((w: string) => w.length > 4); // Busca palavras com mais de 4 letras
+        foundProc = sigtapDatabase.find(p => {
+          const nomeProc = p.nome.toLowerCase();
+          return searchTerms.some((term: string) => nomeProc.includes(term));
+        });
+      }
+
+      // Failsafe 2: Defaults genéricos de sobrevivência do SUS
+      if (!foundProc) {
+        if (tipoAtendimento === 'cirurgia') {
+          foundProc = sigtapDatabase.find(p => p.codigo === "0415010012"); // TRATAMENTO C/ CIRURGIAS MULTIPLAS
+        } else if (tipoAtendimento === 'observacao') {
+          foundProc = sigtapDatabase.find(p => p.codigo === "0301060029"); // OBSERVACAO ATE 24H
+        } else {
+          foundProc = sigtapDatabase.find(p => p.codigo === "0301060061"); // ATENDIMENTO DE URGENCIA
+        }
+      }
+
+      if (!foundProc) {
+        // Fallback final extremo
+        foundProc = sigtapDatabase[0];
       }
 
       const cidsPermitidosString = foundProc.cidsPermitidos && foundProc.cidsPermitidos.length > 0
@@ -390,10 +497,105 @@ Retorne EXATAMENTE no seguinte formato JSON, sem crases markdown:
     }
   }
 
+  const handleNursingAnalysis = async () => {
+    if (!apiKey) {
+      alert("Por favor, insira sua chave API do Google Gemini no topo da página.");
+      return;
+    }
+
+    setIsLoadingAi(true);
+    setNursingResults(null);
+    try {
+      const genAI = new GoogleGenAI({ apiKey: apiKey });
+      const prompt = `Você é um Enfermeiro Especialista em Sistematização da Assistência de Enfermagem (SAE) de altíssimo nível, seguindo diretrizes da ANVISA.
+Sua missão é gerar os Diagnósticos de Enfermagem (NANDA-I), Intervenções (NIC) e Resultados Esperados (NOC) com base nos dados vitais e avaliação física do paciente fornecidos abaixo.
+
+DADOS DO PACIENTE:
+Nome: ${patientName || 'Não informado'}
+Idade/Nascimento: ${calcularIdadeExata(historicoPaciente.dataNascimento)}
+Diagnóstico Médico: ${nursingAssessment.hipoteseDiagnostica || 'Não informado'}
+
+DADOS DE AVALIAÇÃO DA ENFERMAGEM (CEFALOCAUDAL E SONDAS):
+${JSON.stringify(nursingAssessment, null, 2)}
+SINAIS VITAIS:
+${JSON.stringify(sinaisVitais, null, 2)}
+ESCALA DE FUGLIN (Grau de Dependência - ${getFugulinCareLevel(fugulinScore.total)}):
+${JSON.stringify(fugulinScore, null, 2)}
+ESCALA DE BRADEN MANUAL (Escore Total: ${bradenScore.total}):
+${JSON.stringify(bradenScore, null, 2)}
+ESCALA DE MORSE MANUAL (Escore Total: ${morseScore.total}):
+${JSON.stringify(morseScore, null, 2)}
+
+INSTRUÇÕES OBRIGATÓRIAS:
+1. Avalie criticamente os sinais vitais, os checkboxes ativados e as Escalas de Fugulin, Braden e Morse.
+2. Identifique os diagnósticos de enfermagem reais e potencias priorizados de acordo com o Nível de Dependência (Fugulin).
+3. Se houver risco de queda (Morse Alto/Moderado) ou lesão por pressão (Braden Baixo/Moderado/Alto/Altíssimo), INCLUA DIAGNÓSTICOS NANDA E INTERVENÇÕES NIC CORRESPONDENTES OBRIGATORIAMENTE.
+
+[ REGRA ANTI-CRASH DE FORMATAÇÃO JSON (CRÍTICA) ]
+Você DEVE obrigatoriamente retornar APENAS um objeto JSON rigorosamente válido. NENHUM texto markdown.
+Use aspas simples (') se precisar adicionar aspas dentro do texto.
+NUNCA adicione vírgula no último item de uma lista ou objeto.
+
+FORMATO OBRIGATÓRIO DE SAÍDA JSON:
+{
+  "diagnosticosNANDA": [
+    {
+      "titulo": "Risco de...",
+      "fatorRelacionado": "Fator que causa o problema (se houver/se aplicável)",
+      "caracteristicaDefinidora": "Sinal ou sintoma (se houver/se aplicável)"
+    }
+  ],
+  "intervencoesNIC": [
+    "Intervenção 1 com base no protocolo ANVISA",
+    "Monitoramento de ..."
+  ],
+  "resultadosNOC": [
+    "Melhora do estado...",
+    "Ausência de sinais de..."
+  ],
+  "riscoBradenAnalise": "Breve texto explicativo sobre o risco de LPP do paciente baseado na avaliação",
+  "riscoMorseAnalise": "Breve texto explicativo sobre o risco de queda"
+}`;
+
+      const response = await genAI.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+      });
+
+      const text = response.text;
+      if (!text) throw new Error("A IA não retornou nenhum texto.");
+
+      const cleanedJsonStr = sanitizeJsonString(text);
+      console.log("Raw AI Nursing String:", text);
+      console.log("Cleaned Nursing JSON:", cleanedJsonStr);
+
+      const parsedData = JSON.parse(cleanedJsonStr);
+      setNursingResults(parsedData);
+
+    } catch (error: any) {
+      console.error("Erro detalhado na IA (Enfermagem):", error);
+      alert(`Erro ao contatar API ou processar dados: ${error?.message || 'Erro desconhecido'}
+
+Abra o console do navegador (F12) para mais detalhes.`);
+    } finally {
+      setIsLoadingAi(false);
+    }
+  };
+
+  const handleNursingCheck = (category: string, item: string) => {
+    setNursingAssessment((prev: any) => {
+      const currentList = prev[category] || [];
+      if (currentList.includes(item)) {
+        return { ...prev, [category]: currentList.filter((i: string) => i !== item) };
+      }
+      return { ...prev, [category]: [...currentList, item] };
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 w-full font-sans text-gray-900">
       {/* Modern, Sticky Glassmorphism Header */}
-      <header className="bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-200 sticky top-0 z-50 transition-all duration-300">
+      <header className="bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-200 sticky top-0 z-50 transition-all duration-300 print:hidden">
         <div className="max-w-5xl mx-auto px-4 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="bg-gradient-to-br from-blue-600 to-indigo-600 p-2.5 rounded-xl shadow-md shadow-blue-500/20 transform hover:scale-105 transition-transform">
@@ -424,29 +626,35 @@ Retorne EXATAMENTE no seguinte formato JSON, sem crases markdown:
       <main className="max-w-6xl mx-auto px-4 py-12 md:py-16">
 
         {/* Main Search Container */}
-        <div className="bg-white rounded-3xl shadow-xl shadow-blue-900/5 border border-gray-100 mb-8 overflow-hidden">
+        <div className={`bg-white rounded-3xl shadow-xl shadow-blue-900/5 border border-gray-100 mb-8 overflow-hidden ${aiResults.length > 0 ? 'print:hidden' : ''}`}>
 
           {/* Segmented Control Tabs */}
-          <div className="bg-gray-50 p-2 border-b border-gray-100">
-            <div className="flex p-1 bg-gray-200/50 rounded-2xl">
+          <div className="bg-gray-50 p-2 border-b border-gray-100 print:hidden">
+            <div className="flex flex-col sm:flex-row p-2 bg-gray-200/70 rounded-2xl gap-2">
               <button
                 onClick={() => setActiveTab('cid')}
-                className={`flex-1 py-3.5 px-4 font-semibold text-sm sm:text-base text-center transition-all duration-300 rounded-xl ${activeTab === 'cid' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'}`}
+                className={`flex-1 py-4 px-6 font-bold text-base sm:text-lg text-center transition-all duration-300 rounded-xl ${activeTab === 'cid' ? 'bg-white text-blue-700 shadow-md ring-1 ring-gray-200 transform scale-[1.02]' : 'text-gray-500 hover:text-gray-800 hover:bg-white/60'} `}
               >
                 1. Já sei o CID principal
               </button>
               <button
                 onClick={() => setActiveTab('symptoms')}
-                className={`flex-1 py-3.5 px-4 font-semibold text-sm sm:text-base text-center transition-all duration-300 rounded-xl ${activeTab === 'symptoms' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'}`}
+                className={`flex-1 py-4 px-6 font-bold text-base sm:text-lg text-center transition-all duration-300 rounded-xl ${activeTab === 'symptoms' ? 'bg-white text-blue-700 shadow-md ring-1 ring-gray-200 transform scale-[1.02]' : 'text-gray-500 hover:text-gray-800 hover:bg-white/60'} `}
               >
                 2. Buscar por Sintomas/Quadro Clínico
+              </button>
+              <button
+                onClick={() => setActiveTab('nursing')}
+                className={`flex-1 py-4 px-6 font-bold text-base sm:text-lg text-center transition-all duration-300 rounded-xl ${activeTab === 'nursing' ? 'bg-white text-blue-700 shadow-md ring-1 ring-gray-200 transform scale-[1.02]' : 'text-gray-500 hover:text-gray-800 hover:bg-white/60'} `}
+              >
+                3. Processo de Enfermagem (SAE)
               </button>
             </div>
           </div>
 
           {/* Search Inputs area */}
           <div className="p-6 md:p-8">
-            {activeTab === 'cid' ? (
+            {activeTab === 'cid' && (
               <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
                 <label className="block text-sm font-bold text-gray-700 mb-3 tracking-wide flex items-center gap-2">
                   <Search className="w-4 h-4 text-blue-500" /> Digite o código ou nome do CID-10
@@ -497,26 +705,28 @@ Retorne EXATAMENTE no seguinte formato JSON, sem crases markdown:
                 </div>
                 <p className="mt-4 text-sm text-gray-500">Iremos buscar automaticamente os procedimentos SIGTAP compatíveis após a seleção.</p>
               </div>
-            ) : (
+            )}
+
+            {activeTab === 'symptoms' && (
               <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
                 <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-xl shadow-blue-900/5 mb-8 transform transition-all hover:scale-[1.01]">
                   <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="text-xs font-semibold text-gray-600 mb-1 block">Nome do Paciente</label>
+                      <label className="text-sm font-bold text-gray-700 mb-2 block tracking-wide">Nome do Paciente</label>
                       <input
                         type="text"
                         placeholder="Nome completo..."
-                        className="w-full text-sm p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                        className="w-full text-base p-4 border border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
                         value={patientName}
                         onChange={e => setPatientName(e.target.value)}
                       />
                     </div>
                     <div>
-                      <label className="text-xs font-semibold text-gray-600 mb-1 block">Prontuário / Registro</label>
+                      <label className="text-sm font-bold text-gray-700 mb-2 block tracking-wide">Prontuário / Registro</label>
                       <input
                         type="text"
                         placeholder="Nº do prontuário..."
-                        className="w-full text-sm p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                        className="w-full text-base p-4 border border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
                         value={medicalRecord}
                         onChange={e => setMedicalRecord(e.target.value)}
                       />
@@ -542,63 +752,65 @@ Retorne EXATAMENTE no seguinte formato JSON, sem crases markdown:
                   </div>
                 </div>
 
-                <div className="bg-white p-8 rounded-3xl border border-gray-100 mb-8 shadow-sm">
+                <div className="bg-white p-8 rounded-3xl border border-gray-100 mb-8 shadow-sm print:break-inside-avoid">
                   <h3 className="text-sm font-bold text-gray-800 uppercase tracking-widest mb-6 flex items-center gap-3">
                     <Activity className="w-5 h-5 text-blue-500" /> Histórico do Paciente
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="text-xs font-semibold text-gray-600 mb-1 block">Data de Nascimento</label>
-                      <input type="date" className="w-full text-sm p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" value={historicoPaciente.dataNascimento} onChange={e => setHistoricoPaciente({ ...historicoPaciente, dataNascimento: e.target.value })} />
+                      <label className="text-sm font-bold text-gray-700 mb-2 block tracking-wide">Data de Nascimento</label>
+                      <input type="date" className="w-full text-base p-4 border border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all" value={historicoPaciente.dataNascimento} onChange={e => setHistoricoPaciente({ ...historicoPaciente, dataNascimento: e.target.value })} />
                     </div>
                     <div>
-                      <label className="text-xs font-semibold text-gray-600 mb-1 block">Alergias</label>
-                      <input type="text" placeholder="Ex: Dipirona, Iodo, etc..." className="w-full text-sm p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" value={historicoPaciente.alergias} onChange={e => setHistoricoPaciente({ ...historicoPaciente, alergias: e.target.value })} />
+                      <label className="text-sm font-bold text-gray-700 mb-2 block tracking-wide">Alergias</label>
+                      <input type="text" placeholder="Ex: Dipirona, Iodo, etc..." className="w-full text-base p-4 border border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all" value={historicoPaciente.alergias} onChange={e => setHistoricoPaciente({ ...historicoPaciente, alergias: e.target.value })} />
                     </div>
                     <div className="md:col-span-2">
-                      <label className="text-xs font-semibold text-gray-600 mb-1 block">Comorbidades / Doenças Crônicas</label>
-                      <textarea rows={2} placeholder="Ex: HAS, Diabetes Tipo 2, Asma..." className="w-full text-sm p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none resize-none" value={historicoPaciente.comorbidades} onChange={e => setHistoricoPaciente({ ...historicoPaciente, comorbidades: e.target.value })} />
+                      <label className="text-sm font-bold text-gray-700 mb-2 block tracking-wide">Comorbidades / Doenças Crônicas</label>
+                      <textarea rows={2} placeholder="Ex: HAS, Diabetes Tipo 2, Asma..." className="w-full text-base p-4 border border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none resize-none transition-all" value={historicoPaciente.comorbidades} onChange={e => setHistoricoPaciente({ ...historicoPaciente, comorbidades: e.target.value })} />
                     </div>
                     <div className="md:col-span-2">
-                      <label className="text-xs font-semibold text-gray-600 mb-1 block">Medicamentos em Uso Contínuo</label>
-                      <textarea rows={2} placeholder="Ex: Losartana 50mg, Metformina..." className="w-full text-sm p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none resize-none" value={historicoPaciente.medicamentos} onChange={e => setHistoricoPaciente({ ...historicoPaciente, medicamentos: e.target.value })} />
+                      <label className="text-sm font-bold text-gray-700 mb-2 block tracking-wide">Medicamentos em Uso Contínuo</label>
+                      <textarea rows={2} placeholder="Ex: Losartana 50mg, Metformina..." className="w-full text-base p-4 border border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none resize-none transition-all" value={historicoPaciente.medicamentos} onChange={e => setHistoricoPaciente({ ...historicoPaciente, medicamentos: e.target.value })} />
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-white p-8 rounded-3xl border border-gray-100 mb-8 shadow-sm">
+                <div className="bg-white p-8 rounded-3xl border border-gray-100 mb-8 shadow-sm print:break-inside-avoid">
                   <h3 className="text-sm font-bold text-gray-800 uppercase tracking-widest mb-6 flex items-center gap-3">
-                    <Activity className="w-5 h-5 text-rose-500" /> Sinais Vitais <span className="text-xs font-semibold normal-case text-gray-400 bg-gray-100 px-2 py-1 rounded-md ml-2">Opcional p/ Manchester</span>
+                    <Activity className="w-5 h-5 text-rose-500" /> Sinais Vitais <span className="text-xs font-semibold normal-case text-gray-500 bg-gray-100 px-3 py-1 rounded-md ml-2">Opcional p/ Manchester</span>
                   </h3>
-                  <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-x-5 gap-y-6">
-                    <div><label className="text-xs text-gray-500 mb-1 block">PA (mmHg)</label><input type="text" placeholder="120x80" className="w-full text-sm p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" value={sinaisVitais.pa} onChange={e => setSinaisVitais({ ...sinaisVitais, pa: e.target.value })} /></div>
-                    <div><label className="text-xs text-gray-500 mb-1 block">FC (bpm)</label><input type="text" placeholder="80" className="w-full text-sm p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" value={sinaisVitais.fc} onChange={e => setSinaisVitais({ ...sinaisVitais, fc: e.target.value })} /></div>
-                    <div><label className="text-xs text-gray-500 mb-1 block">FR (irpm)</label><input type="text" placeholder="18" className="w-full text-sm p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" value={sinaisVitais.fr} onChange={e => setSinaisVitais({ ...sinaisVitais, fr: e.target.value })} /></div>
-                    <div><label className="text-xs text-gray-500 mb-1 block">Temp (ºC)</label><input type="text" placeholder="36.5" className="w-full text-sm p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" value={sinaisVitais.temp} onChange={e => setSinaisVitais({ ...sinaisVitais, temp: e.target.value })} /></div>
-                    <div><label className="text-xs text-gray-500 mb-1 block">SpO2 (%)</label><input type="text" placeholder="98" className="w-full text-sm p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" value={sinaisVitais.spo2} onChange={e => setSinaisVitais({ ...sinaisVitais, spo2: e.target.value })} /></div>
-                    <div><label className="text-xs text-gray-500 mb-1 block">HGT (mg/dL)</label><input type="text" placeholder="99" className="w-full text-sm p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" value={sinaisVitais.hgt} onChange={e => setSinaisVitais({ ...sinaisVitais, hgt: e.target.value })} /></div>
-                    <div><label className="text-xs text-gray-500 mb-1 block">Peso (kg)</label><input type="text" placeholder="70" className="w-full text-sm p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" value={sinaisVitais.peso} onChange={e => setSinaisVitais({ ...sinaisVitais, peso: e.target.value })} /></div>
-                    <div><label className="text-xs text-gray-500 mb-1 block">Altura (m)</label><input type="text" placeholder="1.75" className="w-full text-sm p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" value={sinaisVitais.altura} onChange={e => setSinaisVitais({ ...sinaisVitais, altura: e.target.value })} /></div>
-                    <div>
-                      <label className="text-xs text-gray-500 mb-1 block">Dor (0-10)</label>
-                      <select className="w-full text-sm p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer" value={sinaisVitais.dor} onChange={e => setSinaisVitais({ ...sinaisVitais, dor: e.target.value })}>
-                        <option value="">Sem reg.</option>
-                        <option value="0">0 - Sem Dor</option>
-                        <option value="1">1 - Muito Leve</option>
-                        <option value="2">2 - Leve</option>
-                        <option value="3">3 - Leve (Desconforto)</option>
-                        <option value="4">4 - Moderada</option>
-                        <option value="5">5 - Moderada (Incomoda muito)</option>
-                        <option value="6">6 - Moderada a Forte</option>
-                        <option value="7">7 - Forte</option>
-                        <option value="8">8 - Forte a Muito Forte</option>
-                        <option value="9">9 - Muito Forte</option>
-                        <option value="10">10 - Pior Dor Possível</option>
-                      </select>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                    <div><label className="text-sm font-bold text-gray-700 mb-2 block tracking-wide">PA (mmHg)</label><input type="text" placeholder="120x80" className="w-full text-base p-3 border border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all" value={sinaisVitais.pa} onChange={e => setSinaisVitais({ ...sinaisVitais, pa: e.target.value })} /></div>
+                    <div><label className="text-sm font-bold text-gray-700 mb-2 block tracking-wide">FC (bpm)</label><input type="text" placeholder="80" className="w-full text-base p-3 border border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all" value={sinaisVitais.fc} onChange={e => setSinaisVitais({ ...sinaisVitais, fc: e.target.value })} /></div>
+                    <div><label className="text-sm font-bold text-gray-700 mb-2 block tracking-wide">FR (irpm)</label><input type="text" placeholder="18" className="w-full text-base p-3 border border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all" value={sinaisVitais.fr} onChange={e => setSinaisVitais({ ...sinaisVitais, fr: e.target.value })} /></div>
+                    <div><label className="text-sm font-bold text-gray-700 mb-2 block tracking-wide">Temp (ºC)</label><input type="text" placeholder="36.5" className="w-full text-base p-3 border border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all" value={sinaisVitais.temp} onChange={e => setSinaisVitais({ ...sinaisVitais, temp: e.target.value })} /></div>
+                    <div><label className="text-sm font-bold text-gray-700 mb-2 block tracking-wide">SpO2 (%)</label><input type="text" placeholder="98" className="w-full text-base p-3 border border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all" value={sinaisVitais.spo2} onChange={e => setSinaisVitais({ ...sinaisVitais, spo2: e.target.value })} /></div>
+                    <div><label className="text-sm font-bold text-gray-700 mb-2 block tracking-wide">HGT (mg/dL)</label><input type="text" placeholder="99" className="w-full text-base p-3 border border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all" value={sinaisVitais.hgt} onChange={e => setSinaisVitais({ ...sinaisVitais, hgt: e.target.value })} /></div>
+                    <div><label className="text-sm font-bold text-gray-700 mb-2 block tracking-wide">Peso (kg)</label><input type="text" placeholder="70" className="w-full text-base p-3 border border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all" value={sinaisVitais.peso} onChange={e => setSinaisVitais({ ...sinaisVitais, peso: e.target.value })} /></div>
+                    <div><label className="text-sm font-bold text-gray-700 mb-2 block tracking-wide">Altura (m)</label><input type="text" placeholder="1.75" className="w-full text-base p-3 border border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all" value={sinaisVitais.altura} onChange={e => setSinaisVitais({ ...sinaisVitais, altura: e.target.value })} /></div>
+                    <div className="md:col-span-2 lg:col-span-4 grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <div>
+                        <label className="text-sm font-bold text-gray-700 mb-2 block tracking-wide">Dor (0-10)</label>
+                        <select className="w-full text-base p-3 border border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none cursor-pointer transition-all" value={sinaisVitais.dor} onChange={e => setSinaisVitais({ ...sinaisVitais, dor: e.target.value })}>
+                          <option value="">Sem registro</option>
+                          <option value="0">0 - Sem Dor</option>
+                          <option value="1">1 - Muito Leve</option>
+                          <option value="2">2 - Leve</option>
+                          <option value="3">3 - Leve (Desconforto)</option>
+                          <option value="4">4 - Moderada</option>
+                          <option value="5">5 - Moderada (Incomoda muito)</option>
+                          <option value="6">6 - Moderada a Forte</option>
+                          <option value="7">7 - Forte</option>
+                          <option value="8">8 - Forte a Muito Forte</option>
+                          <option value="9">9 - Muito Forte</option>
+                          <option value="10">10 - Pior Dor Possível</option>
+                        </select>
+                      </div>
+                      <div><label className="text-sm font-bold text-gray-700 mb-2 block tracking-wide">Glasgow</label><input type="text" placeholder="15" className="w-full text-base p-3 border border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all" value={sinaisVitais.glasgow} onChange={e => setSinaisVitais({ ...sinaisVitais, glasgow: e.target.value })} /></div>
+                      <div><label className="text-sm font-bold text-gray-700 mb-2 block tracking-wide">Altura Uterina (cm)</label><input type="text" placeholder="32" className="w-full text-base p-3 border border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all" value={sinaisVitais.alturaUterina} onChange={e => setSinaisVitais({ ...sinaisVitais, alturaUterina: e.target.value })} /></div>
+                      <div><label className="text-sm font-bold text-gray-700 mb-2 block tracking-wide">BCF (bpm)</label><input type="text" placeholder="140" className="w-full text-base p-3 border border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all" value={sinaisVitais.bcf} onChange={e => setSinaisVitais({ ...sinaisVitais, bcf: e.target.value })} /></div>
                     </div>
-                    <div><label className="text-xs text-gray-500 mb-1 block">Glasgow</label><input type="text" placeholder="15" className="w-full text-sm p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" value={sinaisVitais.glasgow} onChange={e => setSinaisVitais({ ...sinaisVitais, glasgow: e.target.value })} /></div>
-                    <div><label className="text-xs text-gray-500 mb-1 block">BCF (bpm)</label><input type="text" placeholder="140" className="w-full text-sm p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" value={sinaisVitais.bcf} onChange={e => setSinaisVitais({ ...sinaisVitais, bcf: e.target.value })} /></div>
-                    <div><label className="text-xs text-gray-500 mb-1 block">AU (cm)</label><input type="text" placeholder="32" className="w-full text-sm p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" value={sinaisVitais.alturaUterina} onChange={e => setSinaisVitais({ ...sinaisVitais, alturaUterina: e.target.value })} /></div>
                   </div>
                 </div>
 
@@ -662,11 +874,632 @@ Retorne EXATAMENTE no seguinte formato JSON, sem crases markdown:
                 </div>
               </div>
             )}
+
+            {activeTab === 'nursing' && (
+              <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div className="bg-white p-6 sm:p-8 rounded-3xl border border-gray-100 shadow-xl shadow-blue-900/5 mb-8 print:shadow-none print:border-none print:p-0">
+                  {/* Header */}
+                  <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-100">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center shadow-lg shadow-blue-500/30">
+                        <Activity className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <h2 className="text-2xl font-black text-gray-800">Processo de Enfermagem (SAE)</h2>
+                        <p className="text-sm text-gray-500 font-medium">Sistematização da Assistência de Enfermagem</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Progress Indicator */}
+                  <div className="bg-gray-50 rounded-2xl p-4 mb-6 border border-gray-100 print:hidden">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-bold text-gray-500">
+                        Etapa {currentSection + 1} de {saeSections.length}
+                      </span>
+                      <span className="text-sm font-bold text-blue-600">
+                        {Math.round(((currentSection + 1) / saeSections.length) * 100)}% Completo
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
+                      <div
+                        className="bg-blue-600 h-full rounded-full transition-all duration-500 ease-out"
+                        style={{ width: `${((currentSection + 1) / saeSections.length) * 100}%` }}
+                      />
+                    </div>
+                    <p className="text-sm text-center mt-3 font-bold text-gray-700 bg-white py-2 rounded-lg border border-gray-100 shadow-sm">
+                      {saeSections[currentSection]}
+                    </p>
+                  </div>
+
+                  {/* WIZARD CONTENT SECTIONS */}
+                  <div className="min-h-[400px]">
+                    {/* Section 1: Dados do Paciente */}
+                    {currentSection === 0 && (
+                      <div className="animate-in fade-in duration-300">
+                        <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+                          <h3 className="text-sm font-bold text-blue-800 uppercase tracking-widest mb-4 flex items-center gap-2 border-b border-gray-100 pb-3">
+                            <Activity className="w-4 h-4 text-blue-500" /> Identificação e Internação
+                          </h3>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                            <div className="md:col-span-2"><label className="text-sm font-bold text-gray-700 uppercase block tracking-wide mb-2">Nome do Paciente</label><input type="text" placeholder="Nome Completo" className="w-full text-base p-4 border border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all bg-gray-50 focus:bg-white" value={patientName} onChange={e => setPatientName(e.target.value)} /></div>
+                            <div><label className="text-sm font-bold text-gray-700 uppercase block tracking-wide mb-2">Prontuário</label><input type="text" placeholder="Ex: 596290" className="w-full text-base p-4 border border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all bg-gray-50 focus:bg-white" value={medicalRecord} onChange={e => setMedicalRecord(e.target.value)} /></div>
+                            <div><label className="text-sm font-bold text-gray-700 uppercase block tracking-wide mb-2">Nascimento</label><input type="date" className="w-full text-base p-4 border border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all bg-gray-50 focus:bg-white" value={historicoPaciente.dataNascimento || ''} onChange={e => setHistoricoPaciente({ ...historicoPaciente, dataNascimento: e.target.value })} /></div>
+                            <div><label className="text-sm font-bold text-gray-700 uppercase block tracking-wide mb-2">Data de Internação</label><input type="date" className="w-full text-base p-4 border border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all bg-gray-50 focus:bg-white" value={nursingAssessment.dataInternacao || ''} onChange={e => setNursingAssessment({ ...nursingAssessment, dataInternacao: e.target.value })} /></div>
+                            <div><label className="text-sm font-bold text-gray-700 uppercase block tracking-wide mb-2">Leito</label><input type="text" placeholder="Ex: UTI-01" className="w-full text-base p-4 border border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all bg-gray-50 focus:bg-white" value={nursingAssessment.leito || ''} onChange={e => setNursingAssessment({ ...nursingAssessment, leito: e.target.value })} /></div>
+                            <div className="md:col-span-3"><label className="text-sm font-bold text-gray-700 uppercase block tracking-wide mb-2">Hipótese Diagnóstica / Quadro</label><input type="text" placeholder="Ex: Sepse de Foco Pulmonar, Pós-Op..." className="w-full text-base p-4 border border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all bg-gray-50 focus:bg-white" value={nursingAssessment.hipoteseDiagnostica || ''} onChange={e => setNursingAssessment({ ...nursingAssessment, hipoteseDiagnostica: e.target.value })} /></div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Section 2: Sinais Vitais */}
+                    {currentSection === 1 && (
+                      <div className="animate-in fade-in duration-300">
+                        <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm border-l-4 border-l-rose-500">
+                          <h3 className="text-sm font-bold text-gray-800 uppercase tracking-widest mb-4 flex items-center gap-2 border-b border-gray-100 pb-3">
+                            <Activity className="w-4 h-4 text-rose-500" /> Sinais Vitais Atuais
+                          </h3>
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <div><label className="text-sm font-bold text-gray-700 uppercase block tracking-wide mb-2">Pressão Arterial (PA)</label><input type="text" placeholder="Ex: 120x80 mmHg" className="w-full text-base p-4 border border-gray-300 rounded-xl focus:ring-4 focus:ring-rose-500/20 focus:border-rose-500 outline-none transition-all bg-gray-50 focus:bg-white" value={sinaisVitais.pa || ''} onChange={e => setSinaisVitais({ ...sinaisVitais, pa: e.target.value })} /></div>
+                            <div><label className="text-sm font-bold text-gray-700 uppercase block tracking-wide mb-2">Frequência Cardíaca (FC/Pulso)</label><input type="text" placeholder="Ex: 80 bpm" className="w-full text-base p-4 border border-gray-300 rounded-xl focus:ring-4 focus:ring-rose-500/20 focus:border-rose-500 outline-none transition-all bg-gray-50 focus:bg-white" value={sinaisVitais.fc || ''} onChange={e => setSinaisVitais({ ...sinaisVitais, fc: e.target.value })} /></div>
+                            <div><label className="text-sm font-bold text-gray-700 uppercase block tracking-wide mb-2">Saturação (SpO2)</label><input type="text" placeholder="Ex: 98%" className="w-full text-base p-4 border border-gray-300 rounded-xl focus:ring-4 focus:ring-rose-500/20 focus:border-rose-500 outline-none transition-all bg-gray-50 focus:bg-white" value={sinaisVitais.spo2 || ''} onChange={e => setSinaisVitais({ ...sinaisVitais, spo2: e.target.value })} /></div>
+                            <div><label className="text-sm font-bold text-gray-700 uppercase block tracking-wide mb-2">Frequência Respiratória (FR)</label><input type="text" placeholder="Ex: 18 irpm" className="w-full text-base p-4 border border-gray-300 rounded-xl focus:ring-4 focus:ring-rose-500/20 focus:border-rose-500 outline-none transition-all bg-gray-50 focus:bg-white" value={sinaisVitais.fr || ''} onChange={e => setSinaisVitais({ ...sinaisVitais, fr: e.target.value })} /></div>
+                            <div><label className="text-sm font-bold text-gray-700 uppercase block tracking-wide mb-2">Temperatura (Temp)</label><input type="text" placeholder="Ex: 36.5 °C" className="w-full text-base p-4 border border-gray-300 rounded-xl focus:ring-4 focus:ring-rose-500/20 focus:border-rose-500 outline-none transition-all bg-gray-50 focus:bg-white" value={sinaisVitais.temp || ''} onChange={e => setSinaisVitais({ ...sinaisVitais, temp: e.target.value })} /></div>
+                            <div><label className="text-sm font-bold text-gray-700 uppercase block tracking-wide mb-2">Glicemia (HGT)</label><input type="text" placeholder="Ex: 100 mg/dL" className="w-full text-base p-4 border border-gray-300 rounded-xl focus:ring-4 focus:ring-rose-500/20 focus:border-rose-500 outline-none transition-all bg-gray-50 focus:bg-white" value={sinaisVitais.hgt || ''} onChange={e => setSinaisVitais({ ...sinaisVitais, hgt: e.target.value })} /></div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Section 3: Avaliação Neurológica */}
+                    {currentSection === 2 && (
+                      <div className="animate-in fade-in duration-300 space-y-6">
+                        <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm border-l-4 border-l-blue-500">
+                          <h4 className="font-bold text-sm text-gray-800 mb-4 border-b border-gray-100 pb-2 flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-blue-500"></div> Estado Neurológico</h4>
+                          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 text-sm text-gray-700">
+                            {['Lúcido', 'Desorientado', 'Confuso', 'Agitado', 'Letárgico', 'Comatoso', 'Déficit Motor'].map(item => (
+                              <label key={item} className="flex items-center gap-3 cursor-pointer group bg-gray-50 hover:bg-blue-50 p-2.5 rounded-xl border border-transparent hover:border-blue-100 transition-all">
+                                <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 transition-all cursor-pointer" checked={(nursingAssessment.neurologicalStatus || []).includes(item)} onChange={() => handleNursingCheck('neurologicalStatus', item)} />
+                                <span className="group-hover:text-blue-700 font-medium">{item}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm border-l-4 border-l-blue-400">
+                          <h4 className="font-bold text-sm text-gray-800 mb-4 border-b border-gray-100 pb-2 flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-blue-400"></div> Pupilas</h4>
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm text-gray-700">
+                            {['Isocóricas', 'Anisocóricas', 'Mióticas', 'Midriáticas', 'Fotorreagentes', 'Não-reagentes'].map(item => (
+                              <label key={item} className="flex items-center gap-3 cursor-pointer group bg-gray-50 hover:bg-blue-50 p-2.5 rounded-xl border border-transparent hover:border-blue-100 transition-all">
+                                <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 transition-all cursor-pointer" checked={(nursingAssessment.pupils || []).includes(item)} onChange={() => handleNursingCheck('pupils', item)} />
+                                <span className="group-hover:text-blue-700 font-medium">{item}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Section 4: Avaliação Respiratória */}
+                    {currentSection === 3 && (
+                      <div className="animate-in fade-in duration-300 bg-white p-6 rounded-2xl border border-gray-200 shadow-sm border-l-4 border-l-cyan-500">
+                        <h4 className="font-bold text-sm text-gray-800 mb-4 border-b border-gray-100 pb-2 flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-cyan-500"></div> Oxigenação & Respiração</h4>
+                        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 text-sm text-gray-700">
+                          {['Eupneico', 'Taquipneico', 'Bradipneico', 'Dispneico', 'Uso de Musculatura Acessória', 'Cianose', 'Tosse Produtiva', 'Tosse Seca', 'Ventilação Mecânica', 'Cateter de O2', 'Máscara de Venturi', 'Macronebulização'].map(item => (
+                            <label key={item} className="flex items-center gap-3 cursor-pointer group bg-gray-50 hover:bg-cyan-50 p-2.5 rounded-xl border border-transparent hover:border-cyan-100 transition-all">
+                              <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-cyan-600 focus:ring-cyan-500 transition-all cursor-pointer" checked={(nursingAssessment.oxygenation || []).includes(item)} onChange={() => handleNursingCheck('oxygenation', item)} />
+                              <span className="group-hover:text-cyan-700 font-medium">{item}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Section 5: Avaliação Cardiovascular */}
+                    {currentSection === 4 && (
+                      <div className="animate-in fade-in duration-300 bg-white p-6 rounded-2xl border border-gray-200 shadow-sm border-l-4 border-l-pink-500">
+                        <h4 className="font-bold text-sm text-gray-800 mb-4 border-b border-gray-100 pb-2 flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-pink-500"></div> Sistema Cardiovascular e Perfusão</h4>
+                        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 text-sm text-gray-700">
+                          {['Normotenso', 'Hipertenso', 'Hipotenso', 'Taquicárdico', 'Bradicárdico', 'Arritmia', 'Edema Periférico', 'Perfusão Periférica Lenta', 'Palidez', 'Pulso Fino', 'Pulso Cheio'].map(item => (
+                            <label key={item} className="flex items-center gap-3 cursor-pointer group bg-gray-50 hover:bg-pink-50 p-2.5 rounded-xl border border-transparent hover:border-pink-100 transition-all">
+                              <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-pink-600 focus:ring-pink-500 transition-all cursor-pointer" checked={(nursingAssessment.vascular || []).includes(item)} onChange={() => handleNursingCheck('vascular', item)} />
+                              <span className="group-hover:text-pink-700 font-medium">{item}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Section 6: Avaliação de Pele */}
+                    {currentSection === 5 && (
+                      <div className="animate-in fade-in duration-300 space-y-6">
+                        <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm border-l-4 border-l-orange-400">
+                          <h4 className="font-bold text-sm text-gray-800 mb-4 border-b border-gray-100 pb-2 flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-orange-400"></div> Pele e Integridade Cutânea</h4>
+                          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 text-sm text-gray-700">
+                            {['Pele Íntegra', 'Corada', 'Hidratada', 'Desidratada', 'Ictérica', 'Eritema', 'Equimose', 'Hematoma', 'Lesão por Pressão (LPP)', 'Ferida Operatória', 'Curativo Oclusivo'].map(item => (
+                              <label key={item} className="flex items-center gap-3 cursor-pointer group bg-gray-50 hover:bg-orange-50 p-2.5 rounded-xl border border-transparent hover:border-orange-100 transition-all">
+                                <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-orange-500 focus:ring-orange-500 transition-all cursor-pointer" checked={(nursingAssessment.skin || []).includes(item)} onChange={() => handleNursingCheck('skin', item)} />
+                                <span className="group-hover:text-orange-700 font-medium">{item}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm border-l-4 border-l-red-400">
+                          <h4 className="font-bold text-sm text-gray-800 mb-4 border-b border-gray-100 pb-2 flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-red-400"></div> Termorregulação</h4>
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm text-gray-700">
+                            {['Normotérmico', 'Febril', 'Hipotérmico', 'Sudorese Fria', 'Calafrios'].map(item => (
+                              <label key={item} className="flex items-center gap-3 cursor-pointer group bg-gray-50 hover:bg-red-50 p-2.5 rounded-xl border border-transparent hover:border-red-100 transition-all">
+                                <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-red-500 focus:ring-red-500 transition-all cursor-pointer" checked={(nursingAssessment.thermalRegulation || []).includes(item)} onChange={() => handleNursingCheck('thermalRegulation', item)} />
+                                <span className="group-hover:text-red-700 font-medium">{item}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Section 7: Avaliação Gastrointestinal */}
+                    {currentSection === 6 && (
+                      <div className="animate-in fade-in duration-300 bg-white p-6 rounded-2xl border border-gray-200 shadow-sm border-l-4 border-l-emerald-500">
+                        <h4 className="font-bold text-sm text-gray-800 mb-4 border-b border-gray-100 pb-2 flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-emerald-500"></div> Gastrointestinal & Exame Abdominal</h4>
+                        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 text-sm text-gray-700">
+                          {['Abdome Plano', 'Abdome Globoso', 'Abdome Distendido', 'Dor à Palpação', 'Ruídos Hidroaéreos Presentes', 'RHA Ausentes/Diminuídos', 'Vômito', 'Náusea', 'Diarreia', 'Constipação', 'Sonda Nasoentérica (SNE)', 'Estomia Intestinal', 'Melena', 'Jejum'].map(item => (
+                            <label key={item} className="flex items-center gap-3 cursor-pointer group bg-gray-50 hover:bg-emerald-50 p-2.5 rounded-xl border border-transparent hover:border-emerald-100 transition-all">
+                              <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 transition-all cursor-pointer" checked={(nursingAssessment.gastrointestinal || []).includes(item)} onChange={() => handleNursingCheck('gastrointestinal', item)} />
+                              <span className="group-hover:text-emerald-800 font-medium">{item}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Section 8: Avaliação Urinária */}
+                    {currentSection === 7 && (
+                      <div className="animate-in fade-in duration-300 bg-white p-6 rounded-2xl border border-gray-200 shadow-sm border-l-4 border-l-yellow-500">
+                        <h4 className="font-bold text-sm text-gray-800 mb-4 border-b border-gray-100 pb-2 flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-yellow-500"></div> Sistema Genitourinário</h4>
+                        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 text-sm text-gray-700">
+                          {['Diurese Espontânea', 'Oligúria', 'Anúria', 'Disúria', 'Hematúria', 'Urina Colúrica', 'Poliúria', 'Sonda Vesical de Demora (SVD)', 'Sonda Vesical de Alívio', 'Incontinência Urinária'].map(item => (
+                            <label key={item} className="flex items-center gap-3 cursor-pointer group bg-gray-50 hover:bg-yellow-50 p-2.5 rounded-xl border border-transparent hover:border-yellow-100 transition-all">
+                              <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-yellow-600 focus:ring-yellow-500 transition-all cursor-pointer" checked={(nursingAssessment.urinary || []).includes(item)} onChange={() => handleNursingCheck('urinary', item)} />
+                              <span className="group-hover:text-yellow-700 font-medium">{item}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Section 9: Cateteres e Sondas */}
+                    {currentSection === 8 && (
+                      <div className="animate-in fade-in duration-300 bg-white p-6 rounded-2xl border border-gray-200 shadow-sm border-l-4 border-l-indigo-500">
+                        <h4 className="font-bold text-sm text-gray-800 mb-4 border-b border-gray-100 pb-2 flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-indigo-500"></div> Acessos, Drenos e Dispositivos Especiais</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-sm text-gray-700">
+                          <div className="space-y-2">
+                            <label className="text-xs text-gray-500 font-semibold uppercase block mb-1">Acesso Venoso (Tipo/Local)</label>
+                            <input type="text" placeholder="Ex: AVP MSD, CVC Subclávia" className="w-full text-sm p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-shadow bg-gray-50 focus:bg-white" value={nursingAssessment.catheters?.peripheral || ''} onChange={e => setNursingAssessment({ ...nursingAssessment, catheters: { ...nursingAssessment.catheters, peripheral: e.target.value } })} />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-xs text-gray-500 font-semibold uppercase block mb-1">Sonda/Cateter Vesical</label>
+                            <input type="text" placeholder="Ex: SVD Fio Guia, Shilley" className="w-full text-sm p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-shadow bg-gray-50 focus:bg-white" value={nursingAssessment.catheters?.vesicalProbe || ''} onChange={e => setNursingAssessment({ ...nursingAssessment, catheters: { ...nursingAssessment.catheters, vesicalProbe: e.target.value } })} />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-xs text-gray-500 font-semibold uppercase block mb-1">Drenos</label>
+                            <input type="text" placeholder="Ex: Dreno Torácico D, Penrose" className="w-full text-sm p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-shadow bg-gray-50 focus:bg-white" value={nursingAssessment.catheters?.drain || ''} onChange={e => setNursingAssessment({ ...nursingAssessment, catheters: { ...nursingAssessment.catheters, drain: e.target.value } })} />
+                          </div>
+                          <div className="md:col-span-2 lg:col-span-3 pt-4 border-t border-gray-100">
+                            <label className="text-xs text-gray-500 font-semibold uppercase block mb-3">Via Alimentar / Suporte Nutricional</label>
+                            <div className="flex flex-wrap gap-2">
+                              {['Dieta Oral', 'SNE', 'SNG', 'Gastrostomia', 'NPT (Nutrição Parenteral)', 'Jejum'].map(item => (
+                                <label key={item} className="flex items-center gap-2 cursor-pointer bg-gray-50 hover:bg-indigo-50 px-3 py-2 rounded-lg border border-transparent hover:border-indigo-100 transition-all">
+                                  <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 transition-all cursor-pointer" checked={(nursingAssessment.catheters?.feeding || []).includes(item)} onChange={() => {
+                                    const currentFeeding = nursingAssessment.catheters?.feeding || [];
+                                    const newFeeding = currentFeeding.includes(item) ? currentFeeding.filter((i: string) => i !== item) : [...currentFeeding, item];
+                                    setNursingAssessment({ ...nursingAssessment, catheters: { ...nursingAssessment.catheters, feeding: newFeeding } });
+                                  }} />
+                                  <span className="text-sm font-medium">{item}</span>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Section 10: Escala de Braden */}
+                    {currentSection === 9 && (
+                      <div className="animate-in fade-in duration-300 space-y-6">
+                        <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm border-l-4 border-l-red-500">
+                          <h4 className="font-bold text-lg text-gray-800 mb-6 flex items-center justify-between">
+                            <span className="flex items-center gap-2">
+                              <div className="w-2 h-2 rounded-full bg-red-500"></div> Escala de Braden Manual
+                            </span>
+                            <div className="px-4 py-2 bg-red-50 text-red-700 rounded-xl text-sm border border-red-100">
+                              Escore: <span className="font-bold text-lg">{bradenScore.total}</span> - {getBradenRisk(bradenScore.total)}
+                            </div>
+                          </h4>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            {/* Percepção Sensorial */}
+                            <div className="space-y-3">
+                              <label className="text-sm font-bold text-gray-800 mb-2 block">1. Percepção Sensorial</label>
+                              <div className="space-y-2">
+                                {[{ v: 1, l: 'Completamente limitado' }, { v: 2, l: 'Muito limitado' }, { v: 3, l: 'Levemente limitado' }, { v: 4, l: 'Nenhuma limitação' }].map(opt => (
+                                  <label key={opt.v} className="flex items-center gap-3 p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-red-50 transition-colors">
+                                    <input type="radio" checked={bradenScore.sensoryPerception === opt.v} onChange={() => setBradenScore({ ...bradenScore, sensoryPerception: opt.v })} className="w-4 h-4 text-red-600 border-gray-300 focus:ring-red-500 cursor-pointer" />
+                                    <span className="text-sm text-gray-700 font-medium">{opt.l} ({opt.v})</span>
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+                            {/* Umidade */}
+                            <div className="space-y-3">
+                              <label className="text-sm font-bold text-gray-800 mb-2 block">2. Umidade</label>
+                              <div className="space-y-2">
+                                {[{ v: 1, l: 'Constantemente úmida' }, { v: 2, l: 'Muito úmida' }, { v: 3, l: 'Ocasionalmente úmida' }, { v: 4, l: 'Raramente úmida' }].map(opt => (
+                                  <label key={opt.v} className="flex items-center gap-3 p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-red-50 transition-colors">
+                                    <input type="radio" checked={bradenScore.moisture === opt.v} onChange={() => setBradenScore({ ...bradenScore, moisture: opt.v })} className="w-4 h-4 text-red-600 border-gray-300 focus:ring-red-500 cursor-pointer" />
+                                    <span className="text-sm text-gray-700 font-medium">{opt.l} ({opt.v})</span>
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+                            {/* Atividade */}
+                            <div className="space-y-3">
+                              <label className="text-sm font-bold text-gray-800 mb-2 block">3. Atividade</label>
+                              <div className="space-y-2">
+                                {[{ v: 1, l: 'Acamado' }, { v: 2, l: 'Confinado à cadeira' }, { v: 3, l: 'Anda ocasionalmente' }, { v: 4, l: 'Anda frequentemente' }].map(opt => (
+                                  <label key={opt.v} className="flex items-center gap-3 p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-red-50 transition-colors">
+                                    <input type="radio" checked={bradenScore.activity === opt.v} onChange={() => setBradenScore({ ...bradenScore, activity: opt.v })} className="w-4 h-4 text-red-600 border-gray-300 focus:ring-red-500 cursor-pointer" />
+                                    <span className="text-sm text-gray-700 font-medium">{opt.l} ({opt.v})</span>
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+                            {/* Mobilidade */}
+                            <div className="space-y-3">
+                              <label className="text-sm font-bold text-gray-800 mb-2 block">4. Mobilidade</label>
+                              <div className="space-y-2">
+                                {[{ v: 1, l: 'Totalmente imóvel' }, { v: 2, l: 'Bastante limitado' }, { v: 3, l: 'Levemente limitado' }, { v: 4, l: 'Não apresenta limitações' }].map(opt => (
+                                  <label key={opt.v} className="flex items-center gap-3 p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-red-50 transition-colors">
+                                    <input type="radio" checked={bradenScore.mobility === opt.v} onChange={() => setBradenScore({ ...bradenScore, mobility: opt.v })} className="w-4 h-4 text-red-600 border-gray-300 focus:ring-red-500 cursor-pointer" />
+                                    <span className="text-sm text-gray-700 font-medium">{opt.l} ({opt.v})</span>
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+                            {/* Nutrição */}
+                            <div className="space-y-3">
+                              <label className="text-sm font-bold text-gray-800 mb-2 block">5. Nutrição</label>
+                              <div className="space-y-2">
+                                {[{ v: 1, l: 'Muito pobre' }, { v: 2, l: 'Provavelmente inadequada' }, { v: 3, l: 'Adequada' }, { v: 4, l: 'Excelente' }].map(opt => (
+                                  <label key={opt.v} className="flex items-center gap-3 p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-red-50 transition-colors">
+                                    <input type="radio" checked={bradenScore.nutrition === opt.v} onChange={() => setBradenScore({ ...bradenScore, nutrition: opt.v })} className="w-4 h-4 text-red-600 border-gray-300 focus:ring-red-500 cursor-pointer" />
+                                    <span className="text-sm text-gray-700 font-medium">{opt.l} ({opt.v})</span>
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+                            {/* Fricção e Cisalhamento */}
+                            <div className="space-y-3">
+                              <label className="text-sm font-bold text-gray-800 mb-2 block">6. Fricção e Cisalhamento</label>
+                              <div className="space-y-2">
+                                {[{ v: 1, l: 'Problema' }, { v: 2, l: 'Problema em potencial' }, { v: 3, l: 'Nenhum problema aparente' }].map(opt => (
+                                  <label key={opt.v} className="flex items-center gap-3 p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-red-50 transition-colors">
+                                    <input type="radio" checked={bradenScore.frictionShear === opt.v} onChange={() => setBradenScore({ ...bradenScore, frictionShear: opt.v })} className="w-4 h-4 text-red-600 border-gray-300 focus:ring-red-500 cursor-pointer" />
+                                    <span className="text-sm text-gray-700 font-medium">{opt.l} ({opt.v})</span>
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Section 11: Escala de Morse */}
+                    {currentSection === 10 && (
+                      <div className="animate-in fade-in duration-300 space-y-6">
+                        <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm border-l-4 border-l-orange-500">
+                          <h4 className="font-bold text-lg text-gray-800 mb-6 flex items-center justify-between">
+                            <span className="flex items-center gap-2">
+                              <div className="w-2 h-2 rounded-full bg-orange-500"></div> Escala de Morse Manual
+                            </span>
+                            <div className="px-4 py-2 bg-orange-50 text-orange-700 rounded-xl text-sm border border-orange-100">
+                              Escore: <span className="font-bold text-lg">{morseScore.total}</span> - {getMorseRisk(morseScore.total)}
+                            </div>
+                          </h4>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            {/* Histórico de Quedas */}
+                            <div className="space-y-3">
+                              <label className="text-sm font-bold text-gray-800 mb-2 block">1. Histórico de Quedas</label>
+                              <div className="space-y-2">
+                                {[{ v: 0, l: 'Não' }, { v: 25, l: 'Sim' }].map(opt => (
+                                  <label key={opt.v} className="flex items-center gap-3 p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-orange-50 transition-colors">
+                                    <input type="radio" checked={morseScore.fallHistory === opt.v} onChange={() => setMorseScore({ ...morseScore, fallHistory: opt.v })} className="w-4 h-4 text-orange-600 border-gray-300 focus:ring-orange-500 cursor-pointer" />
+                                    <span className="text-sm text-gray-700 font-medium">{opt.l} ({opt.v})</span>
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+                            {/* Diagnóstico Secundário */}
+                            <div className="space-y-3">
+                              <label className="text-sm font-bold text-gray-800 mb-2 block">2. Diagnóstico Secundário</label>
+                              <div className="space-y-2">
+                                {[{ v: 0, l: 'Não' }, { v: 15, l: 'Sim' }].map(opt => (
+                                  <label key={opt.v} className="flex items-center gap-3 p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-orange-50 transition-colors">
+                                    <input type="radio" checked={morseScore.secondaryDiagnosis === opt.v} onChange={() => setMorseScore({ ...morseScore, secondaryDiagnosis: opt.v })} className="w-4 h-4 text-orange-600 border-gray-300 focus:ring-orange-500 cursor-pointer" />
+                                    <span className="text-sm text-gray-700 font-medium">{opt.l} ({opt.v})</span>
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+                            {/* Auxílio na Deambulação */}
+                            <div className="space-y-3">
+                              <label className="text-sm font-bold text-gray-800 mb-2 block">3. Auxílio na Deambulação</label>
+                              <div className="space-y-2">
+                                {[{ v: 0, l: 'Nenhum/Acamado/Auxílio de enfermagem' }, { v: 15, l: 'Muletas/Bengala/Andador' }, { v: 30, l: 'Apoio em Mobília' }].map(opt => (
+                                  <label key={opt.v} className="flex items-center gap-3 p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-orange-50 transition-colors">
+                                    <input type="radio" checked={morseScore.ambulatoryAid === opt.v} onChange={() => setMorseScore({ ...morseScore, ambulatoryAid: opt.v })} className="w-4 h-4 text-orange-600 border-gray-300 focus:ring-orange-500 cursor-pointer" />
+                                    <span className="text-sm text-gray-700 font-medium">{opt.l} ({opt.v})</span>
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+                            {/* Terapia Endovenosa */}
+                            <div className="space-y-3">
+                              <label className="text-sm font-bold text-gray-800 mb-2 block">4. Terapia Endovenosa</label>
+                              <div className="space-y-2">
+                                {[{ v: 0, l: 'Não' }, { v: 20, l: 'Sim' }].map(opt => (
+                                  <label key={opt.v} className="flex items-center gap-3 p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-orange-50 transition-colors">
+                                    <input type="radio" checked={morseScore.ivTherapy === opt.v} onChange={() => setMorseScore({ ...morseScore, ivTherapy: opt.v })} className="w-4 h-4 text-orange-600 border-gray-300 focus:ring-orange-500 cursor-pointer" />
+                                    <span className="text-sm text-gray-700 font-medium">{opt.l} ({opt.v})</span>
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+                            {/* Marcha */}
+                            <div className="space-y-3">
+                              <label className="text-sm font-bold text-gray-800 mb-2 block">5. Marcha</label>
+                              <div className="space-y-2">
+                                {[{ v: 0, l: 'Normal/Acamado/Cadeira de rodas' }, { v: 10, l: 'Fraca' }, { v: 20, l: 'Comprometida' }].map(opt => (
+                                  <label key={opt.v} className="flex items-center gap-3 p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-orange-50 transition-colors">
+                                    <input type="radio" checked={morseScore.gait === opt.v} onChange={() => setMorseScore({ ...morseScore, gait: opt.v })} className="w-4 h-4 text-orange-600 border-gray-300 focus:ring-orange-500 cursor-pointer" />
+                                    <span className="text-sm text-gray-700 font-medium">{opt.l} ({opt.v})</span>
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+                            {/* Estado Mental */}
+                            <div className="space-y-3">
+                              <label className="text-sm font-bold text-gray-800 mb-2 block">6. Estado Mental</label>
+                              <div className="space-y-2">
+                                {[{ v: 0, l: 'Orientado/Capaz' }, { v: 15, l: 'Superestima/Esquece limitações' }].map(opt => (
+                                  <label key={opt.v} className="flex items-center gap-3 p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-orange-50 transition-colors">
+                                    <input type="radio" checked={morseScore.mentalStatus === opt.v} onChange={() => setMorseScore({ ...morseScore, mentalStatus: opt.v })} className="w-4 h-4 text-orange-600 border-gray-300 focus:ring-orange-500 cursor-pointer" />
+                                    <span className="text-sm text-gray-700 font-medium">{opt.l} ({opt.v})</span>
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Section 12: Escala de Fugulin */}
+                    {currentSection === 11 && (
+                      <div className="animate-in fade-in duration-300 space-y-6">
+                        <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm border-l-4 border-l-purple-500">
+                          <h4 className="font-bold text-lg text-gray-800 mb-6 flex items-center justify-between">
+                            <span className="flex items-center gap-2">
+                              <div className="w-2 h-2 rounded-full bg-purple-500"></div> Escala de Fugulin (Grau de Dependência)
+                            </span>
+                            <div className="px-4 py-2 bg-purple-50 text-purple-700 rounded-xl text-sm border border-purple-100">
+                              Escore: <span className="font-bold text-lg">{fugulinScore.total}</span> - {getFugulinCareLevel(fugulinScore.total)}
+                            </div>
+                          </h4>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            {/* Estado Mental */}
+                            <div className="space-y-3">
+                              <label className="text-sm font-bold text-gray-800 mb-2 block">1. Estado Mental</label>
+                              <div className="space-y-2">
+                                {[{ v: 1, l: 'Consciente e Orientado' }, { v: 2, l: 'Confuso' }, { v: 3, l: 'Períodos de Inconsciência' }, { v: 4, l: 'Inconsciente/Coma' }].map(opt => (
+                                  <label key={opt.v} className="flex items-center gap-3 p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-purple-50 transition-colors">
+                                    <input type="radio" checked={fugulinScore.mentalStatus === opt.v} onChange={() => setFugulinScore({ ...fugulinScore, mentalStatus: opt.v })} className="w-4 h-4 text-purple-600 border-gray-300 focus:ring-purple-500 cursor-pointer" />
+                                    <span className="text-sm text-gray-700 font-medium">{opt.l} ({opt.v})</span>
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+                            {/* Oxigenação */}
+                            <div className="space-y-3">
+                              <label className="text-sm font-bold text-gray-800 mb-2 block">2. Oxigenação</label>
+                              <div className="space-y-2">
+                                {[{ v: 1, l: 'Ar ambiente' }, { v: 2, l: 'Necessita de O2 (Cateter/Máscara)' }, { v: 3, l: 'VNI / CPAP' }, { v: 4, l: 'Ventilação Mecânica / Intubado' }].map(opt => (
+                                  <label key={opt.v} className="flex items-center gap-3 p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-purple-50 transition-colors">
+                                    <input type="radio" checked={fugulinScore.oxygenation === opt.v} onChange={() => setFugulinScore({ ...fugulinScore, oxygenation: opt.v })} className="w-4 h-4 text-purple-600 border-gray-300 focus:ring-purple-500 cursor-pointer" />
+                                    <span className="text-sm text-gray-700 font-medium">{opt.l} ({opt.v})</span>
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+                            {/* Sinais Vitais */}
+                            <div className="space-y-3">
+                              <label className="text-sm font-bold text-gray-800 mb-2 block">3. Sinais Vitais</label>
+                              <div className="space-y-2">
+                                {[{ v: 1, l: 'Rotina (Ex: 6/6h)' }, { v: 2, l: 'A cada 4 horas' }, { v: 3, l: 'A cada 2 horas' }, { v: 4, l: 'Controles Contínuos' }].map(opt => (
+                                  <label key={opt.v} className="flex items-center gap-3 p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-purple-50 transition-colors">
+                                    <input type="radio" checked={fugulinScore.vitalSigns === opt.v} onChange={() => setFugulinScore({ ...fugulinScore, vitalSigns: opt.v })} className="w-4 h-4 text-purple-600 border-gray-300 focus:ring-purple-500 cursor-pointer" />
+                                    <span className="text-sm text-gray-700 font-medium">{opt.l} ({opt.v})</span>
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+                            {/* Motilidade */}
+                            <div className="space-y-3">
+                              <label className="text-sm font-bold text-gray-800 mb-2 block">4. Motilidade</label>
+                              <div className="space-y-2">
+                                {[{ v: 1, l: 'Movimentação Ampla' }, { v: 2, l: 'Limitação de Movimentos' }, { v: 3, l: 'Dificuldade p/ movimentar-se' }, { v: 4, l: 'Totalmente Imóvel' }].map(opt => (
+                                  <label key={opt.v} className="flex items-center gap-3 p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-purple-50 transition-colors">
+                                    <input type="radio" checked={fugulinScore.motility === opt.v} onChange={() => setFugulinScore({ ...fugulinScore, motility: opt.v })} className="w-4 h-4 text-purple-600 border-gray-300 focus:ring-purple-500 cursor-pointer" />
+                                    <span className="text-sm text-gray-700 font-medium">{opt.l} ({opt.v})</span>
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+                            {/* Deambulação */}
+                            <div className="space-y-3">
+                              <label className="text-sm font-bold text-gray-800 mb-2 block">5. Deambulação</label>
+                              <div className="space-y-2">
+                                {[{ v: 1, l: 'Ambulante' }, { v: 2, l: 'Deambula com Auxílio' }, { v: 3, l: 'Restrito à Cadeira/Poltrona' }, { v: 4, l: 'Restrito ao Leito' }].map(opt => (
+                                  <label key={opt.v} className="flex items-center gap-3 p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-purple-50 transition-colors">
+                                    <input type="radio" checked={fugulinScore.walking === opt.v} onChange={() => setFugulinScore({ ...fugulinScore, walking: opt.v })} className="w-4 h-4 text-purple-600 border-gray-300 focus:ring-purple-500 cursor-pointer" />
+                                    <span className="text-sm text-gray-700 font-medium">{opt.l} ({opt.v})</span>
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+                            {/* Alimentação */}
+                            <div className="space-y-3">
+                              <label className="text-sm font-bold text-gray-800 mb-2 block">6. Alimentação</label>
+                              <div className="space-y-2">
+                                {[{ v: 1, l: 'Auto-suficiente' }, { v: 2, l: 'Auxílio Parcial' }, { v: 3, l: 'Sonda Nasogástrica/Enteral' }, { v: 4, l: 'Nutrição Parenteral / Jejum estrito' }].map(opt => (
+                                  <label key={opt.v} className="flex items-center gap-3 p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-purple-50 transition-colors">
+                                    <input type="radio" checked={fugulinScore.feeding === opt.v} onChange={() => setFugulinScore({ ...fugulinScore, feeding: opt.v })} className="w-4 h-4 text-purple-600 border-gray-300 focus:ring-purple-500 cursor-pointer" />
+                                    <span className="text-sm text-gray-700 font-medium">{opt.l} ({opt.v})</span>
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+                            {/* Cuidado Corporal / Higiene */}
+                            <div className="space-y-3">
+                              <label className="text-sm font-bold text-gray-800 mb-2 block">7. Cuidado Corporal / Cuidado com a pele</label>
+                              <div className="space-y-2">
+                                {[{ v: 1, l: 'Autocuidado (Banho de chuveiro)' }, { v: 2, l: 'Auxílio no chuveiro/cadeira' }, { v: 3, l: 'Banho no leito parcial' }, { v: 4, l: 'Banho no leito total (Higiene íntima/oral)' }].map(opt => (
+                                  <label key={opt.v} className="flex items-center gap-3 p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-purple-50 transition-colors">
+                                    <input type="radio" checked={fugulinScore.bodyCare === opt.v} onChange={() => setFugulinScore({ ...fugulinScore, bodyCare: opt.v })} className="w-4 h-4 text-purple-600 border-gray-300 focus:ring-purple-500 cursor-pointer" />
+                                    <span className="text-sm text-gray-700 font-medium">{opt.l} ({opt.v})</span>
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+                            {/* Eliminação */}
+                            <div className="space-y-3">
+                              <label className="text-sm font-bold text-gray-800 mb-2 block">8. Eliminação</label>
+                              <div className="space-y-2">
+                                {[{ v: 1, l: 'Uso de banheiro independente' }, { v: 2, l: 'Comadre/papagaio c/ auxílio' }, { v: 3, l: 'Sonda Vesical / Fralda / Ostomia' }, { v: 4, l: 'Evacuação no leito / Descontrole / Diálise' }].map(opt => (
+                                  <label key={opt.v} className="flex items-center gap-3 p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-purple-50 transition-colors">
+                                    <input type="radio" checked={fugulinScore.elimination === opt.v} onChange={() => setFugulinScore({ ...fugulinScore, elimination: opt.v })} className="w-4 h-4 text-purple-600 border-gray-300 focus:ring-purple-500 cursor-pointer" />
+                                    <span className="text-sm text-gray-700 font-medium">{opt.l} ({opt.v})</span>
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+                            {/* Terapêutica */}
+                            <div className="space-y-3 md:col-span-2">
+                              <label className="text-sm font-bold text-gray-800 mb-2 block">9. Terapêutica</label>
+                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
+                                {[{ v: 1, l: 'IM/VO/SC (Até 2x/dia)' }, { v: 2, l: 'EV Intermitente (Até 4x/dia)' }, { v: 3, l: 'EV Contínua / NPP / Sangue' }, { v: 4, l: 'Drogas Vasoativas / Hemoderivados contínuos' }].map(opt => (
+                                  <label key={opt.v} className="flex items-center gap-3 p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-purple-50 transition-colors">
+                                    <input type="radio" checked={fugulinScore.therapeutics === opt.v} onChange={() => setFugulinScore({ ...fugulinScore, therapeutics: opt.v })} className="w-4 h-4 text-purple-600 border-gray-300 focus:ring-purple-500 cursor-pointer" />
+                                    <span className="text-sm text-gray-700 font-medium">{opt.l} ({opt.v})</span>
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Section 13: Análise IA */}
+                    {currentSection === 12 && (
+                      <div className="animate-in fade-in duration-300 space-y-6">
+                        <div className="bg-white p-8 rounded-2xl border border-emerald-200 shadow-sm text-center">
+                          <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
+                            <Activity className="w-10 h-10" />
+                          </div>
+                          <h3 className="text-2xl font-bold text-gray-800 mb-3">Conclusão da Avaliação de Enfermagem</h3>
+                          <p className="text-gray-600 max-w-xl mx-auto mb-8 text-lg">
+                            Você completou todas as etapas {nursingResults ? 'com sucesso.' : 'da avaliação. Clique no botão abaixo para enviar os dados à Inteligência Artificial e gerar seu plano de cuidados estruturado.'}
+                          </p>
+
+                          {!nursingResults ? (
+                            <button
+                              onClick={handleNursingAnalysis}
+                              disabled={isLoadingAi || !apiKey}
+                              className="w-full md:w-auto overflow-hidden relative group disabled:opacity-60 disabled:cursor-not-allowed bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold py-4 px-10 rounded-xl shadow-lg shadow-emerald-500/30 transition-all hover:shadow-xl hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-3 mx-auto text-lg"
+                            >
+                              {isLoadingAi ? (
+                                <>
+                                  <svg className="animate-spin -ml-1 mr-2 h-6 w-6 text-white" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                  Processando Dados Clínicos...
+                                </>
+                              ) : (
+                                <>
+                                  <CheckCircle2 className="w-7 h-7" /> Gerar Plano NANDA / NIC / NOC
+                                </>
+                              )}
+                            </button>
+                          ) : (
+                            <div className="bg-emerald-50 text-emerald-800 p-4 rounded-xl border border-emerald-100 inline-flex items-center gap-2 font-bold mb-4">
+                              <CheckCircle2 className="w-5 h-5" /> Plano de Cuidados Gerado com Sucesso! (Role para baixo)
+                            </div>
+                          )}
+
+                          {!apiKey && (
+                            <p className="text-red-500 text-sm mt-4 font-bold flex items-center justify-center gap-2"><AlertTriangle className="w-4 h-4" /> Configuração Obrigatória: Insira a API Key do Google Gemini no topo da página antes de continuar.</p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Navigation Footer */}
+                  <div className="pt-6 mt-8 border-t border-gray-100 flex flex-col sm:flex-row justify-between items-center gap-4 print:hidden">
+                    <button
+                      onClick={() => setCurrentSection(Math.max(0, currentSection - 1))}
+                      disabled={currentSection === 0}
+                      className="w-full sm:w-auto px-6 py-2.5 font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Anterior
+                    </button>
+
+                    <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                      <button
+                        onClick={() => setCurrentSection(0)}
+                        className="w-full sm:w-auto px-6 py-2.5 font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-xl transition-colors"
+                      >
+                        Início
+                      </button>
+
+                      {currentSection < saeSections.length - 1 ? (
+                        <button
+                          onClick={() => setCurrentSection(Math.min(saeSections.length - 1, currentSection + 1))}
+                          className="w-full sm:w-auto px-8 py-2.5 font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md shadow-blue-500/20 transition-all active:scale-95 flex items-center justify-center gap-2"
+                        >
+                          Próximo <ChevronRight className="w-4 h-4" />
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => window.print()}
+                          className="w-full sm:w-auto px-8 py-2.5 font-bold text-white bg-slate-800 hover:bg-slate-900 rounded-xl shadow-md transition-all active:scale-95 flex items-center justify-center gap-2"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                          Salvar Resumo (PDF)
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
         {/* Results Area */}
-        {(results.cidSelecionado || aiResults.length > 0) ? (
+        {(results.cidSelecionado || aiResults.length > 0 || nursingResults) ? (
           <div className="flex flex-col gap-6">
             {/* Cabecalho de Identificacao do Paciente (Para Impressao/PDF) */}
             {(patientName || medicalRecord || historicoPaciente.dataNascimento) && (
@@ -679,9 +1512,24 @@ Retorne EXATAMENTE no seguinte formato JSON, sem crases markdown:
                       <p className="text-sm font-medium text-gray-600 mt-1">Nasc: {new Date(historicoPaciente.dataNascimento).toLocaleDateString('pt-BR')} (Idade: {calcularIdadeExata(historicoPaciente.dataNascimento)})</p>
                     )}
                   </div>
-                  <div className="md:text-right bg-gray-100 px-4 py-2 rounded-lg print:bg-transparent print:border print:border-gray-300">
+                  <div className="md:text-right bg-gray-100 px-4 py-2 rounded-lg print:bg-transparent print:border print:border-gray-300 print:px-0 print:py-0">
                     <span className="text-xs uppercase tracking-widest text-gray-500 font-bold block mb-1">Prontuário / Registro</span>
                     <span className="text-xl font-mono font-bold text-blue-900">{medicalRecord || 'NÃO INFORMADO'}</span>
+                  </div>
+                </div>
+
+                {/* Resumo Clínico Exclusivo para Impressão */}
+                <div className="mt-6 pt-5 border-t border-gray-200 hidden print:block">
+                  <h3 className="font-bold text-sm text-gray-800 uppercase tracking-widest mb-3">Resumo Clínico e Sinais Vitais</h3>
+                  {clinicalText && <p className="text-sm text-gray-800 mb-4 whitespace-pre-wrap"><span className="font-semibold text-gray-500 mr-2 uppercase">Quadro:</span> {clinicalText}</p>}
+
+                  <div className="grid grid-cols-4 gap-4 text-sm bg-gray-50 p-3 rounded-lg border border-gray-200">
+                    {sinaisVitais.pa && <div><span className="font-bold block text-xs text-gray-500 uppercase">PA</span>{sinaisVitais.pa}</div>}
+                    {sinaisVitais.fc && <div><span className="font-bold block text-xs text-gray-500 uppercase">FC</span>{sinaisVitais.fc}</div>}
+                    {sinaisVitais.spo2 && <div><span className="font-bold block text-xs text-gray-500 uppercase">SpO2</span>{sinaisVitais.spo2}</div>}
+                    {sinaisVitais.temp && <div><span className="font-bold block text-xs text-gray-500 uppercase">Temp</span>{sinaisVitais.temp}</div>}
+                    {sinaisVitais.fr && <div><span className="font-bold block text-xs text-gray-500 uppercase">FR</span>{sinaisVitais.fr}</div>}
+                    {sinaisVitais.hgt && <div><span className="font-bold block text-xs text-gray-500 uppercase">Glicemia</span>{sinaisVitais.hgt}</div>}
                   </div>
                 </div>
               </div>
@@ -723,12 +1571,12 @@ Retorne EXATAMENTE no seguinte formato JSON, sem crases markdown:
 
               return (
                 <div key={index} className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                  <div className="mb-4 flex items-center gap-3">
+                  <div className="mb-6 flex items-center gap-3 print:break-after-avoid">
                     <div className="bg-green-100 p-2 rounded-full">
                       <CheckCircle2 className="w-5 h-5 text-green-600" />
                     </div>
                     <div>
-                      <h2 className="text-2xl font-bold text-gray-900 border-b-2 border-green-500 inline-block">
+                      <h2 className="text-2xl font-bold text-gray-900 border-b-2 border-green-500 inline-block pb-1">
                         CID Principal: {res.cidSelecionado}
                       </h2>
                       <p className="text-gray-600 text-lg mt-1 font-medium">{res.nomeCid}</p>
@@ -750,7 +1598,7 @@ Retorne EXATAMENTE no seguinte formato JSON, sem crases markdown:
 
                   {/* Resposta do Manchester Rendering */}
                   {res.classificacaoManchester && (
-                    <div className={`mb-6 rounded-2xl overflow-hidden shadow-sm border-2 ${manchesterBorder} relative break-inside-avoid-page print:break-inside-avoid print:bg-white print:border-4`}>
+                    <div className={`mb-6 rounded-2xl overflow-hidden shadow-sm border-2 ${manchesterBorder} relative break-inside-avoid print:break-inside-avoid print:bg-white print:border-4`}>
                       <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none print:hidden"></div>
                       <div className={`px-6 md:px-8 py-5 flex flex-col md:flex-row md:items-center gap-5 ${manchesterBg} print:bg-transparent`}>
                         <div className="flex-shrink-0 flex items-center gap-3 bg-white/20 p-3 rounded-2xl backdrop-blur-sm print:backdrop-blur-none print:bg-gray-100">
@@ -788,10 +1636,10 @@ Retorne EXATAMENTE no seguinte formato JSON, sem crases markdown:
                     </div>
                   )}
 
-                  <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-300">
+                  <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-300 print:break-inside-avoid">
                     <div className="bg-gradient-to-r from-gray-50 to-white px-6 py-5 border-b border-gray-200 flex items-center gap-3">
                       <div className="bg-blue-100 p-2 rounded-lg text-blue-700 font-black">{(res.procedimentos || []).length}</div>
-                      <h3 className="font-bold text-gray-800 text-lg">Procedimentos SIGTAP Recomendados</h3>
+                      <h3 className="font-bold text-gray-800 text-lg uppercase tracking-wide">Procedimentos SIGTAP Recomendados</h3>
                     </div>
 
                     <div className="divide-y divide-gray-100">
@@ -833,6 +1681,89 @@ Retorne EXATAMENTE no seguinte formato JSON, sem crases markdown:
                 </div>
               );
             })}
+
+            {/* Nursing Results Rendering */}
+            {nursingResults && (
+              <div className="bg-white rounded-2xl shadow-sm border border-emerald-100 overflow-hidden mt-6 animate-in fade-in slide-in-from-bottom-4 duration-500 print:border-black print:border-2">
+                <div className="bg-gradient-to-r from-emerald-600 to-teal-700 px-6 py-5 flex flex-col md:flex-row justify-between md:items-center gap-3 print:bg-transparent print:bg-none print:border-b print:border-black">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-white p-2 text-emerald-700 rounded-lg shadow-sm print:bg-gray-100 print:text-black"><Activity className="w-6 h-6" /></div>
+                    <h3 className="text-xl font-black text-white tracking-wide drop-shadow-sm print:text-black print:drop-shadow-none uppercase">Processo de Enfermagem Gerado com IA</h3>
+                  </div>
+                  <button
+                    onClick={() => window.print()}
+                    className="flex items-center justify-center gap-2 bg-white/20 hover:bg-white/30 text-white border border-white/50 px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-colors print:hidden"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>Salvar PDF
+                  </button>
+                </div>
+
+                <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {/* NANDA */}
+                  <div className="bg-red-50 border border-red-100 rounded-xl p-5 break-inside-avoid print:bg-white print:border-2 print:border-red-800">
+                    <h4 className="font-bold text-red-800 text-lg mb-4 flex items-center gap-2 border-b border-red-200 pb-2"><AlertTriangle className="w-5 h-5" /> Diagnósticos (NANDA-I)</h4>
+                    <ul className="space-y-4">
+                      {nursingResults.diagnosticosNANDA?.map((n: any, i: number) => (
+                        <li key={i} className="text-sm text-gray-800 border-l-4 border-red-300 pl-3">
+                          <span className="font-extrabold block text-red-900 drop-shadow-sm text-base">{n.titulo}</span>
+                          {n.fatorRelacionado && <span className="block mt-1 font-medium text-gray-700"><b className="text-gray-900">Fator Relacionado:</b> {n.fatorRelacionado}</span>}
+                          {n.caracteristicaDefinidora && <span className="block mt-1 font-medium text-gray-700"><b className="text-gray-900">Evidenciado por:</b> {n.caracteristicaDefinidora}</span>}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* NIC */}
+                  <div className="bg-blue-50 border border-blue-100 rounded-xl p-5 break-inside-avoid print:bg-white print:border-2 print:border-blue-800">
+                    <h4 className="font-bold text-blue-800 text-lg mb-4 flex items-center gap-2 border-b border-blue-200 pb-2"><Stethoscope className="w-5 h-5" /> Intervenções (NIC)</h4>
+                    <ul className="list-none space-y-3">
+                      {nursingResults.intervencoesNIC?.map((nic: string, i: number) => (
+                        <li key={i} className="text-sm text-gray-800 flex items-start gap-2 bg-white/50 p-2 rounded-md border border-blue-50/50 print:bg-gray-50 print:border-gray-200">
+                          <CheckCircle2 className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                          <span className="font-medium">{nic}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* NOC */}
+                  <div className="bg-green-50 border border-green-100 rounded-xl p-5 break-inside-avoid print:bg-white print:border-2 print:border-green-800">
+                    <h4 className="font-bold text-green-800 text-lg mb-4 flex items-center gap-2 border-b border-green-200 pb-2"><CheckCircle2 className="w-5 h-5" /> Resultados (NOC)</h4>
+                    <ul className="list-none space-y-3">
+                      {nursingResults.resultadosNOC?.map((noc: string, i: number) => (
+                        <li key={i} className="text-sm text-gray-800 flex items-start gap-2 bg-white/50 p-2 rounded-md border border-green-50/50 print:bg-gray-50 print:border-gray-200">
+                          <Activity className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                          <span className="font-medium">{noc}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Protocolos Anvisa (Braden/Morse) */}
+                {(nursingResults.riscoBradenAnalise || nursingResults.riscoMorseAnalise) && (
+                  <div className="bg-amber-50 mx-6 mb-6 p-5 rounded-xl border border-amber-200 break-inside-avoid print:bg-white print:border-2 print:border-amber-800">
+                    <div className="flex items-center gap-2 font-bold uppercase tracking-wider text-amber-900 mb-4 pb-2 border-b border-amber-200">
+                      <AlertTriangle className="w-5 h-5" /> Análise de Riscos Assistenciais & Protocolos ANVISA
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full text-sm">
+                      {nursingResults.riscoBradenAnalise && (
+                        <div className="bg-white p-3 rounded-lg border border-amber-100 shadow-sm">
+                          <strong className="block text-amber-800 mb-1 border-b border-amber-100 pb-1">Escala de Braden (Lesão por Pressão)</strong>
+                          <span className="text-amber-950 font-medium leading-relaxed">{nursingResults.riscoBradenAnalise}</span>
+                        </div>
+                      )}
+                      {nursingResults.riscoMorseAnalise && (
+                        <div className="bg-white p-3 rounded-lg border border-amber-100 shadow-sm">
+                          <strong className="block text-amber-800 mb-1 border-b border-amber-100 pb-1">Escala de Morse (Queda)</strong>
+                          <span className="text-amber-950 font-medium leading-relaxed">{nursingResults.riscoMorseAnalise}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         ) : (
           searchQuery.length > 2 ? (
