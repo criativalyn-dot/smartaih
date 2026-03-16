@@ -1536,43 +1536,42 @@ Abra o console do navegador (F12) para mais detalhes.`);
                     {sinaisVitais.hgt && <div><span className="font-bold block text-xs text-gray-500 uppercase">Glicemia</span>{sinaisVitais.hgt}</div>}
                   </div>
                 </div>
-
-                {/* Área de Preenchimento do Profissional (Apenas Tela, Não Imprime) */}
-                <div className="mt-6 pt-5 border-t border-gray-200 print:hidden">
-                  <h3 className="font-bold text-sm text-gray-800 uppercase tracking-widest mb-3 flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
-                    Assinatura do Documento
-                  </h3>
-                  <div className="flex flex-col sm:flex-row gap-4">
-                    <div className="flex-1">
-                      <label className="text-xs font-bold text-gray-600 uppercase block mb-1">
-                        {activeTab === 'nursing' ? 'Nome do Enfermeiro(a)' : 'Nome do Médico Solicitante'}
-                      </label>
-                      <input
-                        type="text"
-                        placeholder={activeTab === 'nursing' ? "Ex: Enf. Ana Silva" : "Ex: Dr. João Pedro"}
-                        className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                        value={professionalName}
-                        onChange={e => setProfessionalName(e.target.value)}
-                      />
-                    </div>
-                    {activeTab === 'nursing' && (
-                      <div className="w-full sm:w-1/3">
-                        <label className="text-xs font-bold text-gray-600 uppercase block mb-1">COREN</label>
-                        <input
-                          type="text"
-                          placeholder="Ex: 123456-SP"
-                          className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                          value={professionalCoren}
-                          onChange={e => setProfessionalCoren(e.target.value)}
-                        />
-                      </div>
-                    )}
-                  </div>
-                </div>
-
               </div>
             )}
+
+            {/* Área de Preenchimento do Profissional (Apenas Tela, Não Imprime) */}
+            <div className="bg-white border-2 border-dashed border-gray-300 rounded-xl p-5 mb-4 print:hidden">
+              <h3 className="font-bold text-sm text-gray-800 uppercase tracking-widest mb-3 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                Assinatura do Documento
+              </h3>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex-1">
+                  <label className="text-xs font-bold text-gray-600 uppercase block mb-1">
+                    {activeTab === 'nursing' ? 'Nome do Enfermeiro(a)' : 'Nome do Médico Solicitante'}
+                  </label>
+                  <input
+                    type="text"
+                    placeholder={activeTab === 'nursing' ? "Ex: Enf. Ana Silva" : "Ex: Dr. João Pedro"}
+                    className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                    value={professionalName}
+                    onChange={e => setProfessionalName(e.target.value)}
+                  />
+                </div>
+                {activeTab === 'nursing' && (
+                  <div className="w-full sm:w-1/3">
+                    <label className="text-xs font-bold text-gray-600 uppercase block mb-1">COREN</label>
+                    <input
+                      type="text"
+                      placeholder="Ex: 123456-SP"
+                      className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                      value={professionalCoren}
+                      onChange={e => setProfessionalCoren(e.target.value)}
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
 
             {/* Header if AI generated multiple results */}
             {aiResults.length > 0 && (
