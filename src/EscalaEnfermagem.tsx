@@ -319,7 +319,15 @@ export const EscalaEnfermagem: React.FC<Props> = ({
                         <div className="grid grid-cols-2 gap-4">
                             <div className="col-span-2">
                                 <label className="text-xs font-bold text-gray-500 uppercase block mb-1">Nome Completo</label>
-                                <input autoFocus type="text" value={novoColab.nome || ''} onChange={e => setNovoColab({ ...novoColab, nome: e.target.value })} className="w-full p-2 border rounded focus:ring-2 focus:ring-red-500 outline-none" />
+                                <input autoFocus type="text" value={novoColab.nome || ''} onChange={e => {
+                                    const newName = e.target.value;
+                                    const match = colaboradores.find(c => c.nome.trim().toUpperCase() === newName.trim().toUpperCase());
+                                    if (match && match.coren && !novoColab.coren) {
+                                        setNovoColab({ ...novoColab, nome: newName, coren: match.coren, categoria: match.categoria });
+                                    } else {
+                                        setNovoColab({ ...novoColab, nome: newName });
+                                    }
+                                }} className="w-full p-2 border rounded focus:ring-2 focus:ring-red-500 outline-none" />
                             </div>
 
                             <div>
