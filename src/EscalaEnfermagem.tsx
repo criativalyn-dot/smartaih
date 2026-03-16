@@ -8,7 +8,7 @@ export interface Colaborador {
     coren: string;
     turnoBase: string;
     setor: string;
-    regime: '12x36_PAR' | '12x36_IMPAR' | '8H_DIARIO' | '24H_DOBRA' | '24x24_PAR' | '24x24_IMPAR' | 'SOBREAVISO';
+    regime: '12x36_PAR' | '12x36_IMPAR' | '8H_DIARIO' | '24H_DOBRA' | '24x24_PAR' | '24x24_IMPAR' | 'SOBREAVISO' | 'FERIAS';
 }
 
 interface Props {
@@ -51,6 +51,7 @@ export const EscalaEnfermagem: React.FC<Props> = ({
 
     const calcularPlantaoDefault = (dia: number, colab: Colaborador) => {
         if (colab.regime === 'SOBREAVISO') return 'S';
+        if (colab.regime === 'FERIAS') return 'F';
         if (colab.regime === '12x36_PAR') return dia % 2 === 0 ? 'P' : 'F';
         if (colab.regime === '12x36_IMPAR') return dia % 2 !== 0 ? 'P' : 'F';
         if (colab.regime === '24x24_PAR' || colab.regime === '24H_DOBRA') return dia % 2 === 0 ? 'P' : 'F';
@@ -114,7 +115,7 @@ export const EscalaEnfermagem: React.FC<Props> = ({
         if (existingEntries.length > 0) {
             const isPar = (r?: string) => r === '12x36_PAR' || r === '24x24_PAR' || r === '24H_DOBRA';
             const isImpar = (r?: string) => r === '12x36_IMPAR' || r === '24x24_IMPAR';
-            const is8H = (r?: string) => r === '8H_DIARIO' || r === 'SOBREAVISO';
+            const is8H = (r?: string) => r === '8H_DIARIO' || r === 'SOBREAVISO' || r === 'FERIAS';
 
             const novoIsPar = isPar(novoColab.regime);
             const novoIsImpar = isImpar(novoColab.regime);
@@ -347,7 +348,14 @@ export const EscalaEnfermagem: React.FC<Props> = ({
                                 <label className="text-xs font-bold text-gray-500 uppercase block mb-1">Setor</label>
                                 {isNovoSetor ? (
                                     <div className="flex gap-2">
-                                        <input type="text" placeholder="Digite o nome do setor" value={novoColab.setor || ''} onChange={e => setNovoColab({ ...novoColab, setor: e.target.value.toUpperCase() })} className="w-full p-2 border rounded outline-none" autoFocus />
+                                        <input type="text" placeholder="Digite o nome do setor" value={novoColab.setor || ''} onChange={e => {
+                                            const newSetor = e.target.value.toUpperCase();
+                                            if (newSetor === 'FÉRIAS' || newSetor === 'FERIAS') {
+                                                setNovoColab({ ...novoColab, setor: newSetor, turnoBase: '00H-00H', regime: 'FERIAS' });
+                                            } else {
+                                                setNovoColab({ ...novoColab, setor: newSetor });
+                                            }
+                                        }} className="w-full p-2 border rounded outline-none" autoFocus />
                                         {setores.length > 0 && (
                                             <button onClick={() => { setIsNovoSetor(false); setNovoColab({ ...novoColab, setor: setores[0] }); }} className="px-4 py-2 bg-gray-200 text-gray-700 font-bold rounded hover:bg-gray-300 transition-colors text-xs whitespace-nowrap">
                                                 Voltar à Lista
@@ -356,11 +364,14 @@ export const EscalaEnfermagem: React.FC<Props> = ({
                                     </div>
                                 ) : (
                                     <select value={novoColab.setor || ''} onChange={e => {
-                                        if (e.target.value === 'NOVO_SETOR') {
+                                        const setVal = e.target.value;
+                                        if (setVal === 'NOVO_SETOR') {
                                             setIsNovoSetor(true);
                                             setNovoColab({ ...novoColab, setor: '' });
+                                        } else if (setVal === 'FÉRIAS' || setVal === 'FERIAS') {
+                                            setNovoColab({ ...novoColab, setor: setVal, turnoBase: '00H-00H', regime: 'FERIAS' });
                                         } else {
-                                            setNovoColab({ ...novoColab, setor: e.target.value });
+                                            setNovoColab({ ...novoColab, setor: setVal });
                                         }
                                     }} className="w-full p-2 border rounded outline-none bg-white">
                                         {setores.map(s => <option key={s} value={s}>{s}</option>)}
@@ -391,6 +402,7 @@ export const EscalaEnfermagem: React.FC<Props> = ({
                                     <option value="24x24_PAR">24x24 Dobra (Dias Pares)</option>
                                     <option value="24x24_IMPAR">24x24 Dobra (Dias Ímpares)</option>
                                     <option value="SOBREAVISO">Sobreaviso (S Diário)</option>
+                                    <option value="FERIAS">Férias 30 Dias (F Diário)</option>
                                 </select>
                             </div>
                         </div>
