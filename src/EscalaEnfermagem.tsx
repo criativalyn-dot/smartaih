@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Download, Plus, Trash2, Calendar, Settings } from 'lucide-react';
+import { Download, Plus, Trash2, Calendar } from 'lucide-react';
 
 export interface Colaborador {
     id: string;
@@ -27,10 +27,13 @@ export const EscalaEnfermagem: React.FC<Props> = ({
 }) => {
     const [showModal, setShowModal] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
+    const [isNovoSetor, setIsNovoSetor] = useState(false);
+    const setores = Array.from(new Set(colaboradores.map(c => c.setor)));
+
     const [novoColab, setNovoColab] = useState<Partial<Colaborador>>({
         categoria: 'TEC',
         regime: '12x36_PAR',
-        setor: 'Pronto Socorro',
+        setor: setores.length > 0 ? setores[0] : '',
         turnoBase: '07H-19H'
     });
 
@@ -83,18 +86,21 @@ export const EscalaEnfermagem: React.FC<Props> = ({
 
     const handleOpenAdd = () => {
         setEditingId(null);
-        setNovoColab({ categoria: 'TEC', regime: '12x36_PAR', setor: 'Pronto Socorro', turnoBase: '07H-19H' });
+        setNovoColab({ categoria: 'TEC', regime: '12x36_PAR', setor: setores.length > 0 ? setores[0] : '', turnoBase: '07H-19H' });
+        setIsNovoSetor(setores.length === 0);
         setShowModal(true);
     };
 
     const handleEdit = (colab: Colaborador) => {
         setEditingId(colab.id);
         setNovoColab({ ...colab });
+        setIsNovoSetor(!setores.includes(colab.setor));
         setShowModal(true);
     };
 
     const handleSaveColaborador = () => {
         if (!novoColab.nome) return alert('Digite o nome');
+        if (!novoColab.setor) return alert('Informe o setor do colaborador');
 
         if (editingId) {
             // Update existing
@@ -106,7 +112,8 @@ export const EscalaEnfermagem: React.FC<Props> = ({
 
         setShowModal(false);
         setEditingId(null);
-        setNovoColab({ categoria: 'TEC', regime: '12x36_PAR', setor: 'Pronto Socorro', turnoBase: '07H-19H' });
+        setNovoColab({ categoria: 'TEC', regime: '12x36_PAR', setor: setores.length > 0 ? setores[0] : '', turnoBase: '07H-19H' });
+        setIsNovoSetor(false);
     };
 
     const handleRemove = (id: string) => {
@@ -116,7 +123,6 @@ export const EscalaEnfermagem: React.FC<Props> = ({
     };
 
     // Agrupar por Setor -> Categoria
-    const setores = Array.from(new Set(colaboradores.map(c => c.setor)));
 
     return (
         <div className="w-full bg-white rounded-3xl shadow-xl border border-gray-100 p-6 overflow-x-auto">
@@ -189,29 +195,40 @@ export const EscalaEnfermagem: React.FC<Props> = ({
                                     {dia}
                                 </th>
                             ))}
-                            <th className="border border-gray-400 p-2 text-center w-8 print:hidden"><Settings className="w-4 h-4 mx-auto" /></th>
                         </tr>
                     </thead>
                     <tbody>
                         {colaboradores.length === 0 ? (
                             <tr>
-                                <td colSpan={diasNoMes + 5} className="text-center p-8 text-gray-400">Nenhum colaborador cadastrado. Clique no botão acima para adicionar.</td>
+                                <td colSpan={diasNoMes + 4} className="text-center p-8 text-gray-400">Nenhum colaborador cadastrado. Clique no botão acima para adicionar.</td>
                             </tr>
                         ) : setores.map(setor => (
                             <React.Fragment key={setor}>
                                 {/* Header do Setor */}
                                 <tr className="bg-gray-200">
-                                    <td colSpan={diasNoMes + 5} className="border border-gray-400 p-1.5 font-black text-gray-800 uppercase tracking-widest text-xs">
+                                    <td colSpan={diasNoMes + 4} className="border border-gray-400 p-1.5 font-black text-gray-800 uppercase tracking-widest text-xs">
                                         {setor}
                                     </td>
                                 </tr>
                                 {/* Linhas dos Colaboradores do Setor */}
                                 {colaboradores.filter(c => c.setor === setor).map(colab => (
                                     <tr key={colab.id} className="hover:bg-gray-50">
-                                        <td className="border border-gray-400 p-1.5 font-bold text-gray-800 text-xs truncate max-w-[250px]">{colab.nome}</td>
-                                        <td className="border border-gray-400 p-1 text-center font-bold text-gray-600">{colab.categoria}</td>
-                                        <td className="border border-gray-400 p-1 text-center font-bold text-gray-600">{colab.coren}</td>
-                                        <td className="border border-gray-400 p-1 text-center font-bold text-gray-800">{colab.turnoBase}</td>
+                                        <td className="border border-gray-400 p-1.5 align-middle">
+                                            <div className="flex items-center justify-between gap-1">
+                                                <span className="font-bold text-gray-800 text-xs truncate max-w-[190px]" title={colab.nome}>{colab.nome}</span>
+                                                <div className="flex items-center gap-1.5 print:hidden shrink-0">
+                                                    <button onClick={() => handleEdit(colab)} className="text-gray-400 hover:text-blue-600 transition-colors bg-white/50 hover:bg-white rounded p-1" title="Editar">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                                                    </button>
+                                                    <button onClick={() => handleRemove(colab.id)} className="text-gray-400 hover:text-red-500 transition-colors bg-white/50 hover:bg-white rounded p-1" title="Remover">
+                                                        <Trash2 className="w-3.5 h-3.5 block" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="border border-gray-400 p-1 text-center font-bold text-gray-600 text-xs">{colab.categoria}</td>
+                                        <td className="border border-gray-400 p-1 text-center font-bold text-gray-600 text-xs">{colab.coren}</td>
+                                        <td className="border border-gray-400 p-1 text-center font-bold text-gray-800 text-xs">{colab.turnoBase}</td>
 
                                         {diasArray.map(dia => {
                                             const fds = isFDS(dia, mes, ano);
@@ -243,16 +260,6 @@ export const EscalaEnfermagem: React.FC<Props> = ({
                                                 </td>
                                             );
                                         })}
-                                        <td className="border border-gray-400 p-1 text-center print:hidden">
-                                            <div className="flex items-center justify-center gap-2">
-                                                <button onClick={() => handleEdit(colab)} className="text-gray-400 hover:text-blue-600 transition-colors" title="Editar">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
-                                                </button>
-                                                <button onClick={() => handleRemove(colab.id)} className="text-gray-400 hover:text-red-500 transition-colors" title="Remover">
-                                                    <Trash2 className="w-4 h-4 mx-auto" />
-                                                </button>
-                                            </div>
-                                        </td>
                                     </tr>
                                 ))}
                             </React.Fragment>
@@ -296,12 +303,40 @@ export const EscalaEnfermagem: React.FC<Props> = ({
 
                             <div className="col-span-2">
                                 <label className="text-xs font-bold text-gray-500 uppercase block mb-1">Setor</label>
-                                <input type="text" placeholder="Ex: Pronto Socorro, Clínica Médica" value={novoColab.setor || ''} onChange={e => setNovoColab({ ...novoColab, setor: e.target.value })} className="w-full p-2 border rounded outline-none" />
+                                {isNovoSetor ? (
+                                    <div className="flex gap-2">
+                                        <input type="text" placeholder="Digite o nome do setor" value={novoColab.setor || ''} onChange={e => setNovoColab({ ...novoColab, setor: e.target.value.toUpperCase() })} className="w-full p-2 border rounded outline-none" autoFocus />
+                                        {setores.length > 0 && (
+                                            <button onClick={() => { setIsNovoSetor(false); setNovoColab({ ...novoColab, setor: setores[0] }); }} className="px-4 py-2 bg-gray-200 text-gray-700 font-bold rounded hover:bg-gray-300 transition-colors text-xs whitespace-nowrap">
+                                                Voltar à Lista
+                                            </button>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <select value={novoColab.setor || ''} onChange={e => {
+                                        if (e.target.value === 'NOVO_SETOR') {
+                                            setIsNovoSetor(true);
+                                            setNovoColab({ ...novoColab, setor: '' });
+                                        } else {
+                                            setNovoColab({ ...novoColab, setor: e.target.value });
+                                        }
+                                    }} className="w-full p-2 border rounded outline-none bg-white">
+                                        {setores.map(s => <option key={s} value={s}>{s}</option>)}
+                                        <option value="NOVO_SETOR" className="font-bold text-red-600">+ CADASTRAR NOVO SETOR</option>
+                                    </select>
+                                )}
                             </div>
 
                             <div>
-                                <label className="text-xs font-bold text-gray-500 uppercase block mb-1">Turno Base (Ex: 07H-19H)</label>
-                                <input type="text" value={novoColab.turnoBase || ''} onChange={e => setNovoColab({ ...novoColab, turnoBase: e.target.value })} className="w-full p-2 border rounded outline-none" />
+                                <label className="text-xs font-bold text-gray-500 uppercase block mb-1">Turno Base</label>
+                                <select value={novoColab.turnoBase || ''} onChange={e => setNovoColab({ ...novoColab, turnoBase: e.target.value })} className="w-full p-2 border rounded outline-none bg-white">
+                                    <option value="06H-18H">06H-18H</option>
+                                    <option value="18H-06H">18H-06H</option>
+                                    <option value="07H-19H">07H-19H</option>
+                                    <option value="19H-07H">19H-07H</option>
+                                    <option value="07H-17H">07H-17H</option>
+                                    <option value="08H-17H">08H-17H</option>
+                                </select>
                             </div>
 
                             <div>

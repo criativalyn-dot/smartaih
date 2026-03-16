@@ -4,6 +4,7 @@ import sigtapDatabase from './data/sigtap_database.json'
 import type { CidSigtapRelation, SigtapProcedure } from './data/mockDatabase' // Keeping types for now, though we might need to adjust them if JSON changes
 import { PROTOCOLO_MANCHESTER_REFERENCIA } from './data/manchesterReferencia'
 import { GoogleGenAI } from '@google/genai';
+import { EscalaEnfermagem } from './EscalaEnfermagem';
 
 // Helper para o calculo exato de idade (Anos, Meses ou Dias) usado no prompt e no Header do PDF
 const calcularIdadeExata = (dataString: string) => {
@@ -35,7 +36,7 @@ const calcularIdadeExata = (dataString: string) => {
 
 function App() {
   const [apiKey, setApiKey] = useState(() => localStorage.getItem('smartaih_apiKey') || '')
-  const [activeTab, setActiveTab] = useState<'cid' | 'symptoms' | 'nursing'>('cid')
+  const [activeTab, setActiveTab] = useState<'cid' | 'symptoms' | 'nursing' | 'escala'>('cid')
 
   // Tab 1 State
   const [searchQuery, setSearchQuery] = useState('')
@@ -106,6 +107,26 @@ function App() {
   });
 
   const [nursingResults, setNursingResults] = useState<any>(null);
+
+  // Escala de Enfermagem (Scheduling) Tab 4 State
+  const [colaboradoresEscala, setColaboradoresEscala] = useState<any[]>(() => {
+    const saved = localStorage.getItem('smartaih_escala_colaboradores')
+    return saved ? JSON.parse(saved) : []
+  })
+  const [mesEscala, setMesEscala] = useState(new Date().getMonth() + 1)
+  const [anoEscala, setAnoEscala] = useState(new Date().getFullYear())
+  const [excecoesEscala, setExcecoesEscala] = useState<Record<string, string>>(() => {
+    const saved = localStorage.getItem('smartaih_escala_excecoes')
+    return saved ? JSON.parse(saved) : {}
+  })
+
+  useEffect(() => {
+    localStorage.setItem('smartaih_escala_colaboradores', JSON.stringify(colaboradoresEscala))
+  }, [colaboradoresEscala])
+
+  useEffect(() => {
+    localStorage.setItem('smartaih_escala_excecoes', JSON.stringify(excecoesEscala))
+  }, [excecoesEscala])
 
   // Auto-Save Effect
   useEffect(() => {
@@ -652,6 +673,12 @@ Abra o console do navegador (F12) para mais detalhes.`);
                 className={`flex-1 py-4 px-6 font-bold text-base sm:text-lg text-center transition-all duration-300 rounded-xl ${activeTab === 'nursing' ? 'bg-white text-blue-700 shadow-md ring-1 ring-gray-200 transform scale-[1.02]' : 'text-gray-500 hover:text-gray-800 hover:bg-white/60'} `}
               >
                 3. Processo de Enfermagem (SAE)
+              </button>
+              <button
+                onClick={() => setActiveTab('escala')}
+                className={`flex-1 py-4 px-6 font-bold text-base sm:text-lg text-center transition-all duration-300 rounded-xl ${activeTab === 'escala' ? 'bg-white text-blue-700 shadow-md ring-1 ring-gray-200 transform scale-[1.02]' : 'text-gray-500 hover:text-gray-800 hover:bg-white/60'} `}
+              >
+                4. Escala de Serviço
               </button>
             </div>
           </div>
@@ -1503,341 +1530,353 @@ Abra o console do navegador (F12) para mais detalhes.`);
         </div>
 
         {/* Results Area */}
-        {(results.cidSelecionado || aiResults.length > 0 || nursingResults) ? (
-          <div className="flex flex-col gap-6">
-            {/* Cabecalho de Identificacao do Paciente (Para Impressao/PDF) */}
-            {(patientName || medicalRecord || historicoPaciente.dataNascimento) && (
-              <div className="bg-white border-2 border-gray-800 rounded-xl p-6 mb-4 print:border-black print:mb-8">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                  <div>
-                    <span className="text-xs uppercase tracking-widest text-gray-500 font-bold block mb-1">Paciente</span>
-                    <h2 className="text-2xl font-black text-gray-900 uppercase">{patientName || 'NÃO INFORMADO'}</h2>
-                    {historicoPaciente.dataNascimento && (
-                      <p className="text-sm font-medium text-gray-600 mt-1">Nasc: {new Date(historicoPaciente.dataNascimento).toLocaleDateString('pt-BR')} (Idade: {calcularIdadeExata(historicoPaciente.dataNascimento)})</p>
-                    )}
-                  </div>
-                  <div className="md:text-right bg-gray-100 px-4 py-2 rounded-lg print:bg-transparent print:border print:border-gray-300 print:px-0 print:py-0">
-                    <span className="text-xs uppercase tracking-widest text-gray-500 font-bold block mb-1">Prontuário / Registro</span>
-                    <span className="text-xl font-mono font-bold text-blue-900">{medicalRecord || 'NÃO INFORMADO'}</span>
-                  </div>
-                </div>
+        {activeTab === 'escala' ? (
+          <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <EscalaEnfermagem
+              colaboradores={colaboradoresEscala} setColaboradores={setColaboradoresEscala}
+              mes={mesEscala} ano={anoEscala} setMes={setMesEscala} setAno={setAnoEscala}
+              excecoes={excecoesEscala} setExcecoes={setExcecoesEscala}
+            />
+          </div>
+        ) : (
+          <>
+            {(results.cidSelecionado || aiResults.length > 0 || nursingResults) ? (
+              <div className="flex flex-col gap-6">
+                {/* Cabecalho de Identificacao do Paciente (Para Impressao/PDF) */}
+                {(patientName || medicalRecord || historicoPaciente.dataNascimento) && (
+                  <div className="bg-white border-2 border-gray-800 rounded-xl p-6 mb-4 print:border-black print:mb-8">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                      <div>
+                        <span className="text-xs uppercase tracking-widest text-gray-500 font-bold block mb-1">Paciente</span>
+                        <h2 className="text-2xl font-black text-gray-900 uppercase">{patientName || 'NÃO INFORMADO'}</h2>
+                        {historicoPaciente.dataNascimento && (
+                          <p className="text-sm font-medium text-gray-600 mt-1">Nasc: {new Date(historicoPaciente.dataNascimento).toLocaleDateString('pt-BR')} (Idade: {calcularIdadeExata(historicoPaciente.dataNascimento)})</p>
+                        )}
+                      </div>
+                      <div className="md:text-right bg-gray-100 px-4 py-2 rounded-lg print:bg-transparent print:border print:border-gray-300 print:px-0 print:py-0">
+                        <span className="text-xs uppercase tracking-widest text-gray-500 font-bold block mb-1">Prontuário / Registro</span>
+                        <span className="text-xl font-mono font-bold text-blue-900">{medicalRecord || 'NÃO INFORMADO'}</span>
+                      </div>
+                    </div>
 
-                {/* Resumo Clínico Exclusivo para Impressão */}
-                <div className="mt-6 pt-5 border-t border-gray-200 hidden print:block">
-                  <h3 className="font-bold text-sm text-gray-800 uppercase tracking-widest mb-3">Resumo Clínico e Sinais Vitais</h3>
-                  {clinicalText && <p className="text-sm text-gray-800 mb-4 whitespace-pre-wrap"><span className="font-semibold text-gray-500 mr-2 uppercase">Quadro:</span> {clinicalText}</p>}
+                    {/* Resumo Clínico Exclusivo para Impressão */}
+                    <div className="mt-6 pt-5 border-t border-gray-200 hidden print:block">
+                      <h3 className="font-bold text-sm text-gray-800 uppercase tracking-widest mb-3">Resumo Clínico e Sinais Vitais</h3>
+                      {clinicalText && <p className="text-sm text-gray-800 mb-4 whitespace-pre-wrap"><span className="font-semibold text-gray-500 mr-2 uppercase">Quadro:</span> {clinicalText}</p>}
 
-                  <div className="grid grid-cols-4 gap-4 text-sm bg-gray-50 p-3 rounded-lg border border-gray-200">
-                    {sinaisVitais.pa && <div><span className="font-bold block text-xs text-gray-500 uppercase">PA</span>{sinaisVitais.pa}</div>}
-                    {sinaisVitais.fc && <div><span className="font-bold block text-xs text-gray-500 uppercase">FC</span>{sinaisVitais.fc}</div>}
-                    {sinaisVitais.spo2 && <div><span className="font-bold block text-xs text-gray-500 uppercase">SpO2</span>{sinaisVitais.spo2}</div>}
-                    {sinaisVitais.temp && <div><span className="font-bold block text-xs text-gray-500 uppercase">Temp</span>{sinaisVitais.temp}</div>}
-                    {sinaisVitais.fr && <div><span className="font-bold block text-xs text-gray-500 uppercase">FR</span>{sinaisVitais.fr}</div>}
-                    {sinaisVitais.hgt && <div><span className="font-bold block text-xs text-gray-500 uppercase">Glicemia</span>{sinaisVitais.hgt}</div>}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Área de Preenchimento do Profissional (Apenas Tela, Não Imprime) */}
-            <div className="bg-white border-2 border-dashed border-gray-300 rounded-xl p-5 mb-4 print:hidden">
-              <h3 className="font-bold text-sm text-gray-800 uppercase tracking-widest mb-3 flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
-                Assinatura do Documento
-              </h3>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <div className="flex-1">
-                  <label className="text-xs font-bold text-gray-600 uppercase block mb-1">
-                    {activeTab === 'nursing' ? 'Nome do Enfermeiro(a)' : 'Nome do Médico Solicitante'}
-                  </label>
-                  <input
-                    type="text"
-                    placeholder={activeTab === 'nursing' ? "Ex: Enf. Ana Silva" : "Ex: Dr. João Pedro"}
-                    className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                    value={professionalName}
-                    onChange={e => setProfessionalName(e.target.value)}
-                  />
-                </div>
-                {activeTab === 'nursing' && (
-                  <div className="w-full sm:w-1/3">
-                    <label className="text-xs font-bold text-gray-600 uppercase block mb-1">COREN</label>
-                    <input
-                      type="text"
-                      placeholder="Ex: 123456-SP"
-                      className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                      value={professionalCoren}
-                      onChange={e => setProfessionalCoren(e.target.value)}
-                    />
+                      <div className="grid grid-cols-4 gap-4 text-sm bg-gray-50 p-3 rounded-lg border border-gray-200">
+                        {sinaisVitais.pa && <div><span className="font-bold block text-xs text-gray-500 uppercase">PA</span>{sinaisVitais.pa}</div>}
+                        {sinaisVitais.fc && <div><span className="font-bold block text-xs text-gray-500 uppercase">FC</span>{sinaisVitais.fc}</div>}
+                        {sinaisVitais.spo2 && <div><span className="font-bold block text-xs text-gray-500 uppercase">SpO2</span>{sinaisVitais.spo2}</div>}
+                        {sinaisVitais.temp && <div><span className="font-bold block text-xs text-gray-500 uppercase">Temp</span>{sinaisVitais.temp}</div>}
+                        {sinaisVitais.fr && <div><span className="font-bold block text-xs text-gray-500 uppercase">FR</span>{sinaisVitais.fr}</div>}
+                        {sinaisVitais.hgt && <div><span className="font-bold block text-xs text-gray-500 uppercase">Glicemia</span>{sinaisVitais.hgt}</div>}
+                      </div>
+                    </div>
                   </div>
                 )}
-              </div>
-            </div>
 
-            {/* Header if AI generated multiple results */}
-            {aiResults.length > 0 && (
-              <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-blue-800 print:hidden">
-                <div className="flex items-center gap-3">
-                  <Stethoscope className="w-6 h-6 flex-shrink-0" />
-                  <div>
-                    <h3 className="font-bold">Análise da Inteligência Artificial Concluída</h3>
-                    <p className="text-sm">Foram encontrados {aiResults.length} CIDs clinicamente prováveis para o quadro descrito, com seus respectivos procedimentos SIGTAP sugeridos.</p>
+                {/* Área de Preenchimento do Profissional (Apenas Tela, Não Imprime) */}
+                <div className="bg-white border-2 border-dashed border-gray-300 rounded-xl p-5 mb-4 print:hidden">
+                  <h3 className="font-bold text-sm text-gray-800 uppercase tracking-widest mb-3 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                    Assinatura do Documento
+                  </h3>
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <div className="flex-1">
+                      <label className="text-xs font-bold text-gray-600 uppercase block mb-1">
+                        {activeTab === 'nursing' ? 'Nome do Enfermeiro(a)' : 'Nome do Médico Solicitante'}
+                      </label>
+                      <input
+                        type="text"
+                        placeholder={activeTab === 'nursing' ? "Ex: Enf. Ana Silva" : "Ex: Dr. João Pedro"}
+                        className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                        value={professionalName}
+                        onChange={e => setProfessionalName(e.target.value)}
+                      />
+                    </div>
+                    {activeTab === 'nursing' && (
+                      <div className="w-full sm:w-1/3">
+                        <label className="text-xs font-bold text-gray-600 uppercase block mb-1">COREN</label>
+                        <input
+                          type="text"
+                          placeholder="Ex: 123456-SP"
+                          className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                          value={professionalCoren}
+                          onChange={e => setProfessionalCoren(e.target.value)}
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
-                <button
-                  onClick={() => window.print()}
-                  className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow-md transition-all active:scale-95 whitespace-nowrap w-full sm:w-auto"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                  Salvar em PDF
-                </button>
-              </div>
-            )}
 
-            {/* Mapping over single result or AI results array */}
-            {(aiResults.length > 0 ? aiResults : [results]).map((res: any, index: number) => {
-              // Map Manchester Colors to Tailwind Classes
-              let manchesterBg = 'bg-gray-100';
-              let manchesterText = 'text-gray-800';
-              let manchesterBorder = 'border-gray-200';
-              const corLower = res.classificacaoManchester?.cor?.toLowerCase() || '';
-
-              if (corLower.includes('vermelho')) { manchesterBg = 'bg-red-600'; manchesterText = 'text-gray-900'; manchesterBorder = 'border-red-700'; }
-              else if (corLower.includes('laranja')) { manchesterBg = 'bg-orange-500'; manchesterText = 'text-gray-900'; manchesterBorder = 'border-orange-600'; }
-              else if (corLower.includes('amarelo')) { manchesterBg = 'bg-yellow-400'; manchesterText = 'text-gray-900'; manchesterBorder = 'border-yellow-500'; }
-              else if (corLower.includes('verde')) { manchesterBg = 'bg-green-500'; manchesterText = 'text-gray-900'; manchesterBorder = 'border-green-600'; }
-              else if (corLower.includes('azul')) { manchesterBg = 'bg-blue-500'; manchesterText = 'text-gray-900'; manchesterBorder = 'border-blue-600'; }
-
-              return (
-                <div key={index} className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                  <div className="mb-6 flex items-center gap-3 print:break-after-avoid">
-                    <div className="bg-green-100 p-2 rounded-full">
-                      <CheckCircle2 className="w-5 h-5 text-green-600" />
+                {/* Header if AI generated multiple results */}
+                {aiResults.length > 0 && (
+                  <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-blue-800 print:hidden">
+                    <div className="flex items-center gap-3">
+                      <Stethoscope className="w-6 h-6 flex-shrink-0" />
+                      <div>
+                        <h3 className="font-bold">Análise da Inteligência Artificial Concluída</h3>
+                        <p className="text-sm">Foram encontrados {aiResults.length} CIDs clinicamente prováveis para o quadro descrito, com seus respectivos procedimentos SIGTAP sugeridos.</p>
+                      </div>
                     </div>
-                    <div>
-                      <h2 className="text-2xl font-bold text-gray-900 border-b-2 border-green-500 inline-block pb-1">
-                        CID Principal: {res.cidSelecionado}
-                      </h2>
-                      <p className="text-gray-600 text-lg mt-1 font-medium">{res.nomeCid}</p>
-
-                      {/* Secondary CIDs Rendering */}
-                      {res.cidsSecundarios && res.cidsSecundarios.length > 0 && (
-                        <div className="mt-3 flex flex-wrap gap-2">
-                          {res.cidsSecundarios.map((sec: any, sIdx: number) => (
-                            <span key={sIdx} className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium bg-gray-100 text-gray-700 border border-gray-200" title={sec.nome}>
-                              <span className="font-bold whitespace-nowrap">{sec.cid}</span>
-                              <span className="opacity-70 mx-1">•</span>
-                              <span>{sec.nome}</span>
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                    <button
+                      onClick={() => window.print()}
+                      className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow-md transition-all active:scale-95 whitespace-nowrap w-full sm:w-auto"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                      Salvar em PDF
+                    </button>
                   </div>
+                )}
 
-                  {/* Resposta do Manchester Rendering */}
-                  {res.classificacaoManchester && (
-                    <div className={`mb-6 rounded-2xl overflow-hidden shadow-sm border-2 ${manchesterBorder} relative break-inside-avoid print:break-inside-avoid print:bg-white print:border-4`}>
-                      <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none print:hidden"></div>
-                      <div className={`px-6 md:px-8 py-5 flex flex-col md:flex-row md:items-center gap-5 ${manchesterBg} print:bg-transparent`}>
-                        <div className="flex-shrink-0 flex items-center gap-3 bg-white/20 p-3 rounded-2xl backdrop-blur-sm print:backdrop-blur-none print:bg-gray-100">
-                          <Activity className={`w-8 h-8 ${manchesterText} print:text-black`} />
+                {/* Mapping over single result or AI results array */}
+                {(aiResults.length > 0 ? aiResults : [results]).map((res: any, index: number) => {
+                  // Map Manchester Colors to Tailwind Classes
+                  let manchesterBg = 'bg-gray-100';
+                  let manchesterText = 'text-gray-800';
+                  let manchesterBorder = 'border-gray-200';
+                  const corLower = res.classificacaoManchester?.cor?.toLowerCase() || '';
+
+                  if (corLower.includes('vermelho')) { manchesterBg = 'bg-red-600'; manchesterText = 'text-gray-900'; manchesterBorder = 'border-red-700'; }
+                  else if (corLower.includes('laranja')) { manchesterBg = 'bg-orange-500'; manchesterText = 'text-gray-900'; manchesterBorder = 'border-orange-600'; }
+                  else if (corLower.includes('amarelo')) { manchesterBg = 'bg-yellow-400'; manchesterText = 'text-gray-900'; manchesterBorder = 'border-yellow-500'; }
+                  else if (corLower.includes('verde')) { manchesterBg = 'bg-green-500'; manchesterText = 'text-gray-900'; manchesterBorder = 'border-green-600'; }
+                  else if (corLower.includes('azul')) { manchesterBg = 'bg-blue-500'; manchesterText = 'text-gray-900'; manchesterBorder = 'border-blue-600'; }
+
+                  return (
+                    <div key={index} className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                      <div className="mb-6 flex items-center gap-3 print:break-after-avoid">
+                        <div className="bg-green-100 p-2 rounded-full">
+                          <CheckCircle2 className="w-5 h-5 text-green-600" />
                         </div>
-                        <div className="flex-1 relative z-10">
-                          <h3 className={`font-black text-xl uppercase tracking-widest ${manchesterText} print:text-black mb-1 drop-shadow-sm print:drop-shadow-none`}>
-                            TRIAGEM: {res.classificacaoManchester.cor}
-                          </h3>
-                          <div className={`text-sm md:text-base font-medium opacity-95 leading-relaxed ${manchesterText} print:text-black`}>
-                            {res.classificacaoManchester.justificativa}
+                        <div>
+                          <h2 className="text-2xl font-bold text-gray-900 border-b-2 border-green-500 inline-block pb-1">
+                            CID Principal: {res.cidSelecionado}
+                          </h2>
+                          <p className="text-gray-600 text-lg mt-1 font-medium">{res.nomeCid}</p>
+
+                          {/* Secondary CIDs Rendering */}
+                          {res.cidsSecundarios && res.cidsSecundarios.length > 0 && (
+                            <div className="mt-3 flex flex-wrap gap-2">
+                              {res.cidsSecundarios.map((sec: any, sIdx: number) => (
+                                <span key={sIdx} className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium bg-gray-100 text-gray-700 border border-gray-200" title={sec.nome}>
+                                  <span className="font-bold whitespace-nowrap">{sec.cid}</span>
+                                  <span className="opacity-70 mx-1">•</span>
+                                  <span>{sec.nome}</span>
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Resposta do Manchester Rendering */}
+                      {res.classificacaoManchester && (
+                        <div className={`mb-6 rounded-2xl overflow-hidden shadow-sm border-2 ${manchesterBorder} relative break-inside-avoid print:break-inside-avoid print:bg-white print:border-4`}>
+                          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none print:hidden"></div>
+                          <div className={`px-6 md:px-8 py-5 flex flex-col md:flex-row md:items-center gap-5 ${manchesterBg} print:bg-transparent`}>
+                            <div className="flex-shrink-0 flex items-center gap-3 bg-white/20 p-3 rounded-2xl backdrop-blur-sm print:backdrop-blur-none print:bg-gray-100">
+                              <Activity className={`w-8 h-8 ${manchesterText} print:text-black`} />
+                            </div>
+                            <div className="flex-1 relative z-10">
+                              <h3 className={`font-black text-xl uppercase tracking-widest ${manchesterText} print:text-black mb-1 drop-shadow-sm print:drop-shadow-none`}>
+                                TRIAGEM: {res.classificacaoManchester.cor}
+                              </h3>
+                              <div className={`text-sm md:text-base font-medium opacity-95 leading-relaxed ${manchesterText} print:text-black`}>
+                                {res.classificacaoManchester.justificativa}
+                              </div>
+                            </div>
                           </div>
                         </div>
+                      )}
+
+                      {/* Exames Sugeridos Rendering */}
+                      {res.examesSugeridos && res.examesSugeridos.length > 0 && (
+                        <div className="mb-6 bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200/60 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow break-inside-avoid-page print:break-inside-avoid print:bg-white print:border-purple-300 print:border-2">
+                          <div className="bg-white/60 backdrop-blur-md print:backdrop-blur-none print:bg-transparent px-6 py-4 border-b border-purple-100 flex items-center gap-3">
+                            <div className="bg-purple-100 p-2 rounded-lg print:bg-purple-50"><Activity className="w-5 h-5 text-purple-600 print:text-purple-800" /></div>
+                            <h3 className="font-bold text-purple-900 text-sm md:text-base uppercase tracking-wider print:text-black">Investigação Diagnóstica Sugerida</h3>
+                          </div>
+                          <div className="px-6 py-5 relative z-10">
+                            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-purple-900/80 print:text-black">
+                              {res.examesSugeridos.map((exame: string, eIdx: number) => (
+                                <li key={eIdx} className="flex items-start gap-2.5 group">
+                                  <span className="flex-shrink-0 w-5 h-5 rounded-full bg-purple-200 text-purple-700 print:bg-gray-200 print:text-black flex items-center justify-center text-xs font-bold mt-0.5 transition-colors">{eIdx + 1}</span>
+                                  <span className="font-medium leading-relaxed">{exame}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-300 print:break-inside-avoid">
+                        <div className="bg-gradient-to-r from-gray-50 to-white px-6 py-5 border-b border-gray-200 flex items-center gap-3">
+                          <div className="bg-blue-100 p-2 rounded-lg text-blue-700 font-black">{(res.procedimentos || []).length}</div>
+                          <h3 className="font-bold text-gray-800 text-lg uppercase tracking-wide">Procedimentos SIGTAP Recomendados</h3>
+                        </div>
+
+                        <div className="divide-y divide-gray-100">
+                          {(res.procedimentos || []).map((proc: any, idx: number) => (
+                            <div key={idx} className="p-6 hover:bg-blue-50/50 transition-colors">
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-3 mb-2">
+                                    {proc.codigo && (
+                                      <span className="bg-blue-100 text-blue-800 text-sm font-mono font-bold px-3 py-1 rounded-md">
+                                        {proc.codigo}
+                                      </span>
+                                    )}
+                                    <h4 className="text-lg font-bold text-gray-900">{proc.nome}</h4>
+                                  </div>
+
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-y-2 gap-x-6 mt-4 text-sm text-gray-600">
+                                    {proc.grupo && <div className="flex flex-col"><span className="text-gray-400 text-xs uppercase tracking-wider font-semibold">Grupo</span>{proc.grupo}</div>}
+                                    {proc.subGrupo && <div className="flex flex-col"><span className="text-gray-400 text-xs uppercase tracking-wider font-semibold">Sub-Grupo</span>{proc.subGrupo}</div>}
+                                    {proc.formaOrganizacao && <div className="flex flex-col md:col-span-2"><span className="text-gray-400 text-xs uppercase tracking-wider font-semibold">Forma de Organização</span>{proc.formaOrganizacao}</div>}
+                                  </div>
+                                </div>
+
+                                {/* Restricted Professional Alert Badge */}
+                                {proc.restricaoProfissional && (
+                                  <div className="ml-4 flex-shrink-0 flex items-center gap-2 bg-amber-50 text-amber-700 px-4 py-3 rounded-xl border border-amber-200 max-w-xs">
+                                    <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0" />
+                                    <div className="text-sm">
+                                      <p className="font-bold">Atenção à Especialidade</p>
+                                      <p className="font-medium opacity-90">{proc.restricaoProfissional}</p>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     </div>
-                  )}
+                  );
+                })}
 
-                  {/* Exames Sugeridos Rendering */}
-                  {res.examesSugeridos && res.examesSugeridos.length > 0 && (
-                    <div className="mb-6 bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200/60 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow break-inside-avoid-page print:break-inside-avoid print:bg-white print:border-purple-300 print:border-2">
-                      <div className="bg-white/60 backdrop-blur-md print:backdrop-blur-none print:bg-transparent px-6 py-4 border-b border-purple-100 flex items-center gap-3">
-                        <div className="bg-purple-100 p-2 rounded-lg print:bg-purple-50"><Activity className="w-5 h-5 text-purple-600 print:text-purple-800" /></div>
-                        <h3 className="font-bold text-purple-900 text-sm md:text-base uppercase tracking-wider print:text-black">Investigação Diagnóstica Sugerida</h3>
+                {/* Nursing Results Rendering */}
+                {nursingResults && (
+                  <div className="bg-white rounded-2xl shadow-sm border border-emerald-100 overflow-hidden mt-6 animate-in fade-in slide-in-from-bottom-4 duration-500 print:border-black print:border-2">
+                    <div className="bg-gradient-to-r from-emerald-600 to-teal-700 px-6 py-5 flex flex-col md:flex-row justify-between md:items-center gap-3 print:bg-transparent print:bg-none print:border-b print:border-black">
+                      <div className="flex items-center gap-3">
+                        <div className="bg-white p-2 text-emerald-700 rounded-lg shadow-sm print:bg-gray-100 print:text-black"><Activity className="w-6 h-6" /></div>
+                        <h3 className="text-xl font-black text-white tracking-wide drop-shadow-sm print:text-black print:drop-shadow-none uppercase">Processo de Enfermagem Gerado com IA</h3>
                       </div>
-                      <div className="px-6 py-5 relative z-10">
-                        <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-purple-900/80 print:text-black">
-                          {res.examesSugeridos.map((exame: string, eIdx: number) => (
-                            <li key={eIdx} className="flex items-start gap-2.5 group">
-                              <span className="flex-shrink-0 w-5 h-5 rounded-full bg-purple-200 text-purple-700 print:bg-gray-200 print:text-black flex items-center justify-center text-xs font-bold mt-0.5 transition-colors">{eIdx + 1}</span>
-                              <span className="font-medium leading-relaxed">{exame}</span>
+                      <button
+                        onClick={() => window.print()}
+                        className="flex items-center justify-center gap-2 bg-white/20 hover:bg-white/30 text-white border border-white/50 px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-colors print:hidden"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>Salvar PDF
+                      </button>
+                    </div>
+
+                    <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+                      {/* NANDA */}
+                      <div className="bg-red-50 border border-red-100 rounded-xl p-5 break-inside-avoid print:bg-white print:border-2 print:border-red-800">
+                        <h4 className="font-bold text-red-800 text-lg mb-4 flex items-center gap-2 border-b border-red-200 pb-2"><AlertTriangle className="w-5 h-5" /> Diagnósticos (NANDA-I)</h4>
+                        <ul className="space-y-4">
+                          {nursingResults.diagnosticosNANDA?.map((n: any, i: number) => (
+                            <li key={i} className="text-sm text-gray-800 border-l-4 border-red-300 pl-3">
+                              <span className="font-extrabold block text-red-900 drop-shadow-sm text-base">{n.titulo}</span>
+                              {n.fatorRelacionado && <span className="block mt-1 font-medium text-gray-700"><b className="text-gray-900">Fator Relacionado:</b> {n.fatorRelacionado}</span>}
+                              {n.caracteristicaDefinidora && <span className="block mt-1 font-medium text-gray-700"><b className="text-gray-900">Evidenciado por:</b> {n.caracteristicaDefinidora}</span>}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      {/* NIC */}
+                      <div className="bg-blue-50 border border-blue-100 rounded-xl p-5 break-inside-avoid print:bg-white print:border-2 print:border-blue-800">
+                        <h4 className="font-bold text-blue-800 text-lg mb-4 flex items-center gap-2 border-b border-blue-200 pb-2"><Stethoscope className="w-5 h-5" /> Intervenções (NIC)</h4>
+                        <ul className="list-none space-y-3">
+                          {nursingResults.intervencoesNIC?.map((nic: string, i: number) => (
+                            <li key={i} className="text-sm text-gray-800 flex items-start gap-2 bg-white/50 p-2 rounded-md border border-blue-50/50 print:bg-gray-50 print:border-gray-200">
+                              <CheckCircle2 className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                              <span className="font-medium">{nic}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      {/* NOC */}
+                      <div className="bg-green-50 border border-green-100 rounded-xl p-5 break-inside-avoid print:bg-white print:border-2 print:border-green-800">
+                        <h4 className="font-bold text-green-800 text-lg mb-4 flex items-center gap-2 border-b border-green-200 pb-2"><CheckCircle2 className="w-5 h-5" /> Resultados (NOC)</h4>
+                        <ul className="list-none space-y-3">
+                          {nursingResults.resultadosNOC?.map((noc: string, i: number) => (
+                            <li key={i} className="text-sm text-gray-800 flex items-start gap-2 bg-white/50 p-2 rounded-md border border-green-50/50 print:bg-gray-50 print:border-gray-200">
+                              <Activity className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                              <span className="font-medium">{noc}</span>
                             </li>
                           ))}
                         </ul>
                       </div>
                     </div>
-                  )}
 
-                  <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-300 print:break-inside-avoid">
-                    <div className="bg-gradient-to-r from-gray-50 to-white px-6 py-5 border-b border-gray-200 flex items-center gap-3">
-                      <div className="bg-blue-100 p-2 rounded-lg text-blue-700 font-black">{(res.procedimentos || []).length}</div>
-                      <h3 className="font-bold text-gray-800 text-lg uppercase tracking-wide">Procedimentos SIGTAP Recomendados</h3>
-                    </div>
-
-                    <div className="divide-y divide-gray-100">
-                      {(res.procedimentos || []).map((proc: any, idx: number) => (
-                        <div key={idx} className="p-6 hover:bg-blue-50/50 transition-colors">
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-3 mb-2">
-                                {proc.codigo && (
-                                  <span className="bg-blue-100 text-blue-800 text-sm font-mono font-bold px-3 py-1 rounded-md">
-                                    {proc.codigo}
-                                  </span>
-                                )}
-                                <h4 className="text-lg font-bold text-gray-900">{proc.nome}</h4>
-                              </div>
-
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-y-2 gap-x-6 mt-4 text-sm text-gray-600">
-                                {proc.grupo && <div className="flex flex-col"><span className="text-gray-400 text-xs uppercase tracking-wider font-semibold">Grupo</span>{proc.grupo}</div>}
-                                {proc.subGrupo && <div className="flex flex-col"><span className="text-gray-400 text-xs uppercase tracking-wider font-semibold">Sub-Grupo</span>{proc.subGrupo}</div>}
-                                {proc.formaOrganizacao && <div className="flex flex-col md:col-span-2"><span className="text-gray-400 text-xs uppercase tracking-wider font-semibold">Forma de Organização</span>{proc.formaOrganizacao}</div>}
-                              </div>
+                    {/* Protocolos Anvisa (Braden/Morse) */}
+                    {(nursingResults.riscoBradenAnalise || nursingResults.riscoMorseAnalise) && (
+                      <div className="bg-amber-50 mx-6 mb-6 p-5 rounded-xl border border-amber-200 break-inside-avoid print:bg-white print:border-2 print:border-amber-800">
+                        <div className="flex items-center gap-2 font-bold uppercase tracking-wider text-amber-900 mb-4 pb-2 border-b border-amber-200">
+                          <AlertTriangle className="w-5 h-5" /> Análise de Riscos Assistenciais & Protocolos ANVISA
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full text-sm">
+                          {nursingResults.riscoBradenAnalise && (
+                            <div className="bg-white p-3 rounded-lg border border-amber-100 shadow-sm">
+                              <strong className="block text-amber-800 mb-1 border-b border-amber-100 pb-1">Escala de Braden (Lesão por Pressão)</strong>
+                              <span className="text-amber-950 font-medium leading-relaxed">{nursingResults.riscoBradenAnalise}</span>
                             </div>
-
-                            {/* Restricted Professional Alert Badge */}
-                            {proc.restricaoProfissional && (
-                              <div className="ml-4 flex-shrink-0 flex items-center gap-2 bg-amber-50 text-amber-700 px-4 py-3 rounded-xl border border-amber-200 max-w-xs">
-                                <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0" />
-                                <div className="text-sm">
-                                  <p className="font-bold">Atenção à Especialidade</p>
-                                  <p className="font-medium opacity-90">{proc.restricaoProfissional}</p>
-                                </div>
-                              </div>
-                            )}
-                          </div>
+                          )}
+                          {nursingResults.riscoMorseAnalise && (
+                            <div className="bg-white p-3 rounded-lg border border-amber-100 shadow-sm">
+                              <strong className="block text-amber-800 mb-1 border-b border-amber-100 pb-1">Escala de Morse (Queda)</strong>
+                              <span className="text-amber-950 font-medium leading-relaxed">{nursingResults.riscoMorseAnalise}</span>
+                            </div>
+                          )}
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-
-            {/* Nursing Results Rendering */}
-            {nursingResults && (
-              <div className="bg-white rounded-2xl shadow-sm border border-emerald-100 overflow-hidden mt-6 animate-in fade-in slide-in-from-bottom-4 duration-500 print:border-black print:border-2">
-                <div className="bg-gradient-to-r from-emerald-600 to-teal-700 px-6 py-5 flex flex-col md:flex-row justify-between md:items-center gap-3 print:bg-transparent print:bg-none print:border-b print:border-black">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-white p-2 text-emerald-700 rounded-lg shadow-sm print:bg-gray-100 print:text-black"><Activity className="w-6 h-6" /></div>
-                    <h3 className="text-xl font-black text-white tracking-wide drop-shadow-sm print:text-black print:drop-shadow-none uppercase">Processo de Enfermagem Gerado com IA</h3>
-                  </div>
-                  <button
-                    onClick={() => window.print()}
-                    className="flex items-center justify-center gap-2 bg-white/20 hover:bg-white/30 text-white border border-white/50 px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-colors print:hidden"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>Salvar PDF
-                  </button>
-                </div>
-
-                <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {/* NANDA */}
-                  <div className="bg-red-50 border border-red-100 rounded-xl p-5 break-inside-avoid print:bg-white print:border-2 print:border-red-800">
-                    <h4 className="font-bold text-red-800 text-lg mb-4 flex items-center gap-2 border-b border-red-200 pb-2"><AlertTriangle className="w-5 h-5" /> Diagnósticos (NANDA-I)</h4>
-                    <ul className="space-y-4">
-                      {nursingResults.diagnosticosNANDA?.map((n: any, i: number) => (
-                        <li key={i} className="text-sm text-gray-800 border-l-4 border-red-300 pl-3">
-                          <span className="font-extrabold block text-red-900 drop-shadow-sm text-base">{n.titulo}</span>
-                          {n.fatorRelacionado && <span className="block mt-1 font-medium text-gray-700"><b className="text-gray-900">Fator Relacionado:</b> {n.fatorRelacionado}</span>}
-                          {n.caracteristicaDefinidora && <span className="block mt-1 font-medium text-gray-700"><b className="text-gray-900">Evidenciado por:</b> {n.caracteristicaDefinidora}</span>}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  {/* NIC */}
-                  <div className="bg-blue-50 border border-blue-100 rounded-xl p-5 break-inside-avoid print:bg-white print:border-2 print:border-blue-800">
-                    <h4 className="font-bold text-blue-800 text-lg mb-4 flex items-center gap-2 border-b border-blue-200 pb-2"><Stethoscope className="w-5 h-5" /> Intervenções (NIC)</h4>
-                    <ul className="list-none space-y-3">
-                      {nursingResults.intervencoesNIC?.map((nic: string, i: number) => (
-                        <li key={i} className="text-sm text-gray-800 flex items-start gap-2 bg-white/50 p-2 rounded-md border border-blue-50/50 print:bg-gray-50 print:border-gray-200">
-                          <CheckCircle2 className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
-                          <span className="font-medium">{nic}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  {/* NOC */}
-                  <div className="bg-green-50 border border-green-100 rounded-xl p-5 break-inside-avoid print:bg-white print:border-2 print:border-green-800">
-                    <h4 className="font-bold text-green-800 text-lg mb-4 flex items-center gap-2 border-b border-green-200 pb-2"><CheckCircle2 className="w-5 h-5" /> Resultados (NOC)</h4>
-                    <ul className="list-none space-y-3">
-                      {nursingResults.resultadosNOC?.map((noc: string, i: number) => (
-                        <li key={i} className="text-sm text-gray-800 flex items-start gap-2 bg-white/50 p-2 rounded-md border border-green-50/50 print:bg-gray-50 print:border-gray-200">
-                          <Activity className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                          <span className="font-medium">{noc}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-
-                {/* Protocolos Anvisa (Braden/Morse) */}
-                {(nursingResults.riscoBradenAnalise || nursingResults.riscoMorseAnalise) && (
-                  <div className="bg-amber-50 mx-6 mb-6 p-5 rounded-xl border border-amber-200 break-inside-avoid print:bg-white print:border-2 print:border-amber-800">
-                    <div className="flex items-center gap-2 font-bold uppercase tracking-wider text-amber-900 mb-4 pb-2 border-b border-amber-200">
-                      <AlertTriangle className="w-5 h-5" /> Análise de Riscos Assistenciais & Protocolos ANVISA
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full text-sm">
-                      {nursingResults.riscoBradenAnalise && (
-                        <div className="bg-white p-3 rounded-lg border border-amber-100 shadow-sm">
-                          <strong className="block text-amber-800 mb-1 border-b border-amber-100 pb-1">Escala de Braden (Lesão por Pressão)</strong>
-                          <span className="text-amber-950 font-medium leading-relaxed">{nursingResults.riscoBradenAnalise}</span>
-                        </div>
-                      )}
-                      {nursingResults.riscoMorseAnalise && (
-                        <div className="bg-white p-3 rounded-lg border border-amber-100 shadow-sm">
-                          <strong className="block text-amber-800 mb-1 border-b border-amber-100 pb-1">Escala de Morse (Queda)</strong>
-                          <span className="text-amber-950 font-medium leading-relaxed">{nursingResults.riscoMorseAnalise}</span>
-                        </div>
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </div>
                 )}
+
+                {/* Bloco de Assinatura para Impressão */}
+                <div className="hidden print:flex flex-col items-center justify-center mt-20 pt-10 break-inside-avoid">
+                  <div className="w-80 border-t-2 border-gray-800 mb-2"></div>
+                  <h4 className="font-bold text-gray-900 text-lg uppercase">
+                    {(professionalName || '________________________________________').toUpperCase()}
+                  </h4>
+                  <p className="text-gray-700 font-bold mb-1">
+                    {activeTab === 'nursing' ? 'ENFERMEIRO(A)' : 'MÉDICO(A)'}
+                  </p>
+                  {activeTab === 'nursing' && (
+                    <p className="text-gray-700 font-medium">COREN: {professionalCoren || '___________'}</p>
+                  )}
+                  {activeTab !== 'nursing' && professionalCoren && (
+                    <p className="text-gray-700 font-medium">CRM: {professionalCoren}</p>
+                  )}
+                  <p className="text-gray-500 mt-4 text-sm font-medium">
+                    Documento gerado em {new Date().toLocaleDateString('pt-BR')} às {new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </div>
+
               </div>
+            ) : (
+              searchQuery.length > 2 ? (
+                <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-2xl p-12 text-center text-gray-500">
+                  Nenhum CID ou procedimento encontrado para "{searchQuery}".
+                </div>
+              ) : (
+                <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-2xl p-12 text-center">
+                  <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                    <Search className="w-8 h-8 text-gray-400" />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-1">Aguardando busca...</h3>
+                  <p className="text-gray-500 max-w-sm mx-auto">Use uma das opções acima para encontrar CIDs e Procedimentos SIGTAP compatíveis.</p>
+                </div>
+              )
             )}
-
-            {/* Bloco de Assinatura para Impressão */}
-            <div className="hidden print:flex flex-col items-center justify-center mt-20 pt-10 break-inside-avoid">
-              <div className="w-80 border-t-2 border-gray-800 mb-2"></div>
-              <h4 className="font-bold text-gray-900 text-lg uppercase">
-                {(professionalName || '________________________________________').toUpperCase()}
-              </h4>
-              <p className="text-gray-700 font-bold mb-1">
-                {activeTab === 'nursing' ? 'ENFERMEIRO(A)' : 'MÉDICO(A)'}
-              </p>
-              {activeTab === 'nursing' && (
-                <p className="text-gray-700 font-medium">COREN: {professionalCoren || '___________'}</p>
-              )}
-              {activeTab !== 'nursing' && professionalCoren && (
-                <p className="text-gray-700 font-medium">CRM: {professionalCoren}</p>
-              )}
-              <p className="text-gray-500 mt-4 text-sm font-medium">
-                Documento gerado em {new Date().toLocaleDateString('pt-BR')} às {new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-              </p>
-            </div>
-
-          </div>
-        ) : (
-          searchQuery.length > 2 ? (
-            <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-2xl p-12 text-center text-gray-500">
-              Nenhum CID ou procedimento encontrado para "{searchQuery}".
-            </div>
-          ) : (
-            <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-2xl p-12 text-center">
-              <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                <Search className="w-8 h-8 text-gray-400" />
-              </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-1">Aguardando busca...</h3>
-              <p className="text-gray-500 max-w-sm mx-auto">Use uma das opções acima para encontrar CIDs e Procedimentos SIGTAP compatíveis.</p>
-            </div>
-          )
+          </>
         )}
       </main>
     </div>
