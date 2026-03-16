@@ -113,17 +113,24 @@ export const EscalaEnfermagem: React.FC<Props> = ({
         if (existingEntries.length > 0) {
             const isPar = (r?: string) => r === '12x36_PAR' || r === '24x24_PAR' || r === '24H_DOBRA';
             const isImpar = (r?: string) => r === '12x36_IMPAR' || r === '24x24_IMPAR';
+            const is8H = (r?: string) => r === '8H_DIARIO';
 
             const novoIsPar = isPar(novoColab.regime);
             const novoIsImpar = isImpar(novoColab.regime);
+            const novoIs8H = is8H(novoColab.regime);
 
             for (const existing of existingEntries) {
                 const existingIsPar = isPar(existing.regime);
                 const existingIsImpar = isImpar(existing.regime);
+                const existingIs8H = is8H(existing.regime);
 
-                if ((novoIsPar && existingIsImpar) || (novoIsImpar && existingIsPar)) {
-                    alert(`⚠️ Incompatibilidade de Escala Inteligente Detectada!\n\nO colaborador ${existing.nome} já possui uma escala salva em dias ${existingIsPar ? 'PARES' : 'ÍMPARES'} no setor "${existing.setor}".\n\nNão é possível alocar este profissional em dias opostos, pois causaria um conflito direto na execução do plantão (trabalharia todos os dias sem descanso de 36h).`);
-                    return;
+                // Se um dos regimes for 8H_DIARIO, ele nao conflita por paridade com 12x36 (ex: trabalha 8h de dia e 12h a noite).
+                // Apenas bloqueamos se houver um conflito direto Par vs Impar entre regimes de 12/24h.
+                if (!novoIs8H && !existingIs8H) {
+                    if ((novoIsPar && existingIsImpar) || (novoIsImpar && existingIsPar)) {
+                        alert(`⚠️ Incompatibilidade de Escala Inteligente Detectada!\n\nO colaborador ${existing.nome} já possui uma escala salva em dias ${existingIsPar ? 'PARES' : 'ÍMPARES'} no setor "${existing.setor}".\n\nNão é possível alocar este profissional em dias opostos (PAR x ÍMPAR), pois causaria um conflito direto na execução do plantão (trabalharia todos os dias sem descanso de 36h).`);
+                        return;
+                    }
                 }
             }
         }
