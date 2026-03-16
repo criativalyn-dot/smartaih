@@ -8,7 +8,7 @@ export interface Colaborador {
     coren: string;
     turnoBase: string;
     setor: string;
-    regime: '12x36_PAR' | '12x36_IMPAR' | '8H_DIARIO' | '24H_DOBRA';
+    regime: '12x36_PAR' | '12x36_IMPAR' | '8H_DIARIO' | '24H_DOBRA' | '24x24_PAR' | '24x24_IMPAR';
 }
 
 interface Props {
@@ -52,7 +52,8 @@ export const EscalaEnfermagem: React.FC<Props> = ({
     const calcularPlantaoDefault = (dia: number, colab: Colaborador) => {
         if (colab.regime === '12x36_PAR') return dia % 2 === 0 ? 'P' : 'F';
         if (colab.regime === '12x36_IMPAR') return dia % 2 !== 0 ? 'P' : 'F';
-        if (colab.regime === '24H_DOBRA') return dia % 2 === 0 ? 'P' : 'F';
+        if (colab.regime === '24x24_PAR' || colab.regime === '24H_DOBRA') return dia % 2 === 0 ? 'P' : 'F';
+        if (colab.regime === '24x24_IMPAR') return dia % 2 !== 0 ? 'P' : 'F';
         if (colab.regime === '8H_DIARIO') {
             if (isFDS(dia, mes, ano)) return 'X'; // Cinza, nao trabalha
             return diasStr[getDiaDaSemana(dia, mes, ano)];
@@ -101,6 +102,31 @@ export const EscalaEnfermagem: React.FC<Props> = ({
     const handleSaveColaborador = () => {
         if (!novoColab.nome) return alert('Digite o nome');
         if (!novoColab.setor) return alert('Informe o setor do colaborador');
+
+        // Intelligent Parity Incompatibility Check
+        const nomeTrim = novoColab.nome.trim().toUpperCase();
+        const existingEntries = colaboradores.filter(c =>
+            c.id !== editingId &&
+            (c.nome.trim().toUpperCase() === nomeTrim || (novoColab.coren && c.coren === novoColab.coren))
+        );
+
+        if (existingEntries.length > 0) {
+            const isPar = (r?: string) => r === '12x36_PAR' || r === '24x24_PAR' || r === '24H_DOBRA';
+            const isImpar = (r?: string) => r === '12x36_IMPAR' || r === '24x24_IMPAR';
+
+            const novoIsPar = isPar(novoColab.regime);
+            const novoIsImpar = isImpar(novoColab.regime);
+
+            for (const existing of existingEntries) {
+                const existingIsPar = isPar(existing.regime);
+                const existingIsImpar = isImpar(existing.regime);
+
+                if ((novoIsPar && existingIsImpar) || (novoIsImpar && existingIsPar)) {
+                    alert(`⚠️ Incompatibilidade de Escala Inteligente Detectada!\n\nO colaborador ${existing.nome} já possui uma escala salva em dias ${existingIsPar ? 'PARES' : 'ÍMPARES'} no setor "${existing.setor}".\n\nNão é possível alocar este profissional em dias opostos, pois causaria um conflito direto na execução do plantão (trabalharia todos os dias sem descanso de 36h).`);
+                    return;
+                }
+            }
+        }
 
         if (editingId) {
             // Update existing
@@ -341,11 +367,12 @@ export const EscalaEnfermagem: React.FC<Props> = ({
 
                             <div>
                                 <label className="text-xs font-bold text-gray-500 uppercase block mb-1">Regime / Padrão</label>
-                                <select value={novoColab.regime} onChange={e => setNovoColab({ ...novoColab, regime: e.target.value as any })} className="w-full p-2 border rounded outline-none">
+                                <select value={novoColab.regime} onChange={e => setNovoColab({ ...novoColab, regime: e.target.value as any })} className="w-full p-2 border rounded outline-none bg-white">
                                     <option value="12x36_PAR">12x36 (Dias Pares)</option>
                                     <option value="12x36_IMPAR">12x36 (Dias Ímpares)</option>
                                     <option value="8H_DIARIO">8H (Seg-Sex, Folga FDS)</option>
-                                    <option value="24H_DOBRA">24x24 (Dobra)</option>
+                                    <option value="24x24_PAR">24x24 Dobra (Dias Pares)</option>
+                                    <option value="24x24_IMPAR">24x24 Dobra (Dias Ímpares)</option>
                                 </select>
                             </div>
                         </div>
