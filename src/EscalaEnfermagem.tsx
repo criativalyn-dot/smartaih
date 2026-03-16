@@ -8,7 +8,7 @@ export interface Colaborador {
     coren: string;
     turnoBase: string;
     setor: string;
-    regime: '12x36_PAR' | '12x36_IMPAR' | '8H_DIARIO' | '24H_DOBRA' | '24x24_PAR' | '24x24_IMPAR';
+    regime: '12x36_PAR' | '12x36_IMPAR' | '8H_DIARIO' | '24H_DOBRA' | '24x24_PAR' | '24x24_IMPAR' | 'SOBREAVISO';
 }
 
 interface Props {
@@ -50,6 +50,7 @@ export const EscalaEnfermagem: React.FC<Props> = ({
     const diasArray = Array.from({ length: diasNoMes }, (_, i) => i + 1);
 
     const calcularPlantaoDefault = (dia: number, colab: Colaborador) => {
+        if (colab.regime === 'SOBREAVISO') return 'S';
         if (colab.regime === '12x36_PAR') return dia % 2 === 0 ? 'P' : 'F';
         if (colab.regime === '12x36_IMPAR') return dia % 2 !== 0 ? 'P' : 'F';
         if (colab.regime === '24x24_PAR' || colab.regime === '24H_DOBRA') return dia % 2 === 0 ? 'P' : 'F';
@@ -113,7 +114,7 @@ export const EscalaEnfermagem: React.FC<Props> = ({
         if (existingEntries.length > 0) {
             const isPar = (r?: string) => r === '12x36_PAR' || r === '24x24_PAR' || r === '24H_DOBRA';
             const isImpar = (r?: string) => r === '12x36_IMPAR' || r === '24x24_IMPAR';
-            const is8H = (r?: string) => r === '8H_DIARIO';
+            const is8H = (r?: string) => r === '8H_DIARIO' || r === 'SOBREAVISO';
 
             const novoIsPar = isPar(novoColab.regime);
             const novoIsImpar = isImpar(novoColab.regime);
@@ -369,6 +370,7 @@ export const EscalaEnfermagem: React.FC<Props> = ({
                                     <option value="19H-07H">19H-07H</option>
                                     <option value="07H-17H">07H-17H</option>
                                     <option value="08H-17H">08H-17H</option>
+                                    <option value="00H-00H">00H-00H (Livre/Sobreaviso)</option>
                                 </select>
                             </div>
 
@@ -380,6 +382,7 @@ export const EscalaEnfermagem: React.FC<Props> = ({
                                     <option value="8H_DIARIO">8H (Seg-Sex, Folga FDS)</option>
                                     <option value="24x24_PAR">24x24 Dobra (Dias Pares)</option>
                                     <option value="24x24_IMPAR">24x24 Dobra (Dias Ímpares)</option>
+                                    <option value="SOBREAVISO">Sobreaviso (S Diário)</option>
                                 </select>
                             </div>
                         </div>
