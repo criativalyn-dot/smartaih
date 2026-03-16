@@ -45,6 +45,8 @@ function App() {
   // Tab 2 State
   const [patientName, setPatientName] = useState(() => localStorage.getItem('smartaih_patientName') || '')
   const [medicalRecord, setMedicalRecord] = useState(() => localStorage.getItem('smartaih_medicalRecord') || '')
+  const [professionalName, setProfessionalName] = useState(() => localStorage.getItem('smartaih_professionalName') || '')
+  const [professionalCoren, setProfessionalCoren] = useState(() => localStorage.getItem('smartaih_professionalCoren') || '')
   const [clinicalText, setClinicalText] = useState(() => localStorage.getItem('smartaih_clinicalText') || '')
   const [historicoPaciente, setHistoricoPaciente] = useState(() => {
     const saved = localStorage.getItem('smartaih_historico');
@@ -110,6 +112,8 @@ function App() {
     localStorage.setItem('smartaih_apiKey', apiKey);
     localStorage.setItem('smartaih_patientName', patientName);
     localStorage.setItem('smartaih_medicalRecord', medicalRecord);
+    localStorage.setItem('smartaih_professionalName', professionalName);
+    localStorage.setItem('smartaih_professionalCoren', professionalCoren);
     localStorage.setItem('smartaih_clinicalText', clinicalText);
     localStorage.setItem('smartaih_historico', JSON.stringify(historicoPaciente));
     localStorage.setItem('smartaih_sinais', JSON.stringify(sinaisVitais));
@@ -1532,6 +1536,41 @@ Abra o console do navegador (F12) para mais detalhes.`);
                     {sinaisVitais.hgt && <div><span className="font-bold block text-xs text-gray-500 uppercase">Glicemia</span>{sinaisVitais.hgt}</div>}
                   </div>
                 </div>
+
+                {/* Área de Preenchimento do Profissional (Apenas Tela, Não Imprime) */}
+                <div className="mt-6 pt-5 border-t border-gray-200 print:hidden">
+                  <h3 className="font-bold text-sm text-gray-800 uppercase tracking-widest mb-3 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                    Assinatura do Documento
+                  </h3>
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <div className="flex-1">
+                      <label className="text-xs font-bold text-gray-600 uppercase block mb-1">
+                        {activeTab === 'nursing' ? 'Nome do Enfermeiro(a)' : 'Nome do Médico Solicitante'}
+                      </label>
+                      <input
+                        type="text"
+                        placeholder={activeTab === 'nursing' ? "Ex: Enf. Ana Silva" : "Ex: Dr. João Pedro"}
+                        className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                        value={professionalName}
+                        onChange={e => setProfessionalName(e.target.value)}
+                      />
+                    </div>
+                    {activeTab === 'nursing' && (
+                      <div className="w-full sm:w-1/3">
+                        <label className="text-xs font-bold text-gray-600 uppercase block mb-1">COREN</label>
+                        <input
+                          type="text"
+                          placeholder="Ex: 123456-SP"
+                          className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                          value={professionalCoren}
+                          onChange={e => setProfessionalCoren(e.target.value)}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+
               </div>
             )}
 
@@ -1764,6 +1803,27 @@ Abra o console do navegador (F12) para mais detalhes.`);
                 )}
               </div>
             )}
+
+            {/* Bloco de Assinatura para Impressão */}
+            <div className="hidden print:flex flex-col items-center justify-center mt-20 pt-10 break-inside-avoid">
+              <div className="w-80 border-t-2 border-gray-800 mb-2"></div>
+              <h4 className="font-bold text-gray-900 text-lg uppercase">
+                {(professionalName || '________________________________________').toUpperCase()}
+              </h4>
+              <p className="text-gray-700 font-bold mb-1">
+                {activeTab === 'nursing' ? 'ENFERMEIRO(A)' : 'MÉDICO(A)'}
+              </p>
+              {activeTab === 'nursing' && (
+                <p className="text-gray-700 font-medium">COREN: {professionalCoren || '___________'}</p>
+              )}
+              {activeTab !== 'nursing' && professionalCoren && (
+                <p className="text-gray-700 font-medium">CRM: {professionalCoren}</p>
+              )}
+              <p className="text-gray-500 mt-4 text-sm font-medium">
+                Documento gerado em {new Date().toLocaleDateString('pt-BR')} às {new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+              </p>
+            </div>
+
           </div>
         ) : (
           searchQuery.length > 2 ? (
