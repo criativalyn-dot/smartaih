@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
-import { Search, Activity, Stethoscope, AlertTriangle, CheckCircle2, Key, ChevronRight, Eye, Bed, Scissors } from 'lucide-react'
+import { Search, Activity, Stethoscope, AlertTriangle, CheckCircle2, Key, ChevronRight, Eye, Bed, Scissors, LogOut } from 'lucide-react'
 import sigtapDatabase from './data/sigtap_database.json'
 import type { CidSigtapRelation, SigtapProcedure } from './data/mockDatabase' // Keeping types for now, though we might need to adjust them if JSON changes
 import { PROTOCOLO_MANCHESTER_REFERENCIA } from './data/manchesterReferencia'
 import { GoogleGenAI } from '@google/genai';
 import { EscalaEnfermagem } from './EscalaEnfermagem';
+import { supabase } from './lib/supabase';
+import { Auth } from './Auth';
 
 // Helper para o calculo exato de idade (Anos, Meses ou Dias) usado no prompt e no Header do PDF
 const calcularIdadeExata = (dataString: string) => {
@@ -35,6 +37,24 @@ const calcularIdadeExata = (dataString: string) => {
 };
 
 function App() {
+  const [session, setSession] = useState<any>(null);
+  const [isInitializingAuth, setIsInitializingAuth] = useState(true);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setIsInitializingAuth(false);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
   const [apiKey, setApiKey] = useState(() => localStorage.getItem('smartaih_apiKey') || '')
   const [activeTab, setActiveTab] = useState<'cid' | 'symptoms' | 'nursing' | 'escala'>('cid')
 
@@ -617,6 +637,18 @@ Abra o console do navegador (F12) para mais detalhes.`);
     });
   };
 
+  if (isInitializingAuth) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return <Auth />;
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 w-full font-sans text-gray-900">
       {/* Modern, Sticky Glassmorphism Header */}
@@ -634,15 +666,29 @@ Abra o console do navegador (F12) para mais detalhes.`);
             </div>
           </div>
 
-          <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-200">
-            <Key className="w-4 h-4 text-gray-400" />
-            <input
-              type="password"
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              placeholder="Google Gemini API Key"
-              className="bg-transparent border-none focus:outline-none text-sm w-48 xl:w-64 placeholder-gray-400"
-            />
+          <div className="flex flex-col sm:flex-row items-center gap-3">
+            <div className="flex flex-col text-right hidden md:block mr-2">
+              <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider block">Logado como</span>
+              <span className="text-sm font-bold text-gray-800">{session.user?.email}</span>
+            </div>
+            <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-200">
+              <Key className="w-4 h-4 text-gray-400" />
+              <input
+                type="password"
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                placeholder="Google Gemini API Key"
+                className="bg-transparent border-none focus:outline-none text-sm w-48 xl:w-64 placeholder-gray-400"
+              />
+            </div>
+            <button
+              onClick={() => supabase.auth.signOut()}
+              className="flex items-center gap-2 text-sm text-gray-600 hover:text-red-600 transition-colors font-medium px-3 py-1.5 rounded-lg hover:bg-red-50 border border-transparent hover:border-red-100"
+              title="Sair da Conta"
+            >
+              <LogOut className="w-4 h-4" />
+              <span className="hidden sm:inline">Sair</span>
+            </button>
           </div>
         </div>
       </header>
