@@ -1,12 +1,23 @@
 import { useState, useEffect } from 'react'
-import { Search, Activity, Stethoscope, AlertTriangle, CheckCircle2, Key, ChevronRight, Eye, Bed, Scissors, LogOut } from 'lucide-react'
+import { Search, Activity, Stethoscope, AlertTriangle, CheckCircle2, ChevronRight, Eye, Bed, Scissors, LogOut } from 'lucide-react'
 import sigtapDatabase from './data/sigtap_database.json'
 import type { CidSigtapRelation, SigtapProcedure } from './data/mockDatabase' // Keeping types for now, though we might need to adjust them if JSON changes
 import { PROTOCOLO_MANCHESTER_REFERENCIA } from './data/manchesterReferencia'
-import { GoogleGenAI } from '@google/genai';
 import { EscalaEnfermagem } from './EscalaEnfermagem';
 import { supabase } from './lib/supabase';
 import { Auth } from './Auth';
+
+// Helper intermédio para proxy backend Vercel da IA
+const callAIBackend = async (prompt: string, config?: any) => {
+  const res = await fetch('/api/gemini', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt, config })
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Erro na comunicação com o servidor de Inteligência Artificial');
+  return { text: data.text };
+};
 
 // Helper para o calculo exato de idade (Anos, Meses ou Dias) usado no prompt e no Header do PDF
 const calcularIdadeExata = (dataString: string) => {
@@ -55,7 +66,6 @@ function App() {
     return () => subscription.unsubscribe();
   }, []);
 
-  const [apiKey, setApiKey] = useState(() => localStorage.getItem('smartaih_apiKey') || '')
   const [activeTab, setActiveTab] = useState<'cid' | 'symptoms' | 'nursing' | 'escala'>('cid')
 
   // Tab 1 State
@@ -150,7 +160,6 @@ function App() {
 
   // Auto-Save Effect
   useEffect(() => {
-    localStorage.setItem('smartaih_apiKey', apiKey);
     localStorage.setItem('smartaih_patientName', patientName);
     localStorage.setItem('smartaih_medicalRecord', medicalRecord);
     localStorage.setItem('smartaih_professionalName', professionalName);
@@ -163,7 +172,7 @@ function App() {
     localStorage.setItem('smartaih_braden', JSON.stringify(bradenScore));
     localStorage.setItem('smartaih_morse', JSON.stringify(morseScore));
     localStorage.setItem('smartaih_fugulin', JSON.stringify(fugulinScore));
-  }, [apiKey, patientName, medicalRecord, clinicalText, historicoPaciente, sinaisVitais, tipoAtendimento, nursingAssessment, bradenScore, morseScore, fugulinScore]);
+  }, [patientName, medicalRecord, clinicalText, historicoPaciente, sinaisVitais, tipoAtendimento, nursingAssessment, bradenScore, morseScore, fugulinScore]);
 
   // Calculators for Scales
   useEffect(() => {
@@ -294,7 +303,7 @@ function App() {
   };
 
   const handleAiAnalysis = async () => {
-    if (!clinicalText.trim() || !apiKey) return;
+    if (!clinicalText.trim()) return;
 
     setIsLoadingAi(true);
     setResults({ cidSelecionado: null, nomeCid: null, procedimentosTags: [], procedimentos: [] });
@@ -302,7 +311,6 @@ function App() {
 
     try {
       const idadeCalculada = calcularIdadeExata(historicoPaciente.dataNascimento);
-      const ai = new GoogleGenAI({ apiKey });
       const tagsDisponiveis = sigtapDatabase.flatMap(proc => proc.tagsClinicas).join(', ');
 
       let orientacaoTipo = "";
@@ -396,13 +404,9 @@ Retorne EXATAMENTE no seguinte formato JSON, sem crases markdown ou texto extra:
 }
 `;
 
-      const responseStep1 = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: promptStep1,
-        config: {
-          responseMimeType: "application/json",
-          temperature: 0.1,
-        }
+      const responseStep1 = await callAIBackend(promptStep1, {
+        responseMimeType: "application/json",
+        temperature: 0.1,
       });
 
       if (!responseStep1.text) {
@@ -487,13 +491,9 @@ Retorne EXATAMENTE no seguinte formato JSON, sem crases markdown:
 }
 `;
 
-      const responseStep2 = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: promptStep2,
-        config: {
-          responseMimeType: "application/json",
-          temperature: 0.1,
-        }
+      const responseStep2 = await callAIBackend(promptStep2, {
+        responseMimeType: "application/json",
+        temperature: 0.1,
       });
 
       if (!responseStep2.text) {
@@ -543,15 +543,9 @@ Retorne EXATAMENTE no seguinte formato JSON, sem crases markdown:
   }
 
   const handleNursingAnalysis = async () => {
-    if (!apiKey) {
-      alert("Por favor, insira sua chave API do Google Gemini no topo da página.");
-      return;
-    }
-
     setIsLoadingAi(true);
     setNursingResults(null);
     try {
-      const genAI = new GoogleGenAI({ apiKey: apiKey });
       const prompt = `Você é um Enfermeiro Especialista em Sistematização da Assistência de Enfermagem (SAE) de altíssimo nível, seguindo diretrizes da ANVISA.
 Sua missão é gerar os Diagnósticos de Enfermagem (NANDA-I), Intervenções (NIC) e Resultados Esperados (NOC) com base nos dados vitais e avaliação física do paciente fornecidos abaixo.
 
@@ -602,10 +596,7 @@ FORMATO OBRIGATÓRIO DE SAÍDA JSON:
   "riscoMorseAnalise": "Breve texto explicativo sobre o risco de queda"
 }`;
 
-      const response = await genAI.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: prompt,
-      });
+      const response = await callAIBackend(prompt);
 
       const text = response.text;
       if (!text) throw new Error("A IA não retornou nenhum texto.");
@@ -671,16 +662,7 @@ Abra o console do navegador (F12) para mais detalhes.`);
               <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider block">Logado como</span>
               <span className="text-sm font-bold text-gray-800">{session.user?.email}</span>
             </div>
-            <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-200">
-              <Key className="w-4 h-4 text-gray-400" />
-              <input
-                type="password"
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-                placeholder="Google Gemini API Key"
-                className="bg-transparent border-none focus:outline-none text-sm w-48 xl:w-64 placeholder-gray-400"
-              />
-            </div>
+            {/* API Key proxy managed by Vercel backend */}
             <button
               onClick={() => supabase.auth.signOut()}
               className="flex items-center gap-2 text-sm text-gray-600 hover:text-red-600 transition-colors font-medium px-3 py-1.5 rounded-lg hover:bg-red-50 border border-transparent hover:border-red-100"
@@ -923,15 +905,11 @@ Abra o console do navegador (F12) para mais detalhes.`);
 
                 <div className="mt-10 pt-8 border-t border-gray-100 flex flex-col sm:flex-row justify-between items-center gap-6">
                   <span className="text-sm font-medium flex items-center gap-2">
-                    {apiKey ? (
-                      <span className="text-green-600 bg-green-50 px-3 py-1 rounded-full border border-green-200"><CheckCircle2 className="w-4 h-4 inline mr-1" />API Conectada</span>
-                    ) : (
-                      <span className="text-amber-600 bg-amber-50 px-3 py-1 rounded-full border border-amber-200"><AlertTriangle className="w-4 h-4 inline mr-1" />Insira sua chave no topo</span>
-                    )}
+                    <span className="text-green-600 bg-green-50 px-3 py-1 rounded-full border border-green-200"><CheckCircle2 className="w-4 h-4 inline mr-1" />Conectado ao Servidor Mestre</span>
                   </span>
                   <button
                     onClick={handleAiAnalysis}
-                    disabled={isLoadingAi || !clinicalText.trim() || !apiKey}
+                    disabled={isLoadingAi || !clinicalText.trim()}
                     className="w-full sm:w-auto overflow-hidden relative group disabled:opacity-60 disabled:cursor-not-allowed bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-3.5 px-8 rounded-xl shadow-lg shadow-blue-500/30 transition-all hover:shadow-xl hover:-translate-y-0.5 active:scale-95 flex items-center justify-center gap-2"
                   >
                     <span className="absolute w-0 h-0 transition-all duration-500 ease-out bg-white rounded-full group-hover:w-56 group-hover:h-56 opacity-10"></span>
@@ -1505,7 +1483,7 @@ Abra o console do navegador (F12) para mais detalhes.`);
                           {!nursingResults ? (
                             <button
                               onClick={handleNursingAnalysis}
-                              disabled={isLoadingAi || !apiKey}
+                              disabled={isLoadingAi}
                               className="w-full md:w-auto overflow-hidden relative group disabled:opacity-60 disabled:cursor-not-allowed bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold py-4 px-10 rounded-xl shadow-lg shadow-emerald-500/30 transition-all hover:shadow-xl hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-3 mx-auto text-lg"
                             >
                               {isLoadingAi ? (
@@ -1525,9 +1503,7 @@ Abra o console do navegador (F12) para mais detalhes.`);
                             </div>
                           )}
 
-                          {!apiKey && (
-                            <p className="text-red-500 text-sm mt-4 font-bold flex items-center justify-center gap-2"><AlertTriangle className="w-4 h-4" /> Configuração Obrigatória: Insira a API Key do Google Gemini no topo da página antes de continuar.</p>
-                          )}
+                          {/* Alert Key Removed */}
                         </div>
                       </div>
                     )}
