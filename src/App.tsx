@@ -138,6 +138,19 @@ function App() {
 
   const [nursingResults, setNursingResults] = useState<any>(null);
 
+  const handleNovoPaciente = () => {
+    if (window.confirm('Deseja iniciar um novo paciente? Todos os campos atuais serão limpos e os dados locais apagados.')) {
+      const keysToRemove = [
+        'smartaih_patientName', 'smartaih_medicalRecord', 'smartaih_professionalName',
+        'smartaih_professionalCoren', 'smartaih_clinicalText', 'smartaih_historico',
+        'smartaih_sinais', 'smartaih_tipoAtendimento', 'smartaih_nursingAssessment',
+        'smartaih_braden', 'smartaih_morse', 'smartaih_fugulin'
+      ];
+      keysToRemove.forEach(k => localStorage.removeItem(k));
+      window.location.reload();
+    }
+  };
+
   // Escala de Enfermagem (Scheduling) Tab 4 State
   const [colaboradoresEscala, setColaboradoresEscala] = useState<any[]>(() => {
     const saved = localStorage.getItem('smartaih_escala_colaboradores')
@@ -1525,6 +1538,13 @@ Abra o console do navegador (F12) para mais detalhes.`);
                         className="w-full sm:w-auto px-6 py-2.5 font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-xl transition-colors"
                       >
                         Início
+                      </button>
+
+                      <button
+                        onClick={handleNovoPaciente}
+                        className="w-full sm:w-auto px-6 py-2.5 font-bold text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 rounded-xl transition-colors whitespace-nowrap"
+                      >
+                        Limpar / Novo Paciente
                       </button>
 
                       {currentSection < saeSections.length - 1 ? (
