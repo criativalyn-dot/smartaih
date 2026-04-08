@@ -24,7 +24,7 @@ export default async function handler(req: any, res: any) {
         };
 
         const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
-        const modelsToTry = ['gemini-1.5-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
+        const modelsToTry = ['gemini-1.5-flash-latest', 'gemini-1.5-pro-latest', 'gemini-pro'];
         let response;
         let lastError;
 
