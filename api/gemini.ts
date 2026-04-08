@@ -15,11 +15,35 @@ export default async function handler(req: any, res: any) {
 
         const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-        const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: prompt,
-            config: config || undefined
-        });
+        const tryGenerate = async (modelName: string) => {
+            return await ai.models.generateContent({
+                model: modelName,
+                contents: prompt,
+                config: config || undefined
+            });
+        };
+
+        const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
+        const modelsToTry = ['gemini-2.5-flash', 'gemini-2.5-flash', 'gemini-2.0-flash'];
+        let response;
+        let lastError;
+
+        for (let i = 0; i < modelsToTry.length; i++) {
+            try {
+                response = await tryGenerate(modelsToTry[i]);
+                break; // Success
+            } catch (err: any) {
+                lastError = err;
+                console.warn(`Tentativa com ${modelsToTry[i]} falhou:`, err?.message || err);
+                if (i < modelsToTry.length - 1) {
+                    await sleep(3000); // Espera 3 segundos antes do retry
+                }
+            }
+        }
+
+        if (!response) {
+            throw lastError;
+        }
 
         return res.status(200).json({ text: response.text });
     } catch (error: any) {
