@@ -24,8 +24,17 @@ export default async function handler(req: any, res: any) {
         };
 
         const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
-        // Agora que a conta é paga, o 2.0-flash tem cota liberada e não sofre o 503 severo do 2.5
-        const modelsToTry = ['gemini-2.0-flash', 'gemini-2.0-flash', 'gemini-2.5-flash'];
+        // Lista massiva de contingência para encontrar O ÚNICO servidor do Google que tenha cota livre hoje + não esteja lotado (503)
+        const modelsToTry = [
+            'gemini-1.5-flash-8b', 
+            'gemini-1.5-flash',
+            'gemini-2.5-flash',
+            'gemini-2.0-flash-lite-preview-02-05',
+            'gemini-2.0-flash-exp',
+            'gemini-2.5-pro',
+            'gemini-pro',
+            'gemini-1.0-pro'
+        ];
         let response;
         let errorsRecord: any[] = [];
 
@@ -36,12 +45,12 @@ export default async function handler(req: any, res: any) {
             } catch (err: any) {
                 errorsRecord.push({ model: modelsToTry[i], error: err?.message || err });
                 console.warn(`Tentativa com ${modelsToTry[i]} falhou:`, err?.message || err);
-                if (err?.message?.includes('404')) {
-                   // Se for 404, não adianta esperar, pula logo pro próximo
+                if (err?.message?.includes('404') || err?.message?.includes('429')) {
+                   // Se for 404 ou limite de cota, não adianta esperar, pula logo pro próximo
                    continue;
                 }
                 if (i < modelsToTry.length - 1) {
-                    await sleep(2000); // Espera 2 segundos antes do retry
+                    await sleep(1000); // Espera 1 seg antes do retry
                 }
             }
         }
