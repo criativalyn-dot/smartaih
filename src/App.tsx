@@ -6,6 +6,7 @@ import { PROTOCOLO_MANCHESTER_REFERENCIA } from './data/manchesterReferencia'
 import { EscalaEnfermagem } from './EscalaEnfermagem';
 import { supabase } from './lib/supabase';
 import { Auth } from './Auth';
+import PrintableSaeReport from './PrintableSaeReport';
 
 // Helper intermédio para proxy backend Vercel da IA
 const callAIBackend = async (prompt: string, config?: any) => {
@@ -74,26 +75,20 @@ function App() {
   const [isShowingSuggestions, setIsShowingSuggestions] = useState(false)
 
   // Tab 2 State
-  const [patientName, setPatientName] = useState(() => localStorage.getItem('smartaih_patientName') || '')
-  const [medicalRecord, setMedicalRecord] = useState(() => localStorage.getItem('smartaih_medicalRecord') || '')
-  const [professionalName, setProfessionalName] = useState(() => localStorage.getItem('smartaih_professionalName') || '')
-  const [professionalCoren, setProfessionalCoren] = useState(() => localStorage.getItem('smartaih_professionalCoren') || '')
-  const [clinicalText, setClinicalText] = useState(() => localStorage.getItem('smartaih_clinicalText') || '')
-  const [historicoPaciente, setHistoricoPaciente] = useState(() => {
-    const saved = localStorage.getItem('smartaih_historico');
-    return saved ? JSON.parse(saved) : {
-      dataNascimento: '', comorbidades: '', alergias: '', medicamentos: ''
-    };
-  })
-  const [sinaisVitais, setSinaisVitais] = useState(() => {
-    const saved = localStorage.getItem('smartaih_sinais');
-    return saved ? JSON.parse(saved) : {
-      pa: '', fc: '', fr: '', temp: '', spo2: '', hgt: '',
-      peso: '', altura: '', bcf: '', alturaUterina: '', glasgow: '', dor: ''
-    };
+  const [patientName, setPatientName] = useState('')
+  const [medicalRecord, setMedicalRecord] = useState('')
+  const [professionalName, setProfessionalName] = useState('')
+  const [professionalCoren, setProfessionalCoren] = useState('')
+  const [clinicalText, setClinicalText] = useState('')
+  const [historicoPaciente, setHistoricoPaciente] = useState<any>({
+    dataNascimento: '', comorbidades: '', alergias: '', medicamentos: '', sexo: '', gestante: 'Não'
+  });
+  const [sinaisVitais, setSinaisVitais] = useState({
+    pa: '', fc: '', fr: '', temp: '', spo2: '', hgt: '',
+    peso: '', altura: '', bcf: '', alturaUterina: '', glasgow: '', dor: ''
   })
   const [isLoadingAi, setIsLoadingAi] = useState(false)
-  const [tipoAtendimento, setTipoAtendimento] = useState<'observacao' | 'internacao' | 'cirurgia'>(() => (localStorage.getItem('smartaih_tipoAtendimento') as any) || 'internacao')
+  const [tipoAtendimento, setTipoAtendimento] = useState<'observacao' | 'internacao' | 'cirurgia'>('internacao')
 
   // Tab 3 State (Nursing SAE Wizard)
   const [currentSection, setCurrentSection] = useState(0);
@@ -113,28 +108,16 @@ function App() {
     'Análise IA (NANDA/NIC/NOC)'
   ];
 
-  const [nursingAssessment, setNursingAssessment] = useState(() => {
-    const saved = localStorage.getItem('smartaih_nursingAssessment');
-    return saved ? JSON.parse(saved) : {
-      neurologicalStatus: [], pupils: [], thermalRegulation: [], oxygenation: [],
-      skin: [], gastrointestinal: [], vascular: [], abdominal: [], urinary: [],
-      catheters: { peripheral: '', location: '', vesicalProbe: '', drain: '', allergies: '', feeding: [] },
-      // Keeping legacy fields for basic info
-      leito: '', dataInternacao: '', hipoteseDiagnostica: ''
-    };
+  const [nursingAssessment, setNursingAssessment] = useState<any>({
+    neurologicalStatus: [], pupils: [], thermalRegulation: [], oxygenation: [],
+    skin: [], gastrointestinal: [], vascular: [], abdominal: [], urinary: [],
+    catheters: { peripheral: '', location: '', vesicalProbe: '', drain: '', allergies: '', feeding: [] },
+    // Keeping legacy fields for basic info
+    leito: '', dataInternacao: '', hipoteseDiagnostica: ''
   });
-  const [bradenScore, setBradenScore] = useState(() => {
-    const saved = localStorage.getItem('smartaih_braden');
-    return saved ? JSON.parse(saved) : { sensoryPerception: 4, moisture: 4, activity: 4, mobility: 4, nutrition: 4, frictionShear: 3, total: 23 };
-  });
-  const [morseScore, setMorseScore] = useState(() => {
-    const saved = localStorage.getItem('smartaih_morse');
-    return saved ? JSON.parse(saved) : { fallHistory: 0, secondaryDiagnosis: 0, ambulatoryAid: 0, ivTherapy: 0, gait: 0, mentalStatus: 0, total: 0 };
-  });
-  const [fugulinScore, setFugulinScore] = useState(() => {
-    const saved = localStorage.getItem('smartaih_fugulin');
-    return saved ? JSON.parse(saved) : { mentalStatus: 1, oxygenation: 1, vitalSigns: 1, motility: 1, walking: 1, feeding: 1, bodyCare: 1, elimination: 1, therapeutics: 1, total: 9 };
-  });
+  const [bradenScore, setBradenScore] = useState({ sensoryPerception: 4, moisture: 4, activity: 4, mobility: 4, nutrition: 4, frictionShear: 3, total: 23 });
+  const [morseScore, setMorseScore] = useState({ fallHistory: 0, secondaryDiagnosis: 0, ambulatoryAid: 0, ivTherapy: 0, gait: 0, mentalStatus: 0, total: 0 });
+  const [fugulinScore, setFugulinScore] = useState({ mentalStatus: 1, oxygenation: 1, vitalSigns: 1, motility: 1, walking: 1, feeding: 1, bodyCare: 1, elimination: 1, therapeutics: 1, total: 9 });
 
   const [nursingResults, setNursingResults] = useState<any>(null);
 
@@ -144,7 +127,7 @@ function App() {
         'smartaih_patientName', 'smartaih_medicalRecord', 'smartaih_professionalName',
         'smartaih_professionalCoren', 'smartaih_clinicalText', 'smartaih_historico',
         'smartaih_sinais', 'smartaih_tipoAtendimento', 'smartaih_nursingAssessment',
-        'smartaih_braden', 'smartaih_morse', 'smartaih_fugulin'
+        'smartaih_braden', 'smartaih_morse', 'smartaih_fugulin', 'smartaih_riscoQueda', 'smartaih_riscoLesao'
       ];
       keysToRemove.forEach(k => localStorage.removeItem(k));
       window.location.reload();
@@ -171,21 +154,7 @@ function App() {
     localStorage.setItem('smartaih_escala_excecoes', JSON.stringify(excecoesEscala))
   }, [excecoesEscala])
 
-  // Auto-Save Effect
-  useEffect(() => {
-    localStorage.setItem('smartaih_patientName', patientName);
-    localStorage.setItem('smartaih_medicalRecord', medicalRecord);
-    localStorage.setItem('smartaih_professionalName', professionalName);
-    localStorage.setItem('smartaih_professionalCoren', professionalCoren);
-    localStorage.setItem('smartaih_clinicalText', clinicalText);
-    localStorage.setItem('smartaih_historico', JSON.stringify(historicoPaciente));
-    localStorage.setItem('smartaih_sinais', JSON.stringify(sinaisVitais));
-    localStorage.setItem('smartaih_tipoAtendimento', tipoAtendimento);
-    localStorage.setItem('smartaih_nursingAssessment', JSON.stringify(nursingAssessment));
-    localStorage.setItem('smartaih_braden', JSON.stringify(bradenScore));
-    localStorage.setItem('smartaih_morse', JSON.stringify(morseScore));
-    localStorage.setItem('smartaih_fugulin', JSON.stringify(fugulinScore));
-  }, [patientName, medicalRecord, clinicalText, historicoPaciente, sinaisVitais, tipoAtendimento, nursingAssessment, bradenScore, morseScore, fugulinScore]);
+
 
   // Calculators for Scales
   useEffect(() => {
@@ -333,10 +302,10 @@ function App() {
         orientacaoTipo = `ATENÇÃO MÁXIMA: O MÉDICO INDICOU QUE O PACIENTE FARÁ CIRURGIA. VOCÊ DEVE OBRIGATORIAMENTE ESCOLHER TAGS CIRÚRGICAS (EX: DRENAGEM_ABSCESSO_PELE, CESAREANA) E NÃO APENAS CLÍNICAS.
 
 [ REGRA DE OURO DO SUS - FATURAMENTO CIRÚRGICO MÚLTIPLO ]
-Se o relato clínico descrever MAIS DE UMA cirurgia distinta sendo feita no mesmo tempo operatório (Ex: Hernioplastia + Colecistectomia), aja como um Auditor Estratégico para faturamento:
-1. O Procedimento Principal (Tag) DEVE SER OBRIGATORIAMENTE a tag coringa "SIGTAP_0415010012_TRATAMENTO_C_CIRURGIAS_MULTIPLAS" (ou Laparotomia Exploratória se aplicável).
-2. Você DEVE usar o array "cidsSecundarios" de forma inteligente e exata para "justificar as cirurgias filhas"! Para CADA procedimento cirúrgico real que você "escondeu" dentro de "Cirurgias Múltiplas", você DEVE deduzir do texto e listar o respectivo CID da tabela que autorizaria a cirurgia filha (Ex: Se tirou vesícula por trauma, liste S36 nos secundários; Se corrigiu hérnia incisional, liste K430). 
-3. Liste textualmente o nome das cirurgias reais realizadas no campo "examesSugeridos" ou na Justificativa.
+Se o relato clínico descrever MAIS DE UMA cirurgia distinta sendo feita no mesmo tempo operatório (Ex: Histerectomia + Salpingectomia), aja como um Auditor Estratégico para faturamento:
+1. O Procedimento Principal (Tag) DEVE SER OBRIGATORIAMENTE A CIRURGIA DE MAIOR COMPLEXIDADE (a cirurgia principal na via de faturamento) E QUE ESTEJA DENTRA DA LISTA DE TAGS EXATAS. Escolha apenas UMA tag.
+2. Você DEVE usar o array "cidsSecundarios" de forma inteligente e descritiva para "justificar as cirurgias filhas".
+3. Liste textualmente o nome das cirurgias adicionais (Ex: Salpingectomia) no campo "examesSugeridos" ou na Justificativa.
 
 REGRA OURO MANCHESTER PARA CIRURGIA: A indicação cirúrgica imediata ou de urgência eleva automaticamente o Risco. A base da Classificação de Risco DEVE ser no mínimo AMARELO (Urgente), podendo ser LARANJA (Muito Urgente) ou VERMELHO (Emergência) se os sinais vitais estiverem em choque.`;
       } else {
@@ -376,7 +345,7 @@ No texto clínico, você encontrará várias abreviações médicas de urgência
 - HGT: Glicemia Capilar
 Além disso, atenção a cruzamentos laboratoriais (HB, HTO, Leuco, Creat, Ureia, K, Na) com os Sinais Vitais para elevar o nível do Manchester.
 
-2. CIDS SECUNDÁRIOS E COMORBIDADES: Liste todas as comorbidades ativas e secundárias relevantes no array "cidsSecundarios". Exija prioridade absoluta nas comorbidades não-compensadas encontradas pela varredura laboratorial.
+2. CIDS SECUNDÁRIOS E COMORBIDADES: Liste todas as comorbidades ativas e secundárias relevantes no array "cidsSecundarios". Exija prioridade absoluta nas comorbidades não-compensadas encontradas pela varredura laboratorial. EXTREMAMENTE IMPORTANTE: Você está TERMINANTEMENTE PROIBIDO de inventar ou alterar o nome dos CIDs! Use SOMENTE a descrição OFICIAL exata do manual CID-10, com no máximo 4 caracteres no código (ex: J45 ou J45.9). NUNCA forneça CIDs hiper-específicos de 5 caracteres como J45.99.
 
 3. CLASSIFICAÇÃO DE RISCO DE MANCHESTER: Avalie todos os Sinais Vitais fornecidos, os RESULTADOS LABORATORIAIS e o Quadro Clínico para determinar a Cor.
 DIRETRIZES DE MANCHESTER:
@@ -457,9 +426,10 @@ Retorne EXATAMENTE no seguinte formato JSON, sem crases markdown ou texto extra:
       }
 
       // Failsafe 2: Defaults genéricos de sobrevivência do SUS
+      // Failsafe 2: Defaults genéricos de sobrevivência do SUS
       if (!foundProc) {
         if (tipoAtendimento === 'cirurgia') {
-          foundProc = sigtapDatabase.find(p => p.codigo === "0415010012"); // TRATAMENTO C/ CIRURGIAS MULTIPLAS
+          foundProc = sigtapDatabase.find(p => p.nome.includes('CIRURGIA') || p.nome.includes('PARTO') || p.nome.includes('HISTERECTOMIA')) || sigtapDatabase[0]; // Fallback genérico para cirurgia
         } else if (tipoAtendimento === 'observacao') {
           foundProc = sigtapDatabase.find(p => p.codigo === "0301060029"); // OBSERVACAO ATE 24H
         } else {
@@ -488,8 +458,8 @@ Você está PROIBIDO de sugerir qualquer CID Principal que não esteja exata e l
 Se o CID ideal que você pensou (ex: E16.2 para Hipoglicemia) NÃO ESTÁ na lista, você DEVE procurar o CID mais próximo que ESTÁ na lista e que englobe os sintomas/condição base (ex: buscando entre E10 e E14 para diabetes causador).
 Retorne o CID com sua grafia exata (ex: E100, N390 - removendo o ponto no formato final se estava assim na lista acima, ou mantendo o ponto se a lista tem ponto, apenas copie o formato da lista).
 
-1. Escolha o melhor CID DENTRO DA LISTA PERMITIDA.
-2. Dê o nome real descritivo desse CID.
+1. Escolha o melhor CID DENTRO DA LISTA PERMITIDA. O CID DEVE ter no máximo 4 caracteres (ex: J45 ou J45.9). NUNCA forneça CIDs de 5 caracteres como J45.99.
+2. Dê o nome real descritivo desse CID. EXTREMAMENTE IMPORTANTE: VOCÊ ESTÁ TERMINANTEMENTE PROIBIDO DE INVENTAR, ABREVIAR OU ALTERAR O NOME DO CID! Use SOMENTE a descrição OFICIAL exata do manual CID-10 (ex: Se CID for M67.4, nomeie como "Gânglio" e JAMAIS como "Cisto Sinovial").
 
 Quadro Clínico Original para referência:
 "${clinicalText}"
@@ -581,7 +551,10 @@ ${JSON.stringify(morseScore, null, 2)}
 INSTRUÇÕES OBRIGATÓRIAS:
 1. Avalie criticamente os sinais vitais, os checkboxes ativados e as Escalas de Fugulin, Braden e Morse.
 2. Identifique os diagnósticos de enfermagem reais e potencias priorizados de acordo com o Nível de Dependência (Fugulin).
-3. Se houver risco de queda (Morse Alto/Moderado) ou lesão por pressão (Braden Baixo/Moderado/Alto/Altíssimo), INCLUA DIAGNÓSTICOS NANDA E INTERVENÇÕES NIC CORRESPONDENTES OBRIGATORIAMENTE.
+3. Se o paciente for Gestante (ver Histórico) ou possuir BCF/Altura Uterina registrados, GERE DIAGNÓSTICOS E PRESCRIÇÕES EXCLUSIVOS DE OBSTETRÍCIA/MATERNIDADE se houver alguma alteração pertinente.
+4. Se o paciente relatar ALERGIAS, isso deve influenciar o plano de cuidados e gerar um alerta na análise.
+5. Se houver risco de queda (Morse Alto/Moderado) ou lesão por pressão (Braden Baixo/Moderado/Alto/Altíssimo), INCLUA DIAGNÓSTICOS NANDA E INTERVENÇÕES NIC CORRESPONDENTES OBRIGATORIAMENTE.
+6. REGRA DE ESPAÇO E IMPRESSÃO (CRÍTICA): Seja EXTREMAMENTE conciso. Gere no MÁXIMO 2 Diagnósticos NANDA, no MÁXIMO 3 Intervenções NIC e no MÁXIMO 3 Resultados NOC. Mantenha as frases curtas. O layout de impressão do hospital quebra se for extenso demais.
 
 [ REGRA ANTI-CRASH DE FORMATAÇÃO JSON (CRÍTICA) ]
 Você DEVE obrigatoriamente retornar APENAS um objeto JSON rigorosamente válido. NENHUM texto markdown.
@@ -606,7 +579,8 @@ FORMATO OBRIGATÓRIO DE SAÍDA JSON:
     "Ausência de sinais de..."
   ],
   "riscoBradenAnalise": "Breve texto explicativo sobre o risco de LPP do paciente baseado na avaliação",
-  "riscoMorseAnalise": "Breve texto explicativo sobre o risco de queda"
+  "riscoMorseAnalise": "Breve texto explicativo sobre o risco de queda",
+  "riscoFugulinAnalise": "Breve texto explicativo sobre o grau de dependência (Fugulin)"
 }`;
 
       const response = await callAIBackend(prompt);
@@ -654,7 +628,7 @@ Abra o console do navegador (F12) para mais detalhes.`);
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 w-full font-sans text-gray-900">
+    <div className="min-h-screen bg-gray-50 w-full font-sans text-gray-900 print:bg-white">
       {/* Modern, Sticky Glassmorphism Header */}
       <header className="bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-200 sticky top-0 z-50 transition-all duration-300 print:hidden">
         <div className="max-w-5xl mx-auto px-4 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -689,7 +663,7 @@ Abra o console do navegador (F12) para mais detalhes.`);
       </header>
 
       {/* Main Content */}
-      <main className="max-w-6xl mx-auto px-4 py-12 md:py-16">
+      <main className="max-w-6xl mx-auto px-4 py-12 md:py-16 print:hidden">
 
         {/* Main Search Container */}
         <div className={`bg-white rounded-3xl shadow-xl shadow-blue-900/5 border border-gray-100 mb-8 overflow-hidden ${aiResults.length > 0 ? 'print:hidden' : ''}`}>
@@ -993,8 +967,25 @@ Abra o console do navegador (F12) para mais detalhes.`);
                             <div className="md:col-span-2"><label className="text-sm font-bold text-gray-700 uppercase block tracking-wide mb-2">Nome do Paciente</label><input type="text" placeholder="Nome Completo" className="w-full text-base p-4 border border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all bg-gray-50 focus:bg-white" value={patientName} onChange={e => setPatientName(e.target.value)} /></div>
                             <div><label className="text-sm font-bold text-gray-700 uppercase block tracking-wide mb-2">Prontuário</label><input type="text" placeholder="Ex: 596290" className="w-full text-base p-4 border border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all bg-gray-50 focus:bg-white" value={medicalRecord} onChange={e => setMedicalRecord(e.target.value)} /></div>
                             <div><label className="text-sm font-bold text-gray-700 uppercase block tracking-wide mb-2">Nascimento</label><input type="date" className="w-full text-base p-4 border border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all bg-gray-50 focus:bg-white" value={historicoPaciente.dataNascimento || ''} onChange={e => setHistoricoPaciente({ ...historicoPaciente, dataNascimento: e.target.value })} /></div>
+                            <div>
+                               <label className="text-sm font-bold text-gray-700 uppercase block tracking-wide mb-2">Sexo</label>
+                               <div className="flex gap-4 p-4 border border-gray-300 rounded-xl transition-all bg-gray-50 h-[58px] items-center">
+                                 <label className="flex items-center gap-2 cursor-pointer font-medium text-gray-700"><input type="radio" name="sexo" value="M" checked={historicoPaciente.sexo === 'M'} onChange={e => setHistoricoPaciente({...historicoPaciente, sexo: e.target.value})} className="w-5 h-5 text-blue-600 focus:ring-blue-500 cursor-pointer"/> M</label>
+                                 <label className="flex items-center gap-2 cursor-pointer font-medium text-gray-700"><input type="radio" name="sexo" value="F" checked={historicoPaciente.sexo === 'F'} onChange={e => setHistoricoPaciente({...historicoPaciente, sexo: e.target.value})} className="w-5 h-5 text-blue-600 focus:ring-blue-500 cursor-pointer"/> F</label>
+                               </div>
+                            </div>
+                            {historicoPaciente.sexo === 'F' && (
+                              <div>
+                                <label className="text-sm font-bold text-pink-700 uppercase block tracking-wide mb-2">Gestante?</label>
+                                <div className="flex gap-4 p-4 border border-pink-200 rounded-xl transition-all bg-pink-50 h-[58px] items-center">
+                                  <label className="flex items-center gap-2 cursor-pointer font-medium text-pink-800"><input type="radio" name="gestante" value="Sim" checked={historicoPaciente.gestante === 'Sim'} onChange={e => setHistoricoPaciente({...historicoPaciente, gestante: e.target.value})} className="w-5 h-5 text-pink-600 focus:ring-pink-500 cursor-pointer"/> Sim</label>
+                                  <label className="flex items-center gap-2 cursor-pointer font-medium text-pink-800"><input type="radio" name="gestante" value="Não" checked={historicoPaciente.gestante === 'Não'} onChange={e => setHistoricoPaciente({...historicoPaciente, gestante: e.target.value})} className="w-5 h-5 text-pink-600 focus:ring-pink-500 cursor-pointer"/> Não</label>
+                                </div>
+                              </div>
+                            )}
                             <div><label className="text-sm font-bold text-gray-700 uppercase block tracking-wide mb-2">Data de Internação</label><input type="date" className="w-full text-base p-4 border border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all bg-gray-50 focus:bg-white" value={nursingAssessment.dataInternacao || ''} onChange={e => setNursingAssessment({ ...nursingAssessment, dataInternacao: e.target.value })} /></div>
                             <div><label className="text-sm font-bold text-gray-700 uppercase block tracking-wide mb-2">Leito</label><input type="text" placeholder="Ex: UTI-01" className="w-full text-base p-4 border border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all bg-gray-50 focus:bg-white" value={nursingAssessment.leito || ''} onChange={e => setNursingAssessment({ ...nursingAssessment, leito: e.target.value })} /></div>
+                            <div className="md:col-span-2"><label className="text-sm font-bold text-red-700 uppercase block tracking-wide mb-2">Alergias (Quais Medicamentos/Outros?)</label><input type="text" placeholder="Ex: Dipirona, Iodo, Sem Alergias..." className="w-full text-base p-4 border border-red-300 rounded-xl focus:ring-4 focus:ring-red-500/20 focus:border-red-500 outline-none transition-all bg-red-50 focus:bg-white" value={historicoPaciente.alergias || ''} onChange={e => setHistoricoPaciente({ ...historicoPaciente, alergias: e.target.value })} /></div>
                             <div className="md:col-span-3"><label className="text-sm font-bold text-gray-700 uppercase block tracking-wide mb-2">Hipótese Diagnóstica / Quadro</label><input type="text" placeholder="Ex: Sepse de Foco Pulmonar, Pós-Op..." className="w-full text-base p-4 border border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all bg-gray-50 focus:bg-white" value={nursingAssessment.hipoteseDiagnostica || ''} onChange={e => setNursingAssessment({ ...nursingAssessment, hipoteseDiagnostica: e.target.value })} /></div>
                           </div>
                         </div>
@@ -1015,6 +1006,13 @@ Abra o console do navegador (F12) para mais detalhes.`);
                             <div><label className="text-sm font-bold text-gray-700 uppercase block tracking-wide mb-2">Frequência Respiratória (FR)</label><input type="text" placeholder="Ex: 18 irpm" className="w-full text-base p-4 border border-gray-300 rounded-xl focus:ring-4 focus:ring-rose-500/20 focus:border-rose-500 outline-none transition-all bg-gray-50 focus:bg-white" value={sinaisVitais.fr || ''} onChange={e => setSinaisVitais({ ...sinaisVitais, fr: e.target.value })} /></div>
                             <div><label className="text-sm font-bold text-gray-700 uppercase block tracking-wide mb-2">Temperatura (Temp)</label><input type="text" placeholder="Ex: 36.5 °C" className="w-full text-base p-4 border border-gray-300 rounded-xl focus:ring-4 focus:ring-rose-500/20 focus:border-rose-500 outline-none transition-all bg-gray-50 focus:bg-white" value={sinaisVitais.temp || ''} onChange={e => setSinaisVitais({ ...sinaisVitais, temp: e.target.value })} /></div>
                             <div><label className="text-sm font-bold text-gray-700 uppercase block tracking-wide mb-2">Glicemia (HGT)</label><input type="text" placeholder="Ex: 100 mg/dL" className="w-full text-base p-4 border border-gray-300 rounded-xl focus:ring-4 focus:ring-rose-500/20 focus:border-rose-500 outline-none transition-all bg-gray-50 focus:bg-white" value={sinaisVitais.hgt || ''} onChange={e => setSinaisVitais({ ...sinaisVitais, hgt: e.target.value })} /></div>
+                            
+                            {historicoPaciente.sexo === 'F' && historicoPaciente.gestante === 'Sim' && (
+                              <>
+                                <div><label className="text-sm font-bold text-pink-700 uppercase block tracking-wide mb-2">Batimento Card. Fetal (BCF)</label><input type="text" placeholder="Ex: 140 bpm" className="w-full text-base p-4 border border-pink-300 rounded-xl focus:ring-4 focus:ring-pink-500/20 focus:border-pink-500 outline-none transition-all bg-pink-50 focus:bg-white" value={sinaisVitais.bcf || ''} onChange={e => setSinaisVitais({ ...sinaisVitais, bcf: e.target.value })} /></div>
+                                <div><label className="text-sm font-bold text-pink-700 uppercase block tracking-wide mb-2">Altura Uterina (AU)</label><input type="text" placeholder="Ex: 32 cm" className="w-full text-base p-4 border border-pink-300 rounded-xl focus:ring-4 focus:ring-pink-500/20 focus:border-pink-500 outline-none transition-all bg-pink-50 focus:bg-white" value={sinaisVitais.alturaUterina || ''} onChange={e => setSinaisVitais({ ...sinaisVitais, alturaUterina: e.target.value })} /></div>
+                              </>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -1879,6 +1877,32 @@ Abra o console do navegador (F12) para mais detalhes.`);
                         </div>
                       </div>
                     )}
+                    {/* PDF Preview Section */}
+                    <div className="mt-12 pt-8 border-t border-gray-200 bg-gray-50/50 -mx-8 px-8 pb-8">
+                       <h3 className="text-sm font-bold text-gray-800 uppercase tracking-widest mb-6 flex items-center justify-center gap-3">
+                         <Activity className="w-5 h-5 text-gray-500" /> Pré-Visualização do Relatório (PDF)
+                       </h3>
+                       <p className="text-center text-gray-500 text-xs mb-8">Esta é a visualização exata de como a página será impressa. Caso encontre informações faltando, edite acima e gere novamente.</p>
+                       <div className="overflow-x-auto w-full flex justify-center bg-gray-200/50 rounded-xl p-4 md:p-8">
+                         <PrintableSaeReport 
+                           patientName={patientName}
+                           historicoPaciente={historicoPaciente}
+                           idadeCalculada={calcularIdadeExata(historicoPaciente.dataNascimento)}
+                           prontuario={medicalRecord}
+                           dataInternacao={nursingAssessment?.dataInternacao}
+                           hipoteseDiagnostica={nursingAssessment?.hipoteseDiagnostica}
+                           leito={nursingAssessment?.leito}
+                           sinaisVitais={sinaisVitais}
+                           nursingAssessment={nursingAssessment}
+                           nursingResults={nursingResults}
+                           bradenScore={bradenScore}
+                           morseScore={morseScore}
+                           fugulinScore={fugulinScore}
+                           previewMode={true}
+                         />
+                       </div>
+                    </div>
+
                   </div>
                 )}
 
@@ -1921,6 +1945,22 @@ Abra o console do navegador (F12) para mais detalhes.`);
           </>
         )}
       </main>
+
+      <PrintableSaeReport 
+        patientName={patientName}
+        historicoPaciente={historicoPaciente}
+        idadeCalculada={calcularIdadeExata(historicoPaciente.dataNascimento)}
+        prontuario={medicalRecord}
+        dataInternacao={nursingAssessment?.dataInternacao}
+        hipoteseDiagnostica={nursingAssessment?.hipoteseDiagnostica}
+        leito={nursingAssessment?.leito}
+        sinaisVitais={sinaisVitais}
+        nursingAssessment={nursingAssessment}
+        nursingResults={nursingResults}
+        bradenScore={bradenScore}
+        morseScore={morseScore}
+        fugulinScore={fugulinScore}
+      />
     </div>
   )
 }
