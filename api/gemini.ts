@@ -24,25 +24,31 @@ export default async function handler(req: any, res: any) {
         };
 
         const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
-        const modelsToTry = ['gemini-1.5-flash-latest', 'gemini-1.5-pro-latest', 'gemini-pro'];
+        // Vamos testar os modelos modernos
+        const modelsToTry = ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-2.0-flash'];
         let response;
-        let lastError;
+        let errorsRecord: any[] = [];
 
         for (let i = 0; i < modelsToTry.length; i++) {
             try {
                 response = await tryGenerate(modelsToTry[i]);
                 break; // Success
             } catch (err: any) {
-                lastError = err;
+                errorsRecord.push({ model: modelsToTry[i], error: err?.message || err });
                 console.warn(`Tentativa com ${modelsToTry[i]} falhou:`, err?.message || err);
+                if (err?.message?.includes('404')) {
+                   // Se for 404, não adianta esperar, pula logo pro próximo
+                   continue;
+                }
                 if (i < modelsToTry.length - 1) {
-                    await sleep(3000); // Espera 3 segundos antes do retry
+                    await sleep(2000); // Espera 2 segundos antes do retry
                 }
             }
         }
 
         if (!response) {
-            throw lastError;
+            console.error("All models failed. Error record:", JSON.stringify(errorsRecord, null, 2));
+            return res.status(500).json({ error: 'Nenhum modelo disponível no momento. Detalhes: ' + JSON.stringify(errorsRecord) });
         }
 
         return res.status(200).json({ text: response.text });
