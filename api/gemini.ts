@@ -24,16 +24,11 @@ export default async function handler(req: any, res: any) {
         };
 
         const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
-        // Lista massiva de contingência para encontrar O ÚNICO servidor do Google que tenha cota livre hoje + não esteja lotado (503)
+        // Foco vital nos únicos modelos que o Google aprovou como 'Encontrados' (sem 404)
         const modelsToTry = [
-            'gemini-1.5-flash-8b', 
-            'gemini-1.5-flash',
+            'gemini-2.0-flash', 
             'gemini-2.5-flash',
-            'gemini-2.0-flash-lite-preview-02-05',
-            'gemini-2.0-flash-exp',
-            'gemini-2.5-pro',
-            'gemini-pro',
-            'gemini-1.0-pro'
+            'gemini-2.0-pro'
         ];
         let response;
         let errorsRecord: any[] = [];
