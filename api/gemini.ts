@@ -24,8 +24,8 @@ export default async function handler(req: any, res: any) {
         };
 
         const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
-        // Vamos testar os modelos modernos
-        const modelsToTry = ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-2.0-flash'];
+        // Agora que a conta é paga, o 2.0-flash tem cota liberada e não sofre o 503 severo do 2.5
+        const modelsToTry = ['gemini-2.0-flash', 'gemini-2.0-flash', 'gemini-2.5-flash'];
         let response;
         let errorsRecord: any[] = [];
 
