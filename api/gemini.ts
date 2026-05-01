@@ -24,12 +24,12 @@ export default async function handler(req: any, res: any) {
         };
 
         const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
-        // Foco em modelos modernos (a versão 1.5 foi descontinuada e retorna 404)
+        // Usando aliases contínuos para evitar erros de versão descontinuada (404)
         const modelsToTry = [
-            'gemini-2.0-flash', 
+            'gemini-flash-latest', 
+            'gemini-pro-latest',
             'gemini-2.5-flash',
-            'gemini-3.1-flash',
-            'gemini-2.0-pro'
+            'gemini-2.5-pro'
         ];
         let response;
         let errorsRecord: any[] = [];
