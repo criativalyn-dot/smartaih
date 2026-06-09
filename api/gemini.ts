@@ -26,10 +26,10 @@ export default async function handler(req: any, res: any) {
         const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
         // Usando aliases contínuos para evitar erros de versão descontinuada (404)
         const modelsToTry = [
-            'gemini-flash-latest', 
-            'gemini-pro-latest',
             'gemini-2.5-flash',
-            'gemini-2.5-pro'
+            'gemini-1.5-flash',
+            'gemini-2.5-pro',
+            'gemini-1.5-pro'
         ];
         let response;
         let errorsRecord: any[] = [];
