@@ -755,7 +755,7 @@ Abra o console do navegador (F12) para mais detalhes.`);
 
                   {/* Suggestions Dropdown */}
                   {isShowingSuggestions && suggestions.length > 0 && (
-                    <div className="absolute z-20 w-full mt-2 bg-white rounded-xl shadow-2xl border-2 border-blue-100 max-h-96 overflow-y-auto ring-1 ring-black ring-opacity-5">
+                    <div className="w-full mt-2 bg-white rounded-xl shadow-2xl border-2 border-blue-100 max-h-96 overflow-y-auto ring-1 ring-black ring-opacity-5">
                       <div className="sticky top-0 bg-blue-50/90 backdrop-blur-sm border-b border-blue-100 px-5 py-2 text-xs font-bold text-blue-800 uppercase tracking-wide z-10">
                         {suggestions.length} resultados encontrados
                       </div>
@@ -779,7 +779,7 @@ Abra o console do navegador (F12) para mais detalhes.`);
                   )}
 
                   {isShowingSuggestions && suggestions.length === 0 && searchQuery.length > 0 && (
-                    <div className="absolute z-10 w-full mt-2 bg-white rounded-xl shadow-lg border border-gray-200 p-4 text-gray-500 text-center text-sm">
+                    <div className="w-full mt-2 bg-white rounded-xl shadow-lg border border-gray-200 p-4 text-gray-500 text-center text-sm">
                       Nenhum CID encontrado para essa busca.
                     </div>
                   )}
