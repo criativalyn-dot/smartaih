@@ -1,12 +1,47 @@
 import { useState, useEffect } from 'react'
 import { Search, Activity, Stethoscope, AlertTriangle, CheckCircle2, ChevronRight, Eye, Bed, Scissors, LogOut } from 'lucide-react'
 import sigtapDatabase from './data/sigtap_database.json'
+import cid10Nomes from './data/cid10_nomes.json'
 import type { CidSigtapRelation, SigtapProcedure } from './data/mockDatabase' // Keeping types for now, though we might need to adjust them if JSON changes
 import { PROTOCOLO_MANCHESTER_REFERENCIA } from './data/manchesterReferencia'
 import { EscalaEnfermagem } from './EscalaEnfermagem';
 import { supabase } from './lib/supabase';
 import { Auth } from './Auth';
 import PrintableSaeReport from './PrintableSaeReport';
+
+// --- CID-10 (Aba 1): normalização de código e índices para busca/autocomplete e procedimentos compatíveis ---
+const normalizeCidCode = (raw: string): string => {
+  const clean = raw.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  return clean.length > 3 ? clean.slice(0, 3) + '.' + clean.slice(3) : clean;
+};
+
+const normalizeSearchText = (raw: string): string =>
+  raw.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+// Índice reverso: CID normalizado -> procedimentos SIGTAP compatíveis.
+// Reaproveita a mesma base da Aba 2 (procedimento -> cidsPermitidos) sem alterá-la.
+const CID_PROCEDIMENTOS_MAP: Record<string, SigtapProcedure[]> = {};
+sigtapDatabase.forEach((proc: any) => {
+  (proc.cidsPermitidos || []).forEach((cidCode: string) => {
+    const norm = normalizeCidCode(cidCode);
+    if (!CID_PROCEDIMENTOS_MAP[norm]) CID_PROCEDIMENTOS_MAP[norm] = [];
+    CID_PROCEDIMENTOS_MAP[norm].push({
+      codigo: proc.codigo,
+      nome: proc.nome,
+      grupo: proc.grupo,
+      subGrupo: proc.subGrupo,
+      formaOrganizacao: proc.formaOrganizacao,
+    });
+  });
+});
+
+// Lista de todos os CIDs pesquisáveis (código + nome oficial) para o autocomplete
+const CID10_SEARCH_LIST: { cid: string; cidNome: string; codeNorm: string; nomeNorm: string }[] = (cid10Nomes as [string, string][]).map(
+  ([codigo, nome]) => {
+    const cid = normalizeCidCode(codigo);
+    return { cid, cidNome: nome, codeNorm: cid.replace(/[^A-Z0-9]/g, ''), nomeNorm: normalizeSearchText(nome) };
+  }
+);
 
 // Helper intermédio para proxy backend Vercel da IA
 const callAIBackend = async (prompt: string, config?: any) => {
@@ -218,30 +253,30 @@ function App() {
   const handleCidSearch = (query: string) => {
     setSearchQuery(query);
 
-    if (query.trim().length === 0) {
+    const trimmed = query.trim();
+    // Só começa a buscar a partir de 3 caracteres (código ou início do nome do CID)
+    if (trimmed.length < 3) {
       setSuggestions([]);
       setIsShowingSuggestions(false);
       setResults({ cidSelecionado: null, nomeCid: null, procedimentosTags: [], procedimentos: [] });
       return;
     }
 
-    const lowerQuery = query.toLowerCase();
+    const codeQuery = trimmed.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    const nameQuery = normalizeSearchText(trimmed);
 
-    // Filtra CIDs que COMECEM com o código digitado OU contenham no NOME a palavra digitada na base falsa/legada (se precisarmos de autocomplete real de ICD10, mudar isso depois)
-    // Usando temporariamente um mapa extraido do JSON SIGTAP se não houver um banco CID puro
-    const allCidsFromSigtap: Record<string, string> = {};
-    sigtapDatabase.forEach(proc => {
-      if (proc.defaultCid) allCidsFromSigtap[proc.defaultCid] = "Doença relacionada a " + proc.nome;
-    });
+    const matches: CidSigtapRelation[] = CID10_SEARCH_LIST
+      .filter((item) =>
+        (codeQuery.length > 0 && item.codeNorm.startsWith(codeQuery)) || item.nomeNorm.startsWith(nameQuery)
+      )
+      .slice(0, 50)
+      .map((item) => ({
+        cid: item.cid,
+        cidNome: item.cidNome,
+        procedimentos: CID_PROCEDIMENTOS_MAP[item.cid] || []
+      }));
 
-    // Mock simples de autocomplete baseado nos defaultCids do JSON para não quebrar a UI
-    const mockAutocomplete: CidSigtapRelation[] = Object.keys(allCidsFromSigtap).map(cid => ({
-      cid,
-      cidNome: allCidsFromSigtap[cid],
-      procedimentos: []
-    })).filter(item => item.cid.toLowerCase().startsWith(lowerQuery));
-
-    setSuggestions(mockAutocomplete);
+    setSuggestions(matches);
     setIsShowingSuggestions(true);
     setResults({ cidSelecionado: null, nomeCid: null, procedimentosTags: [], procedimentos: [] });
     setAiResults([]);
@@ -713,7 +748,7 @@ Abra o console do navegador (F12) para mais detalhes.`);
                     type="text"
                     value={searchQuery}
                     onChange={(e) => handleCidSearch(e.target.value)}
-                    onFocus={() => { if (searchQuery.length > 0) setIsShowingSuggestions(true) }}
+                    onFocus={() => { if (searchQuery.trim().length >= 3) setIsShowingSuggestions(true) }}
                     className="block w-full pl-11 pr-4 py-4 border border-gray-300 rounded-xl leading-5 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow text-lg"
                     placeholder="Ex: R10.4, Apendicite, Pneumonia, etc..."
                   />
@@ -750,6 +785,31 @@ Abra o console do navegador (F12) para mais detalhes.`);
                   )}
                 </div>
                 <p className="mt-4 text-sm text-gray-500">Iremos buscar automaticamente os procedimentos SIGTAP compatíveis após a seleção.</p>
+                {results.cidSelecionado && (
+                  <div className="mt-6 bg-white p-6 rounded-2xl border border-gray-100 shadow-lg shadow-blue-900/5 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+                      <h3 className="text-base font-bold text-gray-800">
+                        Procedimentos SIGTAP compatíveis com <span className="text-blue-700">{results.cidSelecionado}</span>
+                        {results.nomeCid && <span className="font-medium text-gray-600"> - {results.nomeCid}</span>}
+                      </h3>
+                      <span className="text-xs font-bold text-gray-600 bg-gray-100 px-3 py-1 rounded-full whitespace-nowrap">
+                        {results.procedimentos.length} {results.procedimentos.length === 1 ? 'procedimento' : 'procedimentos'}
+                      </span>
+                    </div>
+                    {results.procedimentos.length === 0 ? (
+                      <p className="text-sm text-gray-500">Nenhum procedimento SIGTAP cadastrado como compatível com este CID.</p>
+                    ) : (
+                      <ul className="divide-y divide-gray-100 max-h-96 overflow-y-auto">
+                        {results.procedimentos.map((proc) => (
+                          <li key={proc.codigo} className="py-3 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4">
+                            <span className="font-black text-blue-700 text-sm w-36 flex-shrink-0">{proc.codigo}</span>
+                            <span className="text-gray-800 text-sm">{proc.nome}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                )}
               </div>
             )}
 
