@@ -8,6 +8,7 @@ import { EscalaEnfermagem } from './EscalaEnfermagem';
 import { supabase } from './lib/supabase';
 import { Auth } from './Auth';
 import PrintableSaeReport from './PrintableSaeReport';
+import { getBradenRisk, getMorseRisk, getFugulinCareLevel, sumScale, scaleMissingItems, calcularIdadeExata, formatDateBR } from './lib/escalas';
 
 // --- CID-10 (Aba 1): normalização de código e índices para busca/autocomplete e procedimentos compatíveis ---
 const normalizeCidCode = (raw: string): string => {
@@ -56,33 +57,6 @@ const callAIBackend = async (prompt: string, config?: any) => {
 };
 
 // Helper para o calculo exato de idade (Anos, Meses ou Dias) usado no prompt e no Header do PDF
-const calcularIdadeExata = (dataString: string) => {
-  if (!dataString) return 'Idade não informada';
-  const hoje = new Date();
-  const nasc = new Date(dataString);
-  let anos = hoje.getFullYear() - nasc.getFullYear();
-  let meses = hoje.getMonth() - nasc.getMonth();
-  let dias = hoje.getDate() - nasc.getDate();
-
-  if (dias < 0) {
-    meses--;
-    const ultimoDiaMesAnterior = new Date(hoje.getFullYear(), hoje.getMonth(), 0).getDate();
-    dias += ultimoDiaMesAnterior;
-  }
-  if (meses < 0) {
-    anos--;
-    meses += 12;
-  }
-
-  if (anos > 0) {
-    return `${anos} anos${meses > 0 ? ` e ${meses} meses` : ''}`;
-  } else if (meses > 0) {
-    return `${meses} meses${dias > 0 ? ` e ${dias} dias` : ''}`;
-  } else {
-    return `${dias} dias de vida`;
-  }
-};
-
 function App() {
   const [session, setSession] = useState<any>(null);
   const [isInitializingAuth, setIsInitializingAuth] = useState(true);
@@ -148,25 +122,27 @@ function App() {
     skin: [], gastrointestinal: [], vascular: [], abdominal: [], urinary: [],
     catheters: { peripheral: '', location: '', vesicalProbe: '', drain: '', allergies: '', feeding: [] },
     // Keeping legacy fields for basic info
-    leito: '', dataInternacao: '', hipoteseDiagnostica: ''
+    leito: '', dataInternacao: '', hipoteseDiagnostica: '', historicoEnfermagem: ''
   });
-  const [bradenScore, setBradenScore] = useState({ sensoryPerception: 4, moisture: 4, activity: 4, mobility: 4, nutrition: 4, frictionShear: 3, total: 23 });
-  const [morseScore, setMorseScore] = useState({ fallHistory: 0, secondaryDiagnosis: 0, ambulatoryAid: 0, ivTherapy: 0, gait: 0, mentalStatus: 0, total: 0 });
-  const [fugulinScore, setFugulinScore] = useState({ mentalStatus: 1, oxygenation: 1, vitalSigns: 1, motility: 1, walking: 1, feeding: 1, bodyCare: 1, elimination: 1, therapeutics: 1, total: 9 });
+  const [bradenScore, setBradenScore] = useState<any>({ sensoryPerception: null, moisture: null, activity: null, mobility: null, nutrition: null, frictionShear: null, total: null });
+  const [morseScore, setMorseScore] = useState<any>({ fallHistory: null, secondaryDiagnosis: null, ambulatoryAid: null, ivTherapy: null, gait: null, mentalStatus: null, total: null });
+  const [fugulinScore, setFugulinScore] = useState<any>({ mentalStatus: null, oxygenation: null, vitalSigns: null, motility: null, walking: null, feeding: null, bodyCare: null, elimination: null, therapeutics: null, total: null });
+  const [saeValidationMsg, setSaeValidationMsg] = useState<string | null>(null);
+  const [showNovoPacienteModal, setShowNovoPacienteModal] = useState(false);
 
   const [nursingResults, setNursingResults] = useState<any>(null);
 
-  const handleNovoPaciente = () => {
-    if (window.confirm('Deseja iniciar um novo paciente? Todos os campos atuais serão limpos e os dados locais apagados.')) {
-      const keysToRemove = [
-        'smartaih_patientName', 'smartaih_medicalRecord', 'smartaih_professionalName',
-        'smartaih_professionalCoren', 'smartaih_clinicalText', 'smartaih_historico',
-        'smartaih_sinais', 'smartaih_tipoAtendimento', 'smartaih_nursingAssessment',
-        'smartaih_braden', 'smartaih_morse', 'smartaih_fugulin', 'smartaih_riscoQueda', 'smartaih_riscoLesao'
-      ];
-      keysToRemove.forEach(k => localStorage.removeItem(k));
-      window.location.reload();
-    }
+  const handleNovoPaciente = () => setShowNovoPacienteModal(true);
+
+  const confirmarNovoPaciente = () => {
+    const keysToRemove = [
+      'smartaih_patientName', 'smartaih_medicalRecord', 'smartaih_professionalName',
+      'smartaih_professionalCoren', 'smartaih_clinicalText', 'smartaih_historico',
+      'smartaih_sinais', 'smartaih_tipoAtendimento', 'smartaih_nursingAssessment',
+      'smartaih_braden', 'smartaih_morse', 'smartaih_fugulin', 'smartaih_riscoQueda', 'smartaih_riscoLesao'
+    ];
+    keysToRemove.forEach(k => localStorage.removeItem(k));
+    window.location.reload();
   };
 
   // Escala de Enfermagem (Scheduling) Tab 4 State
@@ -191,43 +167,56 @@ function App() {
 
 
 
-  // Calculators for Scales
+  // Calculators for Scales (total fica null enquanto houver item sem resposta)
+  const scaleItems = (score: any) => { const c = { ...score }; delete c.total; return c; };
   useEffect(() => {
-    const total = bradenScore.sensoryPerception + bradenScore.moisture + bradenScore.activity + bradenScore.mobility + bradenScore.nutrition + bradenScore.frictionShear;
-    setBradenScore((prev: any) => ({ ...prev, total }));
-  }, [bradenScore.sensoryPerception, bradenScore.moisture, bradenScore.activity, bradenScore.mobility, bradenScore.nutrition, bradenScore.frictionShear]);
-
-  useEffect(() => {
-    const total = morseScore.fallHistory + morseScore.secondaryDiagnosis + morseScore.ambulatoryAid + morseScore.ivTherapy + morseScore.gait + morseScore.mentalStatus;
-    setMorseScore((prev: any) => ({ ...prev, total }));
-  }, [morseScore.fallHistory, morseScore.secondaryDiagnosis, morseScore.ambulatoryAid, morseScore.ivTherapy, morseScore.gait, morseScore.mentalStatus]);
-
-  const getBradenRisk = (score: number) => {
-    if (score <= 9) return 'Risco Altíssimo';
-    if (score <= 12) return 'Risco Alto';
-    if (score <= 14) return 'Risco Moderado';
-    if (score <= 18) return 'Risco Baixo';
-    return 'Sem Risco';
-  };
-
-  const getMorseRisk = (score: number) => {
-    if (score >= 45) return 'Risco Alto';
-    if (score >= 25) return 'Risco Moderado';
-    return 'Risco Baixo';
-  };
-
-  const getFugulinCareLevel = (score: number) => {
-    if (score >= 32) return 'Cuidados Intensivos';
-    if (score >= 27) return 'Cuidados Semi-Intensivos';
-    if (score >= 21) return 'Cuidados de Alta Dependência';
-    if (score >= 15) return 'Cuidados Intermediários';
-    return 'Cuidados Mínimos';
-  };
+    const total = sumScale(scaleItems(bradenScore));
+    if (total !== bradenScore.total) setBradenScore((prev: any) => ({ ...prev, total }));
+  }, [bradenScore]);
 
   useEffect(() => {
-    const total = fugulinScore.mentalStatus + fugulinScore.oxygenation + fugulinScore.vitalSigns + fugulinScore.motility + fugulinScore.walking + fugulinScore.feeding + fugulinScore.bodyCare + fugulinScore.elimination + fugulinScore.therapeutics;
-    setFugulinScore((prev: any) => ({ ...prev, total }));
-  }, [fugulinScore.mentalStatus, fugulinScore.oxygenation, fugulinScore.vitalSigns, fugulinScore.motility, fugulinScore.walking, fugulinScore.feeding, fugulinScore.bodyCare, fugulinScore.elimination, fugulinScore.therapeutics]);
+    const total = sumScale(scaleItems(morseScore));
+    if (total !== morseScore.total) setMorseScore((prev: any) => ({ ...prev, total }));
+  }, [morseScore]);
+
+  useEffect(() => {
+    const total = sumScale(scaleItems(fugulinScore));
+    if (total !== fugulinScore.total) setFugulinScore((prev: any) => ({ ...prev, total }));
+  }, [fugulinScore]);
+
+  const BRADEN_LABELS: Record<string, string> = { sensoryPerception: '1. Percepção Sensorial', moisture: '2. Umidade', activity: '3. Atividade', mobility: '4. Mobilidade', nutrition: '5. Nutrição', frictionShear: '6. Fricção e Cisalhamento' };
+  const MORSE_LABELS: Record<string, string> = { fallHistory: '1. Histórico de Quedas', secondaryDiagnosis: '2. Diagnóstico Secundário', ambulatoryAid: '3. Auxílio na Deambulação', ivTherapy: '4. Terapia Endovenosa', gait: '5. Marcha', mentalStatus: '6. Estado Mental' };
+  const FUGULIN_LABELS: Record<string, string> = { mentalStatus: '1. Estado Mental', oxygenation: '2. Oxigenação', vitalSigns: '3. Sinais Vitais', motility: '4. Motilidade', walking: '5. Deambulação', feeding: '6. Alimentação', bodyCare: '7. Cuidado Corporal', elimination: '8. Eliminação', therapeutics: '9. Terapêutica' };
+
+  // Validação por etapa: devolve mensagem de erro ou null
+  const validateSaeStep = (step: number): string | null => {
+    if (step === 0) {
+      if (!patientName.trim()) return 'Informe o nome do paciente para continuar.';
+      if (!nursingAssessment.hipoteseDiagnostica?.trim()) return 'Informe a hipótese diagnóstica / quadro para continuar.';
+      return null;
+    }
+    if (step === 9) {
+      const faltam = scaleMissingItems(scaleItems(bradenScore), BRADEN_LABELS);
+      return faltam.length ? `Escala de Braden incompleta. Responda: ${faltam.join(', ')}.` : null;
+    }
+    if (step === 10) {
+      const faltam = scaleMissingItems(scaleItems(morseScore), MORSE_LABELS);
+      return faltam.length ? `Escala de Morse incompleta. Responda: ${faltam.join(', ')}.` : null;
+    }
+    if (step === 11) {
+      const faltam = scaleMissingItems(scaleItems(fugulinScore), FUGULIN_LABELS);
+      return faltam.length ? `Escala de Fugulin incompleta. Responda: ${faltam.join(', ')}.` : null;
+    }
+    return null;
+  };
+
+  const goToNextSaeStep = () => {
+    const msg = validateSaeStep(currentSection);
+    if (msg) { setSaeValidationMsg(msg); return; }
+    setSaeValidationMsg(null);
+    setCurrentSection(Math.min(saeSections.length - 1, currentSection + 1));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   // Results State
   const [results, setResults] = useState<{
@@ -561,6 +550,17 @@ Retorne EXATAMENTE no seguinte formato JSON, sem crases markdown:
   }
 
   const handleNursingAnalysis = async () => {
+    for (const step of [0, 9, 10, 11]) {
+      const msg = validateSaeStep(step);
+      if (msg) {
+        setSaeValidationMsg(`${msg} (Etapa ${step + 1} - ${saeSections[step]})`);
+        return;
+      }
+    }
+    setSaeValidationMsg(null);
+    const bradenClass = getBradenRisk(bradenScore.total);
+    const morseClass = getMorseRisk(morseScore.total);
+    const fugulinClass = getFugulinCareLevel(fugulinScore.total);
     setIsLoadingAi(true);
     setNursingResults(null);
     try {
@@ -576,19 +576,26 @@ DADOS DE AVALIAÇÃO DA ENFERMAGEM (CEFALOCAUDAL E SONDAS):
 ${JSON.stringify(nursingAssessment, null, 2)}
 SINAIS VITAIS:
 ${JSON.stringify(sinaisVitais, null, 2)}
-ESCALA DE FUGLIN (Grau de Dependência - ${getFugulinCareLevel(fugulinScore.total)}):
+ESCALA DE FUGULIN (Escore Total: ${fugulinScore.total} - CLASSIFICAÇÃO OFICIAL: ${fugulinClass}):
 ${JSON.stringify(fugulinScore, null, 2)}
-ESCALA DE BRADEN MANUAL (Escore Total: ${bradenScore.total}):
+ESCALA DE BRADEN (Escore Total: ${bradenScore.total} - CLASSIFICAÇÃO OFICIAL: ${bradenClass}):
 ${JSON.stringify(bradenScore, null, 2)}
-ESCALA DE MORSE MANUAL (Escore Total: ${morseScore.total}):
+ESCALA DE MORSE (Escore Total: ${morseScore.total} - CLASSIFICAÇÃO OFICIAL: ${morseClass}):
 ${JSON.stringify(morseScore, null, 2)}
+
+CORTES OFICIAIS DAS ESCALAS (use EXATAMENTE estas classificações nos textos de análise; não reclassifique):
+- Braden: 6-9 Risco Muito Alto | 10-12 Risco Alto | 13-14 Risco Moderado | 15-18 Risco Leve | 19-23 Sem Risco.
+- Morse: 0-24 Risco Baixo | 25-44 Risco Moderado | >=45 Risco Alto.
+- Fugulin: 9-14 Cuidados Mínimos | 15-20 Cuidados Intermediários | 21-26 Alta Dependência | 27-31 Semi-Intensivos | >=32 Intensivos.
 
 INSTRUÇÕES OBRIGATÓRIAS:
 1. Avalie criticamente os sinais vitais, os checkboxes ativados e as Escalas de Fugulin, Braden e Morse.
 2. Identifique os diagnósticos de enfermagem reais e potencias priorizados de acordo com o Nível de Dependência (Fugulin).
 3. Se o paciente for Gestante (ver Histórico) ou possuir BCF/Altura Uterina registrados, GERE DIAGNÓSTICOS E PRESCRIÇÕES EXCLUSIVOS DE OBSTETRÍCIA/MATERNIDADE se houver alguma alteração pertinente.
 4. Se o paciente relatar ALERGIAS, isso deve influenciar o plano de cuidados e gerar um alerta na análise.
-5. Se houver risco de queda (Morse Alto/Moderado) ou lesão por pressão (Braden Baixo/Moderado/Alto/Altíssimo), INCLUA DIAGNÓSTICOS NANDA E INTERVENÇÕES NIC CORRESPONDENTES OBRIGATORIAMENTE.
+5. Se houver risco de queda (Morse Moderado/Alto) ou lesão por pressão (Braden Leve/Moderado/Alto/Muito Alto), INCLUA DIAGNÓSTICOS NANDA E INTERVENÇÕES NIC CORRESPONDENTES OBRIGATORIAMENTE.
+5a. Nos campos riscoBradenAnalise, riscoMorseAnalise e riscoFugulinAnalise, inicie o texto com o escore e a CLASSIFICAÇÃO OFICIAL informada acima (ex.: 'Escore 15 - Risco Leve: ...').
+5b. Considere o Histórico de Enfermagem (campo historicoEnfermagem), a dor (EVA 0-10) e o Glasgow informados nos dados.
 6. REGRA DE ESPAÇO E IMPRESSÃO (CRÍTICA): Seja EXTREMAMENTE conciso. Gere no MÁXIMO 2 Diagnósticos NANDA, no MÁXIMO 3 Intervenções NIC e no MÁXIMO 3 Resultados NOC. Mantenha as frases curtas. O layout de impressão do hospital quebra se for extenso demais.
 
 [ REGRA ANTI-CRASH DE FORMATAÇÃO JSON (CRÍTICA) ]
@@ -1047,6 +1054,7 @@ Abra o console do navegador (F12) para mais detalhes.`);
                             <div><label className="text-sm font-bold text-gray-700 uppercase block tracking-wide mb-2">Leito</label><input type="text" placeholder="Ex: UTI-01" className="w-full text-base p-4 border border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all bg-gray-50 focus:bg-white" value={nursingAssessment.leito || ''} onChange={e => setNursingAssessment({ ...nursingAssessment, leito: e.target.value })} /></div>
                             <div className="md:col-span-2"><label className="text-sm font-bold text-red-700 uppercase block tracking-wide mb-2">Alergias (Quais Medicamentos/Outros?)</label><input type="text" placeholder="Ex: Dipirona, Iodo, Sem Alergias..." className="w-full text-base p-4 border border-red-300 rounded-xl focus:ring-4 focus:ring-red-500/20 focus:border-red-500 outline-none transition-all bg-red-50 focus:bg-white" value={historicoPaciente.alergias || ''} onChange={e => setHistoricoPaciente({ ...historicoPaciente, alergias: e.target.value })} /></div>
                             <div className="md:col-span-3"><label className="text-sm font-bold text-gray-700 uppercase block tracking-wide mb-2">Hipótese Diagnóstica / Quadro</label><input type="text" placeholder="Ex: Sepse de Foco Pulmonar, Pós-Op..." className="w-full text-base p-4 border border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all bg-gray-50 focus:bg-white" value={nursingAssessment.hipoteseDiagnostica || ''} onChange={e => setNursingAssessment({ ...nursingAssessment, hipoteseDiagnostica: e.target.value })} /></div>
+                            <div className="md:col-span-3"><label className="text-sm font-bold text-gray-700 uppercase block tracking-wide mb-2">Histórico de Enfermagem / Anamnese</label><textarea rows={4} placeholder="Queixa principal, história da doença atual, comorbidades, medicamentos em uso, hábitos, condições sociais, dispositivos prévios..." className="w-full text-base p-4 border border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all bg-gray-50 focus:bg-white resize-y" value={nursingAssessment.historicoEnfermagem || ''} onChange={e => setNursingAssessment({ ...nursingAssessment, historicoEnfermagem: e.target.value })} /></div>
                           </div>
                         </div>
                       </div>
@@ -1067,6 +1075,16 @@ Abra o console do navegador (F12) para mais detalhes.`);
                             <div><label className="text-sm font-bold text-gray-700 uppercase block tracking-wide mb-2">Temperatura (Temp)</label><input type="text" placeholder="Ex: 36.5 °C" className="w-full text-base p-4 border border-gray-300 rounded-xl focus:ring-4 focus:ring-rose-500/20 focus:border-rose-500 outline-none transition-all bg-gray-50 focus:bg-white" value={sinaisVitais.temp || ''} onChange={e => setSinaisVitais({ ...sinaisVitais, temp: e.target.value })} /></div>
                             <div><label className="text-sm font-bold text-gray-700 uppercase block tracking-wide mb-2">Glicemia (HGT)</label><input type="text" placeholder="Ex: 100 mg/dL" className="w-full text-base p-4 border border-gray-300 rounded-xl focus:ring-4 focus:ring-rose-500/20 focus:border-rose-500 outline-none transition-all bg-gray-50 focus:bg-white" value={sinaisVitais.hgt || ''} onChange={e => setSinaisVitais({ ...sinaisVitais, hgt: e.target.value })} /></div>
                             
+                            <div>
+                              <label className="text-sm font-bold text-gray-700 uppercase block tracking-wide mb-2">Dor (EVA 0-10)</label>
+                              <select className="w-full text-base p-4 border border-gray-300 rounded-xl focus:ring-4 focus:ring-rose-500/20 focus:border-rose-500 outline-none transition-all bg-gray-50 focus:bg-white cursor-pointer" value={sinaisVitais.dor || ''} onChange={e => setSinaisVitais({ ...sinaisVitais, dor: e.target.value })}>
+                                <option value="">Sem registro</option>
+                                {['0 - Sem Dor', '1 - Muito Leve', '2 - Leve', '3 - Leve (Desconforto)', '4 - Moderada', '5 - Moderada (Incomoda muito)', '6 - Moderada a Forte', '7 - Forte', '8 - Forte a Muito Forte', '9 - Muito Forte', '10 - Pior Dor Possível'].map(o => (
+                                  <option key={o} value={o.split(' ')[0]}>{o}</option>
+                                ))}
+                              </select>
+                            </div>
+                            <div><label className="text-sm font-bold text-gray-700 uppercase block tracking-wide mb-2">Glasgow (3-15)</label><input type="text" placeholder="Ex: 15" className="w-full text-base p-4 border border-gray-300 rounded-xl focus:ring-4 focus:ring-rose-500/20 focus:border-rose-500 outline-none transition-all bg-gray-50 focus:bg-white" value={sinaisVitais.glasgow || ''} onChange={e => setSinaisVitais({ ...sinaisVitais, glasgow: e.target.value })} /></div>
                             {historicoPaciente.sexo === 'F' && historicoPaciente.gestante === 'Sim' && (
                               <>
                                 <div><label className="text-sm font-bold text-pink-700 uppercase block tracking-wide mb-2">Batimento Card. Fetal (BCF)</label><input type="text" placeholder="Ex: 140 bpm" className="w-full text-base p-4 border border-pink-300 rounded-xl focus:ring-4 focus:ring-pink-500/20 focus:border-pink-500 outline-none transition-all bg-pink-50 focus:bg-white" value={sinaisVitais.bcf || ''} onChange={e => setSinaisVitais({ ...sinaisVitais, bcf: e.target.value })} /></div>
@@ -1200,8 +1218,12 @@ Abra o console do navegador (F12) para mais detalhes.`);
                         <h4 className="font-bold text-sm text-gray-800 mb-4 border-b border-gray-100 pb-2 flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-indigo-500"></div> Acessos, Drenos e Dispositivos Especiais</h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-sm text-gray-700">
                           <div className="space-y-2">
-                            <label className="text-xs text-gray-500 font-semibold uppercase block mb-1">Acesso Venoso (Tipo/Local)</label>
-                            <input type="text" placeholder="Ex: AVP MSD, CVC Subclávia" className="w-full text-sm p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-shadow bg-gray-50 focus:bg-white" value={nursingAssessment.catheters?.peripheral || ''} onChange={e => setNursingAssessment({ ...nursingAssessment, catheters: { ...nursingAssessment.catheters, peripheral: e.target.value } })} />
+                            <label className="text-xs text-gray-500 font-semibold uppercase block mb-1">Acesso Venoso (Tipo / Calibre / Data)</label>
+                            <input type="text" placeholder="Ex: AVP 20G (14/10), CVC duplo lúmen" className="w-full text-sm p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-shadow bg-gray-50 focus:bg-white" value={nursingAssessment.catheters?.peripheral || ''} onChange={e => setNursingAssessment({ ...nursingAssessment, catheters: { ...nursingAssessment.catheters, peripheral: e.target.value } })} />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-xs text-gray-500 font-semibold uppercase block mb-1">Local do Acesso</label>
+                            <input type="text" placeholder="Ex: MSD, MSE, Subclávia D" className="w-full text-sm p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-shadow bg-gray-50 focus:bg-white" value={nursingAssessment.catheters?.location || ''} onChange={e => setNursingAssessment({ ...nursingAssessment, catheters: { ...nursingAssessment.catheters, location: e.target.value } })} />
                           </div>
                           <div className="space-y-2">
                             <label className="text-xs text-gray-500 font-semibold uppercase block mb-1">Sonda/Cateter Vesical</label>
@@ -1239,7 +1261,7 @@ Abra o console do navegador (F12) para mais detalhes.`);
                               <div className="w-2 h-2 rounded-full bg-red-500"></div> Escala de Braden Manual
                             </span>
                             <div className="px-4 py-2 bg-red-50 text-red-700 rounded-xl text-sm border border-red-100">
-                              Escore: <span className="font-bold text-lg">{bradenScore.total}</span> - {getBradenRisk(bradenScore.total)}
+                              Escore: <span className="font-bold text-lg">{bradenScore.total ?? "—"}</span> - {getBradenRisk(bradenScore.total)}
                             </div>
                           </h4>
 
@@ -1330,7 +1352,7 @@ Abra o console do navegador (F12) para mais detalhes.`);
                               <div className="w-2 h-2 rounded-full bg-orange-500"></div> Escala de Morse Manual
                             </span>
                             <div className="px-4 py-2 bg-orange-50 text-orange-700 rounded-xl text-sm border border-orange-100">
-                              Escore: <span className="font-bold text-lg">{morseScore.total}</span> - {getMorseRisk(morseScore.total)}
+                              Escore: <span className="font-bold text-lg">{morseScore.total ?? "—"}</span> - {getMorseRisk(morseScore.total)}
                             </div>
                           </h4>
 
@@ -1421,7 +1443,7 @@ Abra o console do navegador (F12) para mais detalhes.`);
                               <div className="w-2 h-2 rounded-full bg-purple-500"></div> Escala de Fugulin (Grau de Dependência)
                             </span>
                             <div className="px-4 py-2 bg-purple-50 text-purple-700 rounded-xl text-sm border border-purple-100">
-                              Escore: <span className="font-bold text-lg">{fugulinScore.total}</span> - {getFugulinCareLevel(fugulinScore.total)}
+                              Escore: <span className="font-bold text-lg">{fugulinScore.total ?? "—"}</span> - {getFugulinCareLevel(fugulinScore.total)}
                             </div>
                           </h4>
 
@@ -1580,10 +1602,17 @@ Abra o console do navegador (F12) para mais detalhes.`);
                     )}
                   </div>
 
+                  {saeValidationMsg && (
+                    <div role="alert" className="mt-6 flex items-start gap-3 bg-amber-50 border border-amber-300 text-amber-900 rounded-xl p-4 text-sm font-medium print:hidden">
+                      <AlertTriangle className="w-5 h-5 shrink-0 text-amber-600" />
+                      <span>{saeValidationMsg}</span>
+                    </div>
+                  )}
+
                   {/* Navigation Footer */}
                   <div className="pt-6 mt-8 border-t border-gray-100 flex flex-col sm:flex-row justify-between items-center gap-4 print:hidden">
                     <button
-                      onClick={() => setCurrentSection(Math.max(0, currentSection - 1))}
+                      onClick={() => { setSaeValidationMsg(null); setCurrentSection(Math.max(0, currentSection - 1)); }}
                       disabled={currentSection === 0}
                       className="w-full sm:w-auto px-6 py-2.5 font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
@@ -1592,7 +1621,7 @@ Abra o console do navegador (F12) para mais detalhes.`);
 
                     <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
                       <button
-                        onClick={() => setCurrentSection(0)}
+                        onClick={() => { setSaeValidationMsg(null); setCurrentSection(0); }}
                         className="w-full sm:w-auto px-6 py-2.5 font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-xl transition-colors"
                       >
                         Início
@@ -1607,7 +1636,7 @@ Abra o console do navegador (F12) para mais detalhes.`);
 
                       {currentSection < saeSections.length - 1 ? (
                         <button
-                          onClick={() => setCurrentSection(Math.min(saeSections.length - 1, currentSection + 1))}
+                          onClick={goToNextSaeStep}
                           className="w-full sm:w-auto px-8 py-2.5 font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md shadow-blue-500/20 transition-all active:scale-95 flex items-center justify-center gap-2"
                         >
                           Próximo <ChevronRight className="w-4 h-4" />
@@ -1650,7 +1679,7 @@ Abra o console do navegador (F12) para mais detalhes.`);
                         <span className="text-xs uppercase tracking-widest text-gray-500 font-bold block mb-1">Paciente</span>
                         <h2 className="text-2xl font-black text-gray-900 uppercase">{patientName || 'NÃO INFORMADO'}</h2>
                         {historicoPaciente.dataNascimento && (
-                          <p className="text-sm font-medium text-gray-600 mt-1">Nasc: {new Date(historicoPaciente.dataNascimento).toLocaleDateString('pt-BR')} (Idade: {calcularIdadeExata(historicoPaciente.dataNascimento)})</p>
+                          <p className="text-sm font-medium text-gray-600 mt-1">Nasc: {formatDateBR(historicoPaciente.dataNascimento)} (Idade: {calcularIdadeExata(historicoPaciente.dataNascimento)})</p>
                         )}
                       </div>
                       <div className="md:text-right bg-gray-100 px-4 py-2 rounded-lg print:bg-transparent print:border print:border-gray-300 print:px-0 print:py-0">
@@ -1958,6 +1987,8 @@ Abra o console do navegador (F12) para mais detalhes.`);
                            bradenScore={bradenScore}
                            morseScore={morseScore}
                            fugulinScore={fugulinScore}
+                           professionalName={professionalName}
+                           professionalCoren={professionalCoren}
                            previewMode={true}
                          />
                        </div>
@@ -2020,7 +2051,25 @@ Abra o console do navegador (F12) para mais detalhes.`);
         bradenScore={bradenScore}
         morseScore={morseScore}
         fugulinScore={fugulinScore}
+        professionalName={professionalName}
+        professionalCoren={professionalCoren}
       />
+
+      {showNovoPacienteModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 print:hidden" role="dialog" aria-modal="true" aria-labelledby="novo-paciente-titulo">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border border-gray-200">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center"><AlertTriangle className="w-5 h-5" /></div>
+              <h3 id="novo-paciente-titulo" className="text-lg font-bold text-gray-900">Iniciar novo paciente?</h3>
+            </div>
+            <p className="text-sm text-gray-600 mb-6">Todos os campos da avaliação atual serão limpos e os dados locais apagados. Esta ação não pode ser desfeita.</p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-end">
+              <button onClick={() => setShowNovoPacienteModal(false)} className="px-5 py-2.5 font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors">Cancelar</button>
+              <button onClick={confirmarNovoPaciente} className="px-5 py-2.5 font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl shadow-md transition-colors">Limpar e iniciar</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
