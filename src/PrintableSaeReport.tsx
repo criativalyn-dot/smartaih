@@ -1,3 +1,5 @@
+import { getBradenRisk, getMorseRisk, getFugulinCareLevel, formatDateBR } from './lib/escalas';
+
 export default function PrintableSaeReport({
   patientName,
   historicoPaciente,
@@ -12,6 +14,8 @@ export default function PrintableSaeReport({
   bradenScore,
   morseScore,
   fugulinScore,
+  professionalName = '',
+  professionalCoren = '',
   previewMode = false
 }: any) {
   
@@ -36,31 +40,6 @@ export default function PrintableSaeReport({
   };
 
   const today = new Date().toLocaleDateString('pt-BR');
-
-  const getBradenRisk = (score: number) => {
-    if (score <= 9) return 'Risco Altíssimo';
-    if (score <= 12) return 'Risco Alto';
-    if (score <= 14) return 'Risco Moderado';
-    if (score <= 18) return 'Risco Baixo';
-    if (score >= 19 && score <= 23) return 'Sem Risco';
-    return 'Não avaliado';
-  };
-
-  const getMorseRisk = (score: number) => {
-    if (score >= 45) return 'Risco Alto';
-    if (score >= 25) return 'Risco Moderado';
-    if (score >= 0) return 'Risco Baixo/Sem Risco';
-    return 'Não avaliado';
-  };
-
-  const getFugulinCareLevel = (score: number) => {
-    if (score >= 32) return 'Cuidados Intensivos';
-    if (score >= 27) return 'Cuidados Semi-Intensivos';
-    if (score >= 21) return 'Cuidados de Alta Dependência';
-    if (score >= 15) return 'Cuidados Intermediários';
-    if (score >= 9) return 'Cuidados Mínimos';
-    return 'Não avaliado';
-  };
 
   const renderList = (arr: any[], isObj = false) => {
     if (!arr || arr.length === 0) return '-';
@@ -137,9 +116,15 @@ export default function PrintableSaeReport({
             <span className="flex-1 text-right">Leito: <span className="border-b border-black inline-block w-16 text-center">{leito}</span></span>
           </div>
           <div className="flex justify-between">
-            <span>Data da internação: <span className="border-b border-black inline-block w-24 text-center">{new Date(dataInternacao || Date.now()).toLocaleDateString('pt-BR')}</span></span>
+            <span>Data da internação: <span className="border-b border-black inline-block w-24 text-center">{formatDateBR(dataInternacao, today)}</span></span>
             <span className="flex-1 ml-4">Hipótese Diagnóstica: <span className="border-b border-black inline-block w-full">{hipoteseDiagnostica}</span></span>
           </div>
+          {nursingAssessment?.historicoEnfermagem && (
+            <div className="border border-black p-1 text-[9px] leading-tight">
+              <span className="font-bold uppercase">Histórico de Enfermagem: </span>
+              <span className="whitespace-pre-wrap">{nursingAssessment.historicoEnfermagem}</span>
+            </div>
+          )}
         </div>
 
         {/* Controls & Vitals Table */}
@@ -176,7 +161,9 @@ export default function PrintableSaeReport({
                <div className="flex justify-between border-b border-dotted border-gray-400"><span>P:</span> <span className="font-bold text-red-600">{sinaisVitais?.fc || '_____'} bpm</span></div>
                <div className="flex justify-between border-b border-dotted border-gray-400"><span>FR:</span> <span className="font-bold text-red-600">{sinaisVitais?.fr || '_____'} irpm</span></div>
                <div className="flex justify-between border-b border-dotted border-gray-400"><span>HGT:</span> <span className="font-bold text-red-600">{sinaisVitais?.hgt || '_____'} mg/dl</span></div>
-               <div className={`flex justify-between ${historicoPaciente?.sexo === 'F' && historicoPaciente?.gestante === 'Sim' ? 'border-b border-dotted border-gray-400' : ''}`}><span>SPO2:</span> <span className="font-bold text-red-600">{sinaisVitais?.spo2 || '_____'} %</span></div>
+               <div className="flex justify-between border-b border-dotted border-gray-400"><span>SPO2:</span> <span className="font-bold text-red-600">{sinaisVitais?.spo2 || '_____'} %</span></div>
+               <div className="flex justify-between border-b border-dotted border-gray-400"><span>DOR (EVA):</span> <span className="font-bold text-red-600">{sinaisVitais?.dor !== '' && sinaisVitais?.dor !== undefined ? `${sinaisVitais.dor}/10` : '___/10'}</span></div>
+               <div className={`flex justify-between ${historicoPaciente?.sexo === 'F' && historicoPaciente?.gestante === 'Sim' ? 'border-b border-dotted border-gray-400' : ''}`}><span>GLASGOW:</span> <span className="font-bold text-red-600">{sinaisVitais?.glasgow || '___'}/15</span></div>
                {historicoPaciente?.sexo === 'F' && historicoPaciente?.gestante === 'Sim' && (
                  <>
                    <div className="flex justify-between border-b border-dotted border-gray-400"><span>BCF:</span> <span className="font-bold text-pink-600">{sinaisVitais?.bcf || '_____'} bpm</span></div>
@@ -191,18 +178,18 @@ export default function PrintableSaeReport({
         <div className="flex border border-black mb-2 text-[10px]">
           <div className="w-1/3 border-r border-black flex flex-col p-1 text-center bg-gray-50">
              <span className="font-bold border-b border-gray-300 pb-1 mb-1">Escala de Braden (Lesão)</span>
-             <span className="font-extrabold text-red-700 text-xs">{bradenScore?.total || 0}</span>
-             <span className="text-[9px] font-medium">{getBradenRisk(bradenScore?.total || 0)}</span>
+             <span className="font-extrabold text-red-700 text-xs">{bradenScore?.total ?? '—'}</span>
+             <span className="text-[9px] font-medium">{getBradenRisk(bradenScore?.total)}</span>
           </div>
           <div className="w-1/3 border-r border-black flex flex-col p-1 text-center bg-gray-50">
              <span className="font-bold border-b border-gray-300 pb-1 mb-1">Escala de Morse (Queda)</span>
-             <span className="font-extrabold text-orange-700 text-xs">{morseScore?.total || 0}</span>
-             <span className="text-[9px] font-medium">{getMorseRisk(morseScore?.total || 0)}</span>
+             <span className="font-extrabold text-orange-700 text-xs">{morseScore?.total ?? '—'}</span>
+             <span className="text-[9px] font-medium">{getMorseRisk(morseScore?.total)}</span>
           </div>
           <div className="w-1/3 flex flex-col p-1 text-center bg-gray-50">
              <span className="font-bold border-b border-gray-300 pb-1 mb-1">Fugulin (Dependência)</span>
-             <span className="font-extrabold text-purple-700 text-xs">{fugulinScore?.total || 0}</span>
-             <span className="text-[9px] font-medium">{getFugulinCareLevel(fugulinScore?.total || 0)}</span>
+             <span className="font-extrabold text-purple-700 text-xs">{fugulinScore?.total ?? '—'}</span>
+             <span className="text-[9px] font-medium">{getFugulinCareLevel(fugulinScore?.total)}</span>
           </div>
         </div>
 
@@ -239,8 +226,9 @@ export default function PrintableSaeReport({
             <div className="h-20 flex flex-col items-center justify-end pb-4 pt-6">
               <div className="w-48 border-t border-black mb-1"></div>
               <div className="text-[9px] uppercase font-bold text-center leading-tight">
+                {professionalName ? <span className="block">{professionalName}</span> : null}
                 Assinatura / Carimbo do Enfermeiro<br/>
-                COREN-___________
+                COREN-{professionalCoren || '___________'}
               </div>
             </div>
           </div>
@@ -256,7 +244,7 @@ export default function PrintableSaeReport({
             <div className="flex text-[9px] divide-x divide-black min-h-[60px]">
                <div className="w-1/3 p-2 flex flex-col text-justify"><span className="font-bold border-b border-orange-200 text-orange-900 pb-1 mb-1">Escala de Braden (Lesão por Pressão)</span> <span>{nursingResults.riscoBradenAnalise}</span></div>
                <div className="w-1/3 p-2 flex flex-col text-justify"><span className="font-bold border-b border-orange-200 text-orange-900 pb-1 mb-1">Escala de Morse (Queda)</span> <span>{nursingResults.riscoMorseAnalise}</span></div>
-               <div className="w-1/3 p-2 flex flex-col text-justify"><span className="font-bold border-b border-orange-200 text-orange-900 pb-1 mb-1">Fugulin (Dependência)</span> <span>{nursingResults.riscoFugulinAnalise || `Paciente foi classificado com Cuidados Mínimos no momento da avaliação, refletindo estabilidade e baixo nível de dependência da enfermagem.`}</span></div>
+               <div className="w-1/3 p-2 flex flex-col text-justify"><span className="font-bold border-b border-orange-200 text-orange-900 pb-1 mb-1">Fugulin (Dependência)</span> <span>{nursingResults.riscoFugulinAnalise || `Escore ${fugulinScore?.total ?? '—'} - ${getFugulinCareLevel(fugulinScore?.total)} no momento da avaliação.`}</span></div>
             </div>
           </div>
         )}
