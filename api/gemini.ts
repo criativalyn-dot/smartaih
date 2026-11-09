@@ -37,7 +37,10 @@ export default async function handler(req: any, res: any) {
         throw err;
       }
       const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), remaining);
+      // Cada modelo (exceto o último) tem no máximo 28s; assim, se o Google estiver sobrecarregado
+      // e não responder, os modelos de reserva ainda têm tempo de ser tentados.
+      const isLast = modelName === modelsToTry[modelsToTry.length - 1];
+      const timer = setTimeout(() => controller.abort(), isLast ? remaining : Math.min(remaining, 28000));
       let response: Response;
       try {
       response = await fetch(
@@ -117,7 +120,7 @@ export default async function handler(req: any, res: any) {
 
     if (!response) {
       console.error('All models failed. Error record:', JSON.stringify(errorsRecord, null, 2));
-      return res.status(500).json({ error: 'Nenhum modelo disponível no momento. Detalhes: ' + JSON.stringify(errorsRecord) });
+      return res.status(503).json({ error: 'A IA do Google está sobrecarregada ou demorou demais para responder. Aguarde alguns minutos e tente novamente. (Detalhes técnicos nos registros do Vercel.)' });
     }
 
     return res.status(200).json({ text: response.text });
