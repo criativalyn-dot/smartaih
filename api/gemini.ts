@@ -18,16 +18,33 @@ export default async function handler(req: any, res: any) {
     const generationConfig: Record<string, any> = {
       temperature: config?.temperature ?? 1,
       maxOutputTokens: 16384,
+      // Raciocínio curto: deixa as respostas bem mais rápidas (nível "low" é aceito por todos os modelos usados aqui)
+      thinkingConfig: { thinkingLevel: 'low' },
     };
+
+    // Orçamento total de tempo, abaixo do limite da função (60s), para sempre devolver JSON
+    const startedAt = Date.now();
+    const TOTAL_BUDGET_MS = 55000;
     if (config?.responseMimeType) {
       generationConfig.responseMimeType = config.responseMimeType;
     }
 
     const tryGenerate = async (modelName: string) => {
-      const response = await fetch(
+      const remaining = TOTAL_BUDGET_MS - (Date.now() - startedAt);
+      if (remaining < 3000) {
+        const err: any = new Error('Tempo esgotado antes de tentar ' + modelName);
+        err.status = 504;
+        throw err;
+      }
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), remaining);
+      let response: Response;
+      try {
+      response = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`,
         {
           method: 'POST',
+          signal: controller.signal,
           headers: {
             'Content-Type': 'application/json',
             'x-goog-api-key': process.env.GEMINI_API_KEY as string,
@@ -58,6 +75,16 @@ export default async function handler(req: any, res: any) {
         throw err;
       }
       return { text };
+      } catch (e: any) {
+        if (e?.name === 'AbortError') {
+          const err: any = new Error(`Tempo esgotado aguardando ${modelName}`);
+          err.status = 504;
+          throw err;
+        }
+        throw e;
+      } finally {
+        clearTimeout(timer);
+      }
     };
 
     const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
